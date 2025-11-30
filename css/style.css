@@ -40,7 +40,7 @@ body {
   width: 100%;
   margin: 0 auto;
   border: 4px solid #ffffff;
-  background-color: #000000;
+  background-color: #1a1a1a;
   position: relative;
   overflow: hidden;          /* lets us crop for inner pages */
 }
@@ -144,9 +144,9 @@ body {
 
 .content h1 {
   margin: 0 0 10px;
-  font-size: 22px;
+  font-size: 55px;
   font-weight: bold;
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 .content p {
