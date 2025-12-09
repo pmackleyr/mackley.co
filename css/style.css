@@ -74,8 +74,8 @@ body {
 
 .hero-title {
   position: absolute;
-  top: 16px;
-  left: 18px;
+  top: 24px;
+  left: 24px;
   font-size: 36px;        /* bigger */
   font-weight: 800;
   letter-spacing: 0.08em;
