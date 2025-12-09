@@ -3,195 +3,204 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+box-sizing: border-box;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
+margin: 0;
+padding: 0;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-  background-color: #1a1a1a; /* darker background so hero is the focus */
-  color: #e7ecf8;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 14px;
+background-color: #1a1a1a;
+color: #e7ecf8;
 }
 
-/* Always render the site name in ALL CAPS */
 .site-name {
-  text-transform: uppercase;
+text-transform: uppercase;
 }
 
 /* ========== PAGE CONTAINER ========== */
-/* This replicates the El Sur Ranch centered column */
 
 .page {
-  max-width: 924px;          /* same width as ESR image */
-  margin: 20px auto 60px;    /* top margin + bottom gutter */
-  padding: 0 10px;           /* side padding for small screens */
+max-width: 924px;
+margin: 20px auto 60px;
+padding: 0 10px;
 }
 
 /* ========== HERO ========== */
-/* framed image, centered, with white border like El Sur Ranch */
 
 .hero {
-  width: 100%;
-  margin: 0 auto;
-  border: 4px solid #ffffff;
-  background-color: #1a1a1a;
-  position: relative;
-  overflow: hidden;          /* lets us crop for inner pages */
+width: 100%;
+margin: 0 auto;
+border: 4px solid #ffffff;
+background-color: #1a1a1a;
+position: relative;
+overflow: hidden;
 }
 
-/* hero image */
+/* optional: top gradient band for readability */
+.hero::before {
+content: "";
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 90px;
+background: linear-gradient(
+to bottom,
+rgba(255, 255, 255, 0.55),
+rgba(255, 255, 255, 0)
+);
+pointer-events: none;
+}
 
 .hero-image {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
+display: block;
+width: 100%;
+height: auto;
+object-fit: cover;
 }
 
-/* Home: full height */
+/* home / inner layout rules */
 
 .hero--home .hero-image {
-  height: auto;
+height: auto;
 }
 
-/* Inner pages: cropped */
-
 .hero--inner {
-  max-height: 220px;
+max-height: 220px;
 }
 
 .hero--inner .hero-image {
-  height: 220px;
+height: 220px;
 }
 
-/* "MACKLEY" text inside hero */
+/* HERO TITLE — updated */
 
 .hero-title {
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  font-size: 36px;        /* bigger */
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #1a1a1a;         /* updated color */
-  text-shadow: none;      /* keeps the dark text crisp */
+position: absolute;
+top: 22px;
+left: 22px;
+font-size: 38px;
+font-weight: 900;
+letter-spacing: 0.08em;
+color: #1a1a1a;
+background: rgba(255, 255, 255, 0.45);
+padding: 6px 10px;
+border-radius: 4px;
+text-transform: uppercase;
 }
 
 /* ========== NAVIGATION ========== */
-/* centered under hero like ESR */
 
 .nav {
-  margin-top: 14px;
-  text-align: center;
+margin-top: 14px;
+text-align: center;
 }
 
 .nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+list-style: none;
+padding: 0;
+margin: 0;
 }
 
 .nav-item {
-  display: inline-block;
-  margin: 0 18px;
+display: inline-block;
+margin: 0 18px;
 }
 
 .nav-link {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  position: relative;
-  padding-bottom: 2px;
+color: #ffffff;
+text-decoration: none;
+font-size: 14px;
+letter-spacing: 0.06em;
+position: relative;
+padding-bottom: 2px;
 }
 
-/* underline animation */
-
 .nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0;
-  height: 1px;
-  background-color: #ffffff;
-  transition: width 0.16s ease-out;
+content: "";
+position: absolute;
+left: 0;
+bottom: 0;
+width: 0;
+height: 1px;
+background-color: #ffffff;
+transition: width 0.16s ease-out;
 }
 
 .nav-link:hover::after,
 .nav-link:focus::after,
 .nav-link--active::after {
-  width: 100%;
+width: 100%;
 }
 
-/* ========== MAIN CONTENT ========== */
+/* ========== CONTENT ========== */
 
 .content {
-  margin-top: 55px;
-  color: #1a1a1a;
-  line-height: 1.6;
+margin-top: 55px;
+color: #1a1a1a;
+line-height: 1.6;
 }
 
 .content--home {
-  margin-top: 22px;
+margin-top: 22px;
 }
 
 .content h1 {
-  margin: 0 0 10px;
-  font-size: 55px;
-  font-weight: bold;
-  color: #1a1a1a;
+margin: 0 0 10px;
+font-size: 55px;
+font-weight: bold;
+color: #1a1a1a;
 }
 
 .content p {
-  margin: 0 0 10px;
+margin: 0 0 10px;
 }
 
 /* ========== FOOTER ========== */
 
 .footer {
-  margin-top: 26px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #9aa3bb;
-  font-size: 11px;
-}
-
-.footer-left {
-  opacity: 0.9;
+margin-top: 26px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+color: #9aa3bb;
+font-size: 11px;
 }
 
 .footer-right a {
-  color: #9aa3bb;
-  text-decoration: none;
+color: #9aa3bb;
+text-decoration: none;
 }
 
 .footer-right a:hover {
-  text-decoration: underline;
+text-decoration: underline;
 }
 
-/* ========== RESPONSIVE ADJUSTMENTS ========== */
+/* ========== RESPONSIVE ========== */
 
 @media (max-width: 960px) {
-  .page {
-    margin: 16px auto 40px;
-    padding: 0 12px;
-  }
+.page {
+margin: 16px auto 40px;
+padding: 0 12px;
+}
 }
 
 @media (max-width: 600px) {
-  .nav-item {
-    margin: 4px 10px;
-  }
+.nav-item {
+margin: 4px 10px;
+}
 
-  .content h1 {
-    font-size: 18px;
-  }
+.content h1 {
+font-size: 18px;
+}
+
+.hero-title {
+font-size: 28px;
+}
 }
