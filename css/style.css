@@ -78,7 +78,7 @@ max-height: 220px;
 .hero--inner .hero-image {
 height: 220px;
 object-fit: cover;
-object-position: center 15%;
+object-position: center 25%;
 }
 
 /* HERO TITLE — updated */
