@@ -19,15 +19,10 @@ body {
   color: #e7ecf8;
 }
 
-/* Always render the site name in ALL CAPS */
-.site-name {
-  text-transform: uppercase;
-}
-
 /* ========== PAGE CONTAINER ========== */
 
 .page {
-  max-width: 924px;          /* same width as ESR reference */
+  max-width: 924px;
   margin: 20px auto 60px;
   padding: 0 10px;
 }
@@ -43,44 +38,37 @@ body {
   overflow: hidden;
 }
 
-/* hero image */
-
 .hero-image {
   display: block;
   width: 100%;
   height: auto;
   object-fit: cover;
-  object-position: left center; /* default framing */
+  object-position: left center;
 }
 
-/* Home: let the image set its own height */
-.hero--home .hero-image {
-  height: auto;
-}
-
-/* Inner pages: cropped strip, nudged slightly upward for more light */
 .hero--inner {
   max-height: 220px;
 }
 
 .hero--inner .hero-image {
   height: 220px;
-  object-position: left 8%; /* move crop up a bit so background is brighter */
+  object-position: right 22%;
 }
 
-/* "MACKLEY" text inside hero */
+/* ========== HERO TITLE (HOME BUTTON) ========== */
 
 .hero-title {
   position: absolute;
-  top: 24px;          /* equal visual padding from top/left */
+  top: 24px;
   left: 24px;
-  font-size: 42px;    /* bigger title */
+  font-size: 40px;         /* bold, clear */
   font-weight: 900;
   letter-spacing: 0.10em;
-  color: #1a1a1a;     /* requested color */
+  color: #1a1a1a;
   text-transform: uppercase;
-  /* very subtle softening so it reads on grainy film */
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.30);
 }
 
 /* ========== NAVIGATION ========== */
@@ -98,20 +86,19 @@ body {
 
 .nav-item {
   display: inline-block;
-  margin: 0 18px;
+  margin: 0 24px;
 }
 
 .nav-link {
   color: #ffffff;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.06em;
   position: relative;
   padding-bottom: 2px;
 }
 
 /* underline animation */
-
 .nav-link::after {
   content: "";
   position: absolute;
@@ -124,7 +111,6 @@ body {
 }
 
 .nav-link:hover::after,
-.nav-link:focus::after,
 .nav-link--active::after {
   width: 100%;
 }
@@ -134,7 +120,6 @@ body {
 .content {
   margin-top: 55px;
   line-height: 1.6;
-  /* color inherits from body (#e7ecf8) for readability on dark bg */
 }
 
 .content--home {
@@ -146,10 +131,6 @@ body {
   font-size: 55px;
   font-weight: bold;
   color: #e7ecf8;
-}
-
-.content p {
-  margin: 0 0 10px;
 }
 
 /* ========== FOOTER ========== */
@@ -174,25 +155,18 @@ body {
 
 /* ========== RESPONSIVE ========== */
 
-@media (max-width: 960px) {
-  .page {
-    margin: 16px auto 40px;
-    padding: 0 12px;
-  }
-}
-
 @media (max-width: 600px) {
   .nav-item {
-    margin: 4px 10px;
-  }
-
-  .content h1 {
-    font-size: 18px;
+    margin: 4px 12px;
   }
 
   .hero-title {
-    font-size: 30px;
+    font-size: 32px;
     top: 18px;
     left: 18px;
+  }
+
+  .content h1 {
+    font-size: 22px;
   }
 }

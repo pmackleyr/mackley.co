@@ -1,52 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mackley</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8" />
+<title>Mackley</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+  * { box-sizing: border-box; }
+
+  :root {
+    --door-radius: 10px;
+    --door-width: min(26vw, 180px);
+    --door-height: calc(var(--door-width) * 1.5); /* 2:3 ratio */
+  }
+
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Background image */
+  .hero {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero.show { opacity: 1; }
+
+  /* Center container for the doors */
+  .main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 2000px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .scene {
+    display: flex;
+    gap: min(14vw, 140px); /* DOUBLE spacing */
+    align-items: center;
+  }
+
+  .door-set {
+    width: var(--door-width);
+    height: var(--door-height);
+    position: relative;
+  }
+
+  .swing {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--door-radius);
+    background: #fff;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.7s ease, box-shadow 0.4s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+
+  .swing:hover {
+    box-shadow: 0 0 35px rgba(255,255,255,0.7);
+  }
+
+  .swing.flipped {
+    transform: rotateY(-120deg);
+    box-shadow: 0 0 40px rgba(255,255,255,1);
+  }
+
+  /* Hide the other door while one is open */
+  .door-set.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  /* FOOTER */
+  footer {
+    width: 100%;
+    text-align: center;
+    padding: 16px 0 8px;
+    font-size: 13px;
+    color: #fff;
+    z-index: 3;
+  }
+
+  footer img {
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+
+  footer a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 12px;
+  }
+
+  footer a:hover { text-decoration: underline; }
+
+  .legal-line {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #777;
+  }
+
+  @media (max-width: 600px) {
+    :root {
+      --door-width: min(42vw, 160px);
+    }
+    .scene { gap: 22vw; }
+  }
+</style>
 </head>
+
 <body>
 
-  <div class="page">
+<div class="hero"></div>
 
-    <!-- HERO (framed, centered) -->
-    <header class="header">
-      <div class="hero hero--home">
-        <img src="images/hero.png" alt="Mackley hero" class="hero-image" />
-        <div class="hero-title">MACKLEY</div>
-      </div>
-    </header>
+<main class="main">
+  <div class="scene">
+    <div class="door-set" data-img="images/dive.png">
+      <div class="swing"></div>
+    </div>
 
-    <!-- NAVIGATION (under hero) -->
-    <nav class="nav">
-      <ul class="nav-list">
-        <li class="nav-item"><a class="nav-link nav-link--active" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="practice.html">Practice</a></li>
-        <li class="nav-item"><a class="nav-link" href="practitioners.html">Practitioners</a></li>
-        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-
-    <!-- CONTENT (keep almost empty like El Sur home) -->
-    <main class="content content--home">
-      <!-- You can drop a one-line tagline here later if you want -->
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-      <div class="footer-left">
-        Copyright © <span id="year-home"></span> Mackley. All rights reserved.
-      </div>
-      <div class="footer-right">
-        <a href="#">Legal</a>
-      </div>
-    </footer>
-
+    <div class="door-set" data-img="images/surf.png">
+      <div class="swing"></div>
+    </div>
   </div>
+</main>
 
-  <script>
-    document.getElementById('year-home').textContent = new Date().getFullYear();
-  </script>
+<footer>
+  <img src="images/logo_light.png" alt="Mackley logo" />
+  <a href="/clear">BREATHE</a>
+  ·
+  <a href="/deep">DEEPER</a>
+  ·
+  <a href="/contact">CONTACT</a>
+
+  <div class="legal-line">© 2025 Mackley — <a href="/legal">Legal</a></div>
+</footer>
+
+<script>
+  const hero = document.querySelector('.hero');
+  const doorSets = document.querySelectorAll('.door-set');
+
+  let openDoor = null;
+
+  doorSets.forEach(set => {
+    const door = set.querySelector('.swing');
+
+    door.addEventListener('click', () => {
+      const isOpening = !door.classList.contains('flipped');
+
+      // Close any open door
+      if (openDoor && openDoor !== door) {
+        openDoor.classList.remove('flipped');
+      }
+
+      // Reset all door visibility
+      doorSets.forEach(s => s.classList.remove('hidden'));
+
+      if (isOpening) {
+        door.classList.add('flipped');
+        openDoor = door;
+
+        // Background update
+        hero.style.backgroundImage = `url('${set.dataset.img}')`;
+        hero.classList.add('show');
+
+        // Hide other door
+        doorSets.forEach(other => {
+          if (other !== set) other.classList.add('hidden');
+        });
+
+      } else {
+        // Closing the door
+        door.classList.remove('flipped');
+        openDoor = null;
+        hero.classList.remove('show');
+
+        // Reveal all doors
+        doorSets.forEach(s => s.classList.remove('hidden'));
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
