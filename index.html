@@ -2,41 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mackley</title>
+  <title>Mackley — Breathe</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Favicons -->
-  <link rel="icon" href="images/icon_dark.png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="images/icon_light.png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="images/icon_dark.png">
+  <!-- Favicons (dark / light variants) -->
+  <link rel="icon" type="image/png" href="images/icon_dark.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="images/icon_light.png" media="(prefers-color-scheme: dark)">
 
   <style>
     * {
       box-sizing: border-box;
     }
 
-    html,
+    :root {
+      --dot-size-min: 40px;
+      --dot-size-max: 80px;
+    }
+
     body {
       margin: 0;
       padding: 0;
-      height: 100%;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, -webkit-system-font,
+        "Segoe UI", sans-serif;
       background: #000;
       color: #fff;
-    }
-
-    .main {
-      position: relative;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      position: relative;
       overflow: hidden;
     }
 
-    /* fullscreen background image */
+    /* full-screen background that swaps images */
     .hero {
       position: fixed;
       inset: 0;
@@ -46,7 +42,7 @@
       background-size: cover;
       background-repeat: no-repeat;
       opacity: 0;
-      transition: opacity 0.7s ease;
+      transition: opacity 0.6s ease;
       z-index: 0;
       pointer-events: none;
     }
@@ -55,201 +51,187 @@
       opacity: 1;
     }
 
-    /* center stack: dot + BREATHE */
-    .prompt {
-      flex: 1;
+    /* shell for centering content + pinning footer */
+    .shell {
       position: relative;
       z-index: 1;
+      flex: 1;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
+      padding: 40px 16px 16px;
+      width: 100%;
+    }
+
+    /* main center stack: dot + text */
+    .scene {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
-      gap: 12px;
-      padding: clamp(24px, 4vw, 40px);
+      align-items: center;
+      gap: 10px;
       text-align: center;
     }
 
+    /* the dot button */
     .dot-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: clamp(40px, 7vw, 72px);
-      height: clamp(40px, 7vw, 72px);
-      border-radius: 999px;
-      border: 2px solid #ffffff;
-      background: rgba(255, 255, 255, 0.04);
-      color: #ffffff;
-      font-size: clamp(20px, 3vw, 30px);
+      border: none;
+      background: transparent;
+      padding: 0;
       cursor: pointer;
-      box-shadow:
-        0 18px 50px rgba(0, 0, 0, 0.9),
-        0 0 0 rgba(255, 255, 255, 0);
-      transition:
-        transform 0.35s ease,
-        box-shadow 0.35s ease,
-        background 0.35s ease;
-    }
-
-    .dot-button:hover,
-    .dot-button:focus-visible {
-      transform: translateY(-4px) scale(1.05);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow:
-        0 26px 70px rgba(0, 0, 0, 1),
-        0 0 26px rgba(255, 255, 255, 0.28);
       outline: none;
     }
 
-    .dot-button:active {
-      transform: translateY(0) scale(0.97);
-      box-shadow:
-        0 14px 40px rgba(0, 0, 0, 0.75),
-        0 0 10px rgba(255, 255, 255, 0.18);
+    .dot {
+      width: clamp(var(--dot-size-min), 10vw, var(--dot-size-max));
+      height: clamp(var(--dot-size-min), 10vw, var(--dot-size-max));
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+      transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.25s ease;
     }
 
-    .breathe-label {
-      text-decoration: none;
-      text-transform: uppercase;
-      letter-spacing: 0.26em;
-      font-size: 0.78rem;
+    .dot-symbol {
+      font-size: clamp(18px, 4vw, 28px);
+      line-height: 1;
       color: #ffffff;
+      transition: color 0.25s ease, transform 0.25s ease;
     }
 
-    .breathe-label:hover {
-      text-decoration: underline;
+    /* hover state (triggered via JS on dot or label hover) */
+    body.hovering-control .dot {
+      background-color: #ffffff;
+      border-color: #ffffff;
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.85);
+      transform: scale(1.04);
+    }
+
+    body.hovering-control .dot-symbol {
+      color: #000000;
+      transform: scale(1.05);
+    }
+
+    /* label under the dot */
+    .label-link {
+      margin-top: 8px;
+      font-size: 14px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #ffffff;
+      position: relative;
+      padding-bottom: 2px;
+    }
+
+    .label-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 1px;
+      background-color: #ffffff;
+      transition: width 0.16s ease-out;
+    }
+
+    .label-link:hover::after,
+    .label-link:focus-visible::after {
+      width: 100%;
+    }
+
+    /* message text: ● breathe ∞ potential */
+    .message {
+      margin-top: 18px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .message span.symbol {
+      font-size: 14px;
+      vertical-align: middle;
     }
 
     /* footer pinned to bottom */
     .footer {
-      position: relative;
-      z-index: 1;
-      padding: 14px clamp(18px, 4vw, 40px) 22px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
+      width: 100%;
+      text-align: center;
+      padding: 12px 16px 20px;
+      font-size: 11px;
       color: #ffffff;
     }
 
-    .footer-inner {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-    }
-
-    .footer-brand {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .footer-logo {
-      height: 18px;
-      width: auto;
-      display: block;
-    }
-
-    .footer-nav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      font-size: 0.72rem;
-      letter-spacing: 0.22em;
+    .footer-link {
+      color: #ffffff;
+      text-decoration: none;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
 
-    .footer-nav a {
-      color: #ffffff;
-      text-decoration: none;
-    }
-
-    .footer-nav a:hover {
+    .footer-link:hover,
+    .footer-link:focus-visible {
       text-decoration: underline;
     }
 
-    .footer-divider {
-      opacity: 0.7;
-    }
-
-    .footer-meta {
-      font-size: 0.65rem;
-      color: #777777;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .footer-meta a {
-      color: #999999;
-      text-decoration: none;
-    }
-
-    .footer-meta a:hover {
-      text-decoration: underline;
-    }
-
+    /* small screens */
     @media (max-width: 600px) {
-      .footer-inner {
-        flex-direction: column;
-        gap: 10px;
+      .shell {
+        padding-top: 32px;
       }
 
-      .footer-nav {
-        font-size: 0.68rem;
-        letter-spacing: 0.18em;
+      .message {
+        margin-top: 14px;
+        font-size: 11px;
       }
 
-      .breathe-label {
-        font-size: 0.7rem;
+      .footer {
+        font-size: 10px;
       }
     }
   </style>
 </head>
-<body>
-  <main class="main">
-    <div class="hero" aria-hidden="true"></div>
 
-    <section class="prompt" aria-label="Breathe entry">
-      <button
-        class="dot-button"
-        type="button"
-        aria-label="Change background image"
-      >
-        ●
+<body>
+
+  <!-- background layer -->
+  <div class="hero"></div>
+
+  <!-- foreground content -->
+  <div class="shell">
+    <main class="scene">
+      <button class="dot-button" aria-label="Toggle breathe / potential">
+        <span class="dot">
+          <span class="dot-symbol">●</span>
+        </span>
       </button>
-      <a class="breathe-label" href="/clear">BREATHE</a>
-    </section>
+
+      <!-- product link (text changes, href stays product page) -->
+      <a href="/clear" class="label-link" id="label-text">breathe</a>
+
+      <div class="message">
+        <span class="symbol">●</span> breathe
+        &nbsp;&nbsp;
+        <span class="symbol">∞</span> potential
+      </div>
+    </main>
 
     <footer class="footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <img
-            src="images/logo_light.png"
-            alt="Mackley"
-            class="footer-logo"
-          />
-        </div>
-        <nav class="footer-nav" aria-label="Footer navigation">
-          <a href="/clear">BREATHE</a>
-          <span class="footer-divider">•</span>
-          <a href="/contact">CONTACT</a>
-        </nav>
-      </div>
-      <div class="footer-meta">
-        <span>© 2025 Mackley</span>
-        <a href="/legal">Legal</a>
-      </div>
+      <a href="/clear" class="footer-link">original neti pot</a>
     </footer>
-  </main>
+  </div>
 
   <script>
-    const hero = document.querySelector(".hero");
-    const dotButton = document.querySelector(".dot-button");
-
     const images = [
       "images/fight.png",
       "images/run.png",
@@ -257,26 +239,78 @@
       "images/surf.png"
     ];
 
-    let currentIndex = -1;
+    const hero = document.querySelector(".hero");
+    const dotButton = document.querySelector(".dot-button");
+    const dotSymbol = document.querySelector(".dot-symbol");
+    const labelLink = document.getElementById("label-text");
+
+    let currentImageIndex = -1;
+    let currentMode = "breathe"; // or "potential"
 
     function setRandomBackground() {
-      if (!hero) return;
+      if (!images.length) return;
 
       let nextIndex;
-      if (images.length === 0) return;
-
       do {
         nextIndex = Math.floor(Math.random() * images.length);
-      } while (images.length > 1 && nextIndex === currentIndex);
+      } while (images.length > 1 && nextIndex === currentImageIndex);
 
-      currentIndex = nextIndex;
-      hero.style.backgroundImage = `url('${images[currentIndex]}')`;
+      currentImageIndex = nextIndex;
+      hero.style.backgroundImage = `url("${images[currentImageIndex]}")`;
       hero.classList.add("show");
     }
 
-    if (dotButton) {
-      dotButton.addEventListener("click", setRandomBackground);
+    function clearBackground() {
+      hero.classList.remove("show");
     }
+
+    function handleHoverEnter() {
+      document.body.classList.add("hovering-control");
+      setRandomBackground();
+    }
+
+    function handleHoverLeave() {
+      document.body.classList.remove("hovering-control");
+      clearBackground();
+    }
+
+    // hover effects from dot OR label
+    dotButton.addEventListener("mouseenter", handleHoverEnter);
+    dotButton.addEventListener("mouseleave", handleHoverLeave);
+    labelLink.addEventListener("mouseenter", handleHoverEnter);
+    labelLink.addEventListener("mouseleave", handleHoverLeave);
+
+    // tap / click on the dot toggles state between breathe / potential
+    dotButton.addEventListener("click", () => {
+      if (currentMode === "breathe") {
+        currentMode = "potential";
+        dotSymbol.textContent = "∞";
+        labelLink.textContent = "potential";
+      } else {
+        currentMode = "breathe";
+        dotSymbol.textContent = "●";
+        labelLink.textContent = "breathe";
+      }
+    });
+
+    // basic touch support: trigger hover effect on touchstart, end on touchend
+    dotButton.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleHoverEnter();
+    }, { passive: false });
+
+    dotButton.addEventListener("touchend", () => {
+      handleHoverLeave();
+    });
+
+    labelLink.addEventListener("touchstart", (e) => {
+      // allow navigation but still do the hover effect momentarily
+      handleHoverEnter();
+    }, { passive: true });
+
+    labelLink.addEventListener("touchend", () => {
+      handleHoverLeave();
+    });
   </script>
 </body>
 </html>
