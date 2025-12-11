@@ -1,227 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Mackley</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>MACKLEY — Original Neti Pot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Favicons -->
-<link rel="icon" type="image/png" href="images/icon_dark.png" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/png" href="images/icon_light.png" media="(prefers-color-scheme: light)">
+  <!-- Favicons (dark/light) -->
+  <link rel="icon" href="images/icon_dark.png" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="images/icon_light.png" media="(prefers-color-scheme: dark)" />
 
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  body {
-    background: #000;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    height: 100vh;
-    overflow: hidden;
-    color: #fff;
-  }
+    html,
+    body {
+      height: 100%;
+    }
 
-  /* BACKGROUND IMAGE */
-  .hero {
-    position: fixed;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    transition: opacity .5s ease;
-    pointer-events: none;
-  }
-  .hero.show { opacity: 1; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
 
-  /* CENTER WRAPPER */
-  .center-wrap {
-    height: 100vh;
-    width: 100vw;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    position:relative;
-    z-index:3;
-  }
+    /* ===== HERO BACKGROUND ===== */
 
-  /* DOT BUTTON */
-  .dot-btn {
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    border:2px solid #fff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    cursor:pointer;
-    transition: all .3s ease;
-    position:relative;
-  }
+    .hero-bg {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 0.7s ease, filter 0.7s ease;
+      z-index: 0;
+    }
 
-  .dot-inner {
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    background:#fff;
-    transition: all .3s ease;
-  }
+    .hero-bg.show {
+      opacity: 1;
+      filter: brightness(0.95);
+    }
 
-  .label {
-    margin-top:10px;
-    font-size:14px;
-    letter-spacing:0.06em;
-    text-align:center;
-    transition: color .3s ease;
-  }
+    /* ===== CENTERED DOT / INFINITY ===== */
 
-  /* HOVER STATE — PREVIEW */
-  .dot-btn:hover {
-    background:#fff;
-    border-color:#fff;
-  }
-  .dot-btn:hover .dot-inner {
-    transform:scale(0);
-  }
+    .hero-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      pointer-events: none; /* re-enabled on child */
+    }
 
-  .dot-btn.hover-mode .dot-inner {
-    transform:scale(0);
-  }
+    .pulse-wrapper {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
 
-  /* WHEN DOT IS “∞ MODE” */
-  .dot-btn.infinity {
-    background:#fff;
-    border-color:#fff;
-  }
-  .dot-btn.infinity .dot-inner {
-    display:none;
-  }
-  .infinity-symbol {
-    font-size:26px;
-    font-weight:600;
-    color:#000; /* BLACK ON IMAGE STATE */
-    opacity: 0;
-    transition: opacity .3s ease;
-  }
-  .dot-btn.infinity .infinity-symbol {
-    opacity:1;
-  }
+    .pulse {
+      width: min(72px, 18vw);
+      height: min(72px, 18vw);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition:
+        box-shadow 0.35s ease,
+        background-color 0.35s ease,
+        border-color 0.35s ease,
+        transform 0.35s ease;
+      background-color: transparent;
+      backdrop-filter: blur(4px);
+      position: relative;
+    }
 
-  .label.infinity {
-    color:#000; /* BLACK LABEL ON IMAGE STATE */
-  }
+    .pulse-inner-dot,
+    .pulse-inner-symbol {
+      font-size: 18px;
+      line-height: 1;
+      transition:
+        color 0.3s ease,
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    }
 
-  /* FOOTER */
-  footer {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    text-align:center;
-    padding:28px 0 16px;
-    z-index:5;
-    background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0));
-  }
+    /* Base: white dot */
+    .pulse-inner-dot {
+      color: #ffffff;
+    }
 
-  footer img {
-    height:13px;
-    vertical-align:middle;
-    margin-right:10px;
-    opacity:.9;
-  }
+    /* Hover: black infinity (initially hidden) */
+    .pulse-inner-symbol {
+      position: absolute;
+      color: #000000;
+      opacity: 0;
+      transform: scale(0.9);
+    }
 
-  footer a {
-    color:#fff;
-    font-size:12px;
-    text-decoration:none;
-    letter-spacing:0.08em;
-  }
-  footer a:hover {
-    text-decoration:underline;
-  }
+    .pulse-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-decoration: none;
+      transition:
+        color 0.3s ease,
+        opacity 0.3s ease;
+    }
 
-  .copyright {
-    margin-top:6px;
-    font-size:10px;
-    opacity:.55;
-  }
-</style>
+    /* Hover state: fill circle white, show ∞, text black */
+    .pulse-wrapper:hover .pulse {
+      background: #ffffff;
+      border-color: #ffffff;
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.75);
+      transform: scale(1.02);
+    }
+
+    .pulse-wrapper:hover .pulse-inner-dot {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    .pulse-wrapper:hover .pulse-inner-symbol {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .pulse-wrapper:hover .pulse-label {
+      color: #000000;
+    }
+
+    /* ===== FOOTER + GRADIENT ===== */
+
+    .footer-shell {
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .footer-gradient {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0));
+    }
+
+    .footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.88);
+      pointer-events: auto;
+    }
+
+    .footer-top {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .footer-logo {
+      height: 14px;
+    }
+
+    .footer-link {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    .footer-meta {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.55);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      .footer-top {
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .footer-gradient {
+        height: 160px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="hero" id="hero"></div>
+  <!-- Randomized hero background -->
+  <div class="hero-bg" id="heroBg"></div>
 
-<div class="center-wrap">
+  <!-- Center circle / text -->
+  <main class="hero-overlay">
+    <div class="pulse-wrapper" id="pulseWrapper">
+      <button class="pulse" id="pulseButton" aria-label="Breathe">
+        <span class="pulse-inner-dot">●</span>
+        <span class="pulse-inner-symbol">∞</span>
+      </button>
+      <a href="#" id="pulseLabelLink" class="pulse-label">Breathe</a>
+    </div>
+  </main>
 
-  <!-- DOT -->
-  <div class="dot-btn" id="dot">
-    <div class="dot-inner"></div>
-    <div class="infinity-symbol">∞</div>
+  <!-- Footer + gradient -->
+  <div class="footer-shell">
+    <div class="footer-gradient"></div>
+    <footer class="footer">
+      <div class="footer-top">
+        <img src="images/logo_light.png" alt="MACKLEY" class="footer-logo" />
+        <a href="#" class="footer-link" id="footerProduct">The Original Neti Pot</a>
+        <span>•</span>
+        <a href="/contact" class="footer-link">Contact</a>
+      </div>
+      <div class="footer-meta">
+        <span>© 2025 Mackley</span>
+        <a href="/legal" class="footer-link">Legal</a>
+      </div>
+    </footer>
   </div>
 
-  <div class="label" id="label">BREATHE</div>
+  <script>
+    const heroBg = document.getElementById('heroBg');
+    const pulseWrapper = document.getElementById('pulseWrapper');
+    const pulseButton = document.getElementById('pulseButton');
+    const labelLink = document.getElementById('pulseLabelLink');
+    const footerProduct = document.getElementById('footerProduct');
 
-</div>
+    // Update this to your actual product page URL
+    const PRODUCT_URL = "/product"; // e.g. "/breathe" or full Amazon URL
 
-<!-- FOOTER -->
-<footer>
-  <img src="images/logo_light.png" alt="Mackley">
-  <a href="/product">THE ORIGINAL NETI POT</a> · 
-  <a href="/contact">CONTACT</a>
-  <div class="copyright">© 2025 Mackley &nbsp; <a href="/legal">Legal</a></div>
-</footer>
+    const images = [
+      "images/fight.png",
+      "images/run.png",
+      "images/dive.png",
+      "images/surf.png"
+      "images/meditate.png"
 
-<script>
-const hero = document.getElementById("hero");
-const dot = document.getElementById("dot");
-const label = document.getElementById("label");
+    ];
 
-const images = [
-  "images/fight.png",
-  "images/run.png",
-  "images/dive.png",
-  "images/surf.png"
-];
+    function randomImage() {
+      const index = Math.floor(Math.random() * images.length);
+      return images[index];
+    }
 
-let isInfinity = false;
+    // Hover: change BG + text -> Potential
+    pulseWrapper.addEventListener("mouseenter", () => {
+      heroBg.style.backgroundImage = `url('${randomImage()}')`;
+      heroBg.classList.add("show");
+      labelLink.textContent = "Potential";
+      pulseButton.setAttribute("aria-label", "Potential");
+    });
 
-/* HOVER PREVIEW */
-dot.addEventListener("mouseenter", () => {
-  if (!isInfinity) {
-    const img = images[Math.floor(Math.random()*images.length)];
-    hero.style.backgroundImage = `url('${img}')`;
-    hero.classList.add("show");
-  }
-});
+    // Leave: back to black + Breathe
+    pulseWrapper.addEventListener("mouseleave", () => {
+      heroBg.classList.remove("show");
+      labelLink.textContent = "Breathe";
+      pulseButton.setAttribute("aria-label", "Breathe");
+    });
 
-dot.addEventListener("mouseleave", () => {
-  if (!isInfinity) {
-    hero.classList.remove("show");
-  }
-});
+    function goToProduct() {
+      window.location.href = PRODUCT_URL;
+    }
 
-/* CLICK — SWITCH TO ∞ MODE */
-dot.addEventListener("click", () => {
-  isInfinity = true;
-
-  dot.classList.add("infinity");
-  label.classList.add("infinity");
-
-  label.textContent = "POTENTIAL";
-
-  // show background persistently
-  const img = images[Math.floor(Math.random()*images.length)];
-  hero.style.backgroundImage = `url('${img}')`;
-  hero.classList.add("show");
-});
-
-/* CLICK TO GO TO PRODUCT PAGE */
-label.addEventListener("click", () => {
-  window.location.href = "/product";
-});
-dot.addEventListener("click", () => {
-  if (isInfinity) window.location.href = "/product";
-});
-</script>
-
+    // Click dot or text -> product
+    pulseButton.addEventListener("click", goToProduct);
+    labelLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      goToProduct();
+    });
+    footerProduct.addEventListener("click", (event) => {
+      event.preventDefault();
+      goToProduct();
+    });
+  </script>
 </body>
 </html>
