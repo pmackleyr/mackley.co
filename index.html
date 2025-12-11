@@ -1,303 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mackley</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Mackley</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Favicons -->
-  <link rel="icon" type="image/png" href="images/icon_dark.png" media="(prefers-color-scheme: light)">
-  <link rel="icon" type="image/png" href="images/icon_light.png" media="(prefers-color-scheme: dark)">
+<!-- Favicons -->
+<link rel="icon" type="image/png" href="images/icon_dark.png" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="images/icon_light.png" media="(prefers-color-scheme: light)">
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
+  body {
+    background: #000;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    color: #fff;
+  }
 
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #000;
-      color: #fff;
-      position: relative;
-      overflow: hidden;
-    }
+  /* BACKGROUND IMAGE */
+  .hero {
+    position: fixed;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity .5s ease;
+    pointer-events: none;
+  }
+  .hero.show { opacity: 1; }
 
-    /* Fullscreen background image layer */
-    .hero {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      opacity: 0;
-      transition: opacity 0.7s ease;
-      z-index: 0;
-      pointer-events: none;
-    }
+  /* CENTER WRAPPER */
+  .center-wrap {
+    height: 100vh;
+    width: 100vw;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    position:relative;
+    z-index:3;
+  }
 
-    .hero.show {
-      opacity: 1;
-    }
+  /* DOT BUTTON */
+  .dot-btn {
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    border:2px solid #fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    transition: all .3s ease;
+    position:relative;
+  }
 
-    /* Centered main content */
-    .main {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 0 16px;
-    }
+  .dot-inner {
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#fff;
+    transition: all .3s ease;
+  }
 
-    .orb-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
+  .label {
+    margin-top:10px;
+    font-size:14px;
+    letter-spacing:0.06em;
+    text-align:center;
+    transition: color .3s ease;
+  }
 
-    .orb {
-      width: clamp(56px, 7.5vw, 80px);
-      height: clamp(56px, 7.5vw, 80px);
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      outline: none;
-      box-shadow: 0 0 0 rgba(255, 255, 255, 0);
-      transition:
-        background 0.35s ease,
-        box-shadow 0.35s ease,
-        transform 0.35s ease,
-        border-color 0.35s ease;
-    }
+  /* HOVER STATE — PREVIEW */
+  .dot-btn:hover {
+    background:#fff;
+    border-color:#fff;
+  }
+  .dot-btn:hover .dot-inner {
+    transform:scale(0);
+  }
 
-    .orb-icon {
-      font-size: 22px;
-      color: #ffffff;
-      transition: color 0.35s ease;
-      line-height: 1;
-    }
+  .dot-btn.hover-mode .dot-inner {
+    transform:scale(0);
+  }
 
-    .orb-label {
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: #ffffff;
-      transition: color 0.35s ease;
-    }
+  /* WHEN DOT IS “∞ MODE” */
+  .dot-btn.infinity {
+    background:#fff;
+    border-color:#fff;
+  }
+  .dot-btn.infinity .dot-inner {
+    display:none;
+  }
+  .infinity-symbol {
+    font-size:26px;
+    font-weight:600;
+    color:#000; /* BLACK ON IMAGE STATE */
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .dot-btn.infinity .infinity-symbol {
+    opacity:1;
+  }
 
-    /* Hover state — fill white, icon & label go black */
-    .orb-wrapper:hover .orb,
-    .orb-wrapper.activated .orb {
-      background: #ffffff;
-      border-color: #ffffff;
-      box-shadow: 0 0 26px rgba(255, 255, 255, 0.75);
-      transform: translateY(-1px) scale(1.02);
-    }
+  .label.infinity {
+    color:#000; /* BLACK LABEL ON IMAGE STATE */
+  }
 
-    .orb-wrapper:hover .orb-icon,
-    .orb-wrapper.activated .orb-icon {
-      color: #000000;
-    }
+  /* FOOTER */
+  footer {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    text-align:center;
+    padding:28px 0 16px;
+    z-index:5;
+    background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0));
+  }
 
-    .orb-wrapper:hover .orb-label,
-    .orb-wrapper.activated .orb-label {
-      color: #000000;
-    }
+  footer img {
+    height:13px;
+    vertical-align:middle;
+    margin-right:10px;
+    opacity:.9;
+  }
 
-    /* Footer */
-    .footer {
-      position: fixed;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      z-index: 2;
-      background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.75),
-        rgba(0, 0, 0, 0)
-      );
-      padding: 18px 24px 10px;
-      color: rgba(255, 255, 255, 0.85);
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
+  footer a {
+    color:#fff;
+    font-size:12px;
+    text-decoration:none;
+    letter-spacing:0.08em;
+  }
+  footer a:hover {
+    text-decoration:underline;
+  }
 
-    .footer-inner {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .footer-logo {
-      height: 16px;
-      width: auto;
-      display: block;
-    }
-
-    .footer-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 10px;
-    }
-
-    .footer-nav a {
-      color: rgba(255, 255, 255, 0.9);
-      text-decoration: none;
-    }
-
-    .footer-nav a:hover {
-      text-decoration: underline;
-    }
-
-    .footer-dot {
-      opacity: 0.6;
-    }
-
-    .footer-meta {
-      display: flex;
-      gap: 10px;
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.65);
-    }
-
-    .footer-meta a {
-      color: rgba(255, 255, 255, 0.75);
-      text-decoration: none;
-    }
-
-    .footer-meta a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 480px) {
-      .footer {
-        padding: 14px 14px 8px;
-      }
-
-      .footer-inner {
-        flex-direction: column;
-        gap: 8px;
-      }
-    }
-  </style>
+  .copyright {
+    margin-top:6px;
+    font-size:10px;
+    opacity:.55;
+  }
+</style>
 </head>
 
 <body>
-  <!-- Background image layer -->
-  <div class="hero"></div>
 
-  <!-- Centered circle + text -->
-  <main class="main">
-    <div class="orb-wrapper">
-      <button class="orb" type="button" aria-label="Breathe">
-        <span class="orb-icon">●</span>
-      </button>
-      <!-- Both states link to product page -->
-      <a href="/original-neti-pot" class="orb-label">Breathe</a>
-    </div>
-  </main>
+<div class="hero" id="hero"></div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <img src="images/logo_light.png" alt="Mackley" class="footer-logo" />
-      <nav class="footer-nav">
-        <a href="/original-neti-pot">Original Neti Pot</a>
-        <span class="footer-dot">·</span>
-        <a href="/contact">Contact</a>
-      </nav>
-    </div>
-    <div class="footer-meta">
-      <span>© 2025 Mackley</span>
-      <a href="/legal">Legal</a>
-    </div>
-  </footer>
+<div class="center-wrap">
 
-  <script>
-    const hero = document.querySelector('.hero');
-    const orbWrapper = document.querySelector('.orb-wrapper');
-    const orb = document.querySelector('.orb');
-    const orbIcon = document.querySelector('.orb-icon');
-    const orbLabel = document.querySelector('.orb-label');
+  <!-- DOT -->
+  <div class="dot-btn" id="dot">
+    <div class="dot-inner"></div>
+    <div class="infinity-symbol">∞</div>
+  </div>
 
-    const images = [
-      'images/fight.png',
-      'images/run.png',
-      'images/dive.png',
-      'images/surf.png'
-    ];
+  <div class="label" id="label">BREATHE</div>
 
-    let isActivated = false;
+</div>
 
-    function setRandomBackground() {
-      const img = images[Math.floor(Math.random() * images.length)];
-      hero.style.backgroundImage = `url('${img}')`;
-    }
+<!-- FOOTER -->
+<footer>
+  <img src="images/logo_light.png" alt="Mackley">
+  <a href="/product">THE ORIGINAL NETI POT</a> · 
+  <a href="/contact">CONTACT</a>
+  <div class="copyright">© 2025 Mackley &nbsp; <a href="/legal">Legal</a></div>
+</footer>
 
-    // Hover: random background, fade in
-    orbWrapper.addEventListener('mouseenter', () => {
-      setRandomBackground();
-      hero.classList.add('show');
-    });
+<script>
+const hero = document.getElementById("hero");
+const dot = document.getElementById("dot");
+const label = document.getElementById("label");
 
-    // Leave: if not activated, fade back to black
-    orbWrapper.addEventListener('mouseleave', () => {
-      if (!isActivated) {
-        hero.classList.remove('show');
-        hero.style.backgroundImage = 'none';
-      }
-    });
+const images = [
+  "images/fight.png",
+  "images/run.png",
+  "images/dive.png",
+  "images/surf.png"
+];
 
-    // Click the circle: toggle between ● Breathe and ∞ Potential
-    orb.addEventListener('click', (event) => {
-      event.preventDefault();
+let isInfinity = false;
 
-      isActivated = !isActivated;
+/* HOVER PREVIEW */
+dot.addEventListener("mouseenter", () => {
+  if (!isInfinity) {
+    const img = images[Math.floor(Math.random()*images.length)];
+    hero.style.backgroundImage = `url('${img}')`;
+    hero.classList.add("show");
+  }
+});
 
-      if (isActivated) {
-        // Lock in "∞ potential" state
-        orbWrapper.classList.add('activated');
-        orbIcon.textContent = '∞';
-        orb.setAttribute('aria-label', 'Potential');
-        orbLabel.textContent = 'Potential';
+dot.addEventListener("mouseleave", () => {
+  if (!isInfinity) {
+    hero.classList.remove("show");
+  }
+});
 
-        if (!hero.style.backgroundImage || hero.style.backgroundImage === 'none') {
-          setRandomBackground();
-        }
-        hero.classList.add('show');
-      } else {
-        // Return to base "● breathe" state
-        orbWrapper.classList.remove('activated');
-        orbIcon.textContent = '●';
-        orb.setAttribute('aria-label', 'Breathe');
-        orbLabel.textContent = 'Breathe';
+/* CLICK — SWITCH TO ∞ MODE */
+dot.addEventListener("click", () => {
+  isInfinity = true;
 
-        hero.classList.remove('show');
-        hero.style.backgroundImage = 'none';
-      }
-    });
-  </script>
+  dot.classList.add("infinity");
+  label.classList.add("infinity");
+
+  label.textContent = "POTENTIAL";
+
+  // show background persistently
+  const img = images[Math.floor(Math.random()*images.length)];
+  hero.style.backgroundImage = `url('${img}')`;
+  hero.classList.add("show");
+});
+
+/* CLICK TO GO TO PRODUCT PAGE */
+label.addEventListener("click", () => {
+  window.location.href = "/product";
+});
+dot.addEventListener("click", () => {
+  if (isInfinity) window.location.href = "/product";
+});
+</script>
+
 </body>
 </html>
