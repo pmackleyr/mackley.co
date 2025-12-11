@@ -2,31 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mackley — Breathe</title>
+  <title>Mackley</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Favicons -->
-  <link rel="icon" href="images/icon_dark.png" />
-  <link rel="icon" href="images/icon_dark.png" media="(prefers-color-scheme: dark)" />
-  <link rel="icon" href="images/icon_light.png" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/png" href="images/icon_dark.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="images/icon_light.png" media="(prefers-color-scheme: dark)">
 
   <style>
-    *,
-    *::before,
-    *::after {
+    * {
       box-sizing: border-box;
     }
 
-    :root {
-      --circle-size: clamp(60px, 10vw, 80px);
-      --circle-border: 1.5px;
-      --bg-color: #000000;
-      --text-color: #ffffff;
-      --muted: #9aa3bb;
-    }
-
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
@@ -34,157 +22,152 @@
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
+      background: #000;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
     }
 
-    /* === BACKGROUND LAYER === */
-
+    /* Fullscreen background image layer */
     .hero {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
-      background-color: #000;
       background-position: center;
       background-size: cover;
       background-repeat: no-repeat;
       opacity: 0;
       transition: opacity 0.7s ease;
-      pointer-events: none;
       z-index: 0;
+      pointer-events: none;
     }
 
     .hero.show {
       opacity: 1;
     }
 
-    /* === MAIN / CTA === */
-
+    /* Centered main content */
     .main {
       position: relative;
-      flex: 1;
+      z-index: 1;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px 16px 80px; /* bottom space for footer */
-      z-index: 1;
       text-align: center;
+      padding: 0 16px;
     }
 
-    .cta-wrapper {
-      display: inline-flex;
+    .orb-wrapper {
+      display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .cta {
-      border: none;
-      background: transparent;
-      padding: 0;
-      cursor: pointer;
-      color: inherit;
-      font: inherit;
-      outline: none;
-    }
-
-    .cta-circle {
-      width: var(--circle-size);
-      height: var(--circle-size);
+    .orb {
+      width: clamp(56px, 7.5vw, 80px);
+      height: clamp(56px, 7.5vw, 80px);
       border-radius: 999px;
-      border: var(--circle-border) solid rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: transparent;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9);
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 0 0 rgba(255, 255, 255, 0);
       transition:
-        border-color 0.25s ease,
-        box-shadow 0.25s ease,
-        transform 0.25s ease,
-        background-color 0.25s ease;
-      background-color: rgba(0, 0, 0, 0.5);
+        background 0.35s ease,
+        box-shadow 0.35s ease,
+        transform 0.35s ease,
+        border-color 0.35s ease;
     }
 
-    .cta-symbol {
+    .orb-icon {
       font-size: 22px;
+      color: #ffffff;
+      transition: color 0.35s ease;
       line-height: 1;
-      color: rgba(255, 255, 255, 0.75);
-      transition:
-        color 0.2s ease,
-        transform 0.2s ease;
     }
 
-    .cta-label {
-      display: block;
-      margin-top: 8px;
+    .orb-label {
       font-size: 11px;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      color: #ffffff;
+      transition: color 0.35s ease;
     }
 
-    /* Hover / focus visual lift */
-    .cta.hovering .cta-circle,
-    .cta:focus-visible .cta-circle {
+    /* Hover state — fill white, icon & label go black */
+    .orb-wrapper:hover .orb,
+    .orb-wrapper.activated .orb {
+      background: #ffffff;
       border-color: #ffffff;
-      box-shadow: 0 0 28px rgba(255, 255, 255, 0.6);
-      transform: scale(1.05);
-      background-color: rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 26px rgba(255, 255, 255, 0.75);
+      transform: translateY(-1px) scale(1.02);
     }
 
-    .cta.hovering .cta-symbol,
-    .cta:focus-visible .cta-symbol {
-      color: #ffffff;
-      transform: scale(1.05);
+    .orb-wrapper:hover .orb-icon,
+    .orb-wrapper.activated .orb-icon {
+      color: #000000;
     }
 
-    /* === FOOTER === */
+    .orb-wrapper:hover .orb-label,
+    .orb-wrapper.activated .orb-label {
+      color: #000000;
+    }
 
+    /* Footer */
     .footer {
-      position: relative;
-      z-index: 1;
-      padding: 12px 20px 18px;
-      color: #ffffff;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      z-index: 2;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75),
+        rgba(0, 0, 0, 0)
+      );
+      padding: 18px 24px 10px;
+      color: rgba(255, 255, 255, 0.85);
       font-size: 11px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
-    .footer-top {
+    .footer-inner {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
+      gap: 24px;
     }
 
     .footer-logo {
-      height: 18px;
+      height: 16px;
       width: auto;
       display: block;
     }
 
     .footer-nav {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       font-size: 10px;
     }
 
-    .footer-link {
-      color: #ffffff;
+    .footer-nav a {
+      color: rgba(255, 255, 255, 0.9);
       text-decoration: none;
     }
 
-    .footer-link:hover {
+    .footer-nav a:hover {
       text-decoration: underline;
     }
 
@@ -192,26 +175,28 @@
       opacity: 0.6;
     }
 
-    .footer-bottom {
+    .footer-meta {
       display: flex;
       gap: 10px;
-      align-items: center;
-      justify-content: center;
       font-size: 10px;
-      color: var(--muted);
+      color: rgba(255, 255, 255, 0.65);
     }
 
-    .footer-legal {
-      color: var(--muted);
+    .footer-meta a {
+      color: rgba(255, 255, 255, 0.75);
       text-decoration: none;
     }
 
-    .footer-legal:hover {
+    .footer-meta a:hover {
       text-decoration: underline;
     }
 
-    @media (max-width: 600px) {
-      .footer-top {
+    @media (max-width: 480px) {
+      .footer {
+        padding: 14px 14px 8px;
+      }
+
+      .footer-inner {
         flex-direction: column;
         gap: 8px;
       }
@@ -220,107 +205,98 @@
 </head>
 
 <body>
-  <!-- Background layer -->
-  <div class="hero" id="hero"></div>
+  <!-- Background image layer -->
+  <div class="hero"></div>
 
-  <!-- Main content -->
+  <!-- Centered circle + text -->
   <main class="main">
-    <div class="cta-wrapper">
-      <button class="cta" id="cta" aria-label="Breathe">
-        <div class="cta-circle">
-          <span class="cta-symbol" id="ctaSymbol">●</span>
-        </div>
-        <span class="cta-label" id="ctaLabel">breathe</span>
+    <div class="orb-wrapper">
+      <button class="orb" type="button" aria-label="Breathe">
+        <span class="orb-icon">●</span>
       </button>
+      <!-- Both states link to product page -->
+      <a href="/original-neti-pot" class="orb-label">Breathe</a>
     </div>
   </main>
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="footer-top">
+    <div class="footer-inner">
       <img src="images/logo_light.png" alt="Mackley" class="footer-logo" />
-
-      <nav class="footer-nav" aria-label="Footer navigation">
-        <a href="product.html" class="footer-link">The Original Neti Pot</a>
-        <span class="footer-dot">•</span>
-        <a href="contact.html" class="footer-link">Contact</a>
+      <nav class="footer-nav">
+        <a href="/original-neti-pot">Original Neti Pot</a>
+        <span class="footer-dot">·</span>
+        <a href="/contact">Contact</a>
       </nav>
     </div>
-
-    <div class="footer-bottom">
+    <div class="footer-meta">
       <span>© 2025 Mackley</span>
-      <a href="legal.html" class="footer-legal">Legal</a>
+      <a href="/legal">Legal</a>
     </div>
   </footer>
 
   <script>
-    // Background images (local paths)
-    const heroImages = [
-      "images/fight.png",
-      "images/run.png",
-      "images/dive.png",
-      "images/surf.png"
+    const hero = document.querySelector('.hero');
+    const orbWrapper = document.querySelector('.orb-wrapper');
+    const orb = document.querySelector('.orb');
+    const orbIcon = document.querySelector('.orb-icon');
+    const orbLabel = document.querySelector('.orb-label');
+
+    const images = [
+      'images/fight.png',
+      'images/run.png',
+      'images/dive.png',
+      'images/surf.png'
     ];
 
-    const heroEl = document.getElementById("hero");
-    const cta = document.getElementById("cta");
-    const ctaSymbol = document.getElementById("ctaSymbol");
-    const ctaLabel = document.getElementById("ctaLabel");
+    let isActivated = false;
 
-    const PRODUCT_URL = "product.html"; // adjust to your real product page
+    function setRandomBackground() {
+      const img = images[Math.floor(Math.random() * images.length)];
+      hero.style.backgroundImage = `url('${img}')`;
+    }
 
-    let lastImageIndex = -1;
+    // Hover: random background, fade in
+    orbWrapper.addEventListener('mouseenter', () => {
+      setRandomBackground();
+      hero.classList.add('show');
+    });
 
-    function pickRandomImage() {
-      if (heroImages.length === 0) return null;
-      let idx = Math.floor(Math.random() * heroImages.length);
-      // avoid repeating the same image twice in a row, if possible
-      if (heroImages.length > 1) {
-        while (idx === lastImageIndex) {
-          idx = Math.floor(Math.random() * heroImages.length);
-        }
+    // Leave: if not activated, fade back to black
+    orbWrapper.addEventListener('mouseleave', () => {
+      if (!isActivated) {
+        hero.classList.remove('show');
+        hero.style.backgroundImage = 'none';
       }
-      lastImageIndex = idx;
-      return heroImages[idx];
-    }
-
-    function showRandomBackground() {
-      const src = pickRandomImage();
-      if (!src) return;
-      heroEl.style.backgroundImage = `url("${src}")`;
-      heroEl.classList.add("show");
-    }
-
-    function hideBackground() {
-      heroEl.classList.remove("show");
-    }
-
-    // Hover: change ● breathe → ∞ potential and show random background
-    cta.addEventListener("mouseenter", () => {
-      cta.classList.add("hovering");
-      ctaSymbol.textContent = "∞";
-      ctaLabel.textContent = "potential";
-      showRandomBackground();
     });
 
-    // Leave: revert to base state and black background
-    cta.addEventListener("mouseleave", () => {
-      cta.classList.remove("hovering");
-      ctaSymbol.textContent = "●";
-      ctaLabel.textContent = "breathe";
-      hideBackground();
-    });
-
-    // Tap / click: go to product page
-    cta.addEventListener("click", (event) => {
+    // Click the circle: toggle between ● Breathe and ∞ Potential
+    orb.addEventListener('click', (event) => {
       event.preventDefault();
-      window.location.href = PRODUCT_URL;
-    });
 
-    // Also make the label itself act like a link for keyboard users
-    ctaLabel.addEventListener("click", (event) => {
-      event.preventDefault();
-      window.location.href = PRODUCT_URL;
+      isActivated = !isActivated;
+
+      if (isActivated) {
+        // Lock in "∞ potential" state
+        orbWrapper.classList.add('activated');
+        orbIcon.textContent = '∞';
+        orb.setAttribute('aria-label', 'Potential');
+        orbLabel.textContent = 'Potential';
+
+        if (!hero.style.backgroundImage || hero.style.backgroundImage === 'none') {
+          setRandomBackground();
+        }
+        hero.classList.add('show');
+      } else {
+        // Return to base "● breathe" state
+        orbWrapper.classList.remove('activated');
+        orbIcon.textContent = '●';
+        orb.setAttribute('aria-label', 'Breathe');
+        orbLabel.textContent = 'Breathe';
+
+        hero.classList.remove('show');
+        hero.style.backgroundImage = 'none';
+      }
     });
   </script>
 </body>
