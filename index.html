@@ -1,208 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Mackley</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Mackley</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-  * { box-sizing: border-box; }
+  <!-- Favicons -->
+  <link rel="icon" href="images/icon_dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="images/icon_light.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="images/icon_dark.png">
 
-  :root {
-    --door-radius: 10px;
-    --door-width: min(26vw, 180px);
-    --door-height: calc(var(--door-width) * 1.5); /* 2:3 ratio */
-  }
-
-  body {
-    margin: 0;
-    background: #000;
-    color: #fff;
-    height: 100vh;
-    overflow: hidden;
-
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Background image */
-  .hero {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transition: opacity 0.7s ease;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .hero.show { opacity: 1; }
-
-  /* Center container for the doors */
-  .main {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 2000px;
-    position: relative;
-    z-index: 2;
-  }
-
-  .scene {
-    display: flex;
-    gap: min(14vw, 140px); /* DOUBLE spacing */
-    align-items: center;
-  }
-
-  .door-set {
-    width: var(--door-width);
-    height: var(--door-height);
-    position: relative;
-  }
-
-  .swing {
-    width: 100%;
-    height: 100%;
-    border-radius: var(--door-radius);
-    background: #fff;
-    cursor: pointer;
-    transform-style: preserve-3d;
-    transition: transform 0.7s ease, box-shadow 0.4s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  }
-
-  .swing:hover {
-    box-shadow: 0 0 35px rgba(255,255,255,0.7);
-  }
-
-  .swing.flipped {
-    transform: rotateY(-120deg);
-    box-shadow: 0 0 40px rgba(255,255,255,1);
-  }
-
-  /* Hide the other door while one is open */
-  .door-set.hidden {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-  }
-
-  /* FOOTER */
-  footer {
-    width: 100%;
-    text-align: center;
-    padding: 16px 0 8px;
-    font-size: 13px;
-    color: #fff;
-    z-index: 3;
-  }
-
-  footer img {
-    height: 18px;
-    vertical-align: middle;
-    margin-right: 10px;
-  }
-
-  footer a {
-    color: #fff;
-    text-decoration: none;
-    margin: 0 12px;
-  }
-
-  footer a:hover { text-decoration: underline; }
-
-  .legal-line {
-    margin-top: 6px;
-    font-size: 11px;
-    color: #777;
-  }
-
-  @media (max-width: 600px) {
-    :root {
-      --door-width: min(42vw, 160px);
+  <style>
+    * {
+      box-sizing: border-box;
     }
-    .scene { gap: 22vw; }
-  }
-</style>
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #000;
+      color: #fff;
+    }
+
+    .main {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* fullscreen background image */
+    .hero {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 0.7s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .hero.show {
+      opacity: 1;
+    }
+
+    /* center stack: dot + BREATHE */
+    .prompt {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: clamp(24px, 4vw, 40px);
+      text-align: center;
+    }
+
+    .dot-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(40px, 7vw, 72px);
+      height: clamp(40px, 7vw, 72px);
+      border-radius: 999px;
+      border: 2px solid #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+      font-size: clamp(20px, 3vw, 30px);
+      cursor: pointer;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.9),
+        0 0 0 rgba(255, 255, 255, 0);
+      transition:
+        transform 0.35s ease,
+        box-shadow 0.35s ease,
+        background 0.35s ease;
+    }
+
+    .dot-button:hover,
+    .dot-button:focus-visible {
+      transform: translateY(-4px) scale(1.05);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 26px 70px rgba(0, 0, 0, 1),
+        0 0 26px rgba(255, 255, 255, 0.28);
+      outline: none;
+    }
+
+    .dot-button:active {
+      transform: translateY(0) scale(0.97);
+      box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.75),
+        0 0 10px rgba(255, 255, 255, 0.18);
+    }
+
+    .breathe-label {
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.26em;
+      font-size: 0.78rem;
+      color: #ffffff;
+    }
+
+    .breathe-label:hover {
+      text-decoration: underline;
+    }
+
+    /* footer pinned to bottom */
+    .footer {
+      position: relative;
+      z-index: 1;
+      padding: 14px clamp(18px, 4vw, 40px) 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #ffffff;
+    }
+
+    .footer-inner {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-logo {
+      height: 18px;
+      width: auto;
+      display: block;
+    }
+
+    .footer-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .footer-nav a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-divider {
+      opacity: 0.7;
+    }
+
+    .footer-meta {
+      font-size: 0.65rem;
+      color: #777777;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-meta a {
+      color: #999999;
+      text-decoration: none;
+    }
+
+    .footer-meta a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .footer-inner {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .footer-nav {
+        font-size: 0.68rem;
+        letter-spacing: 0.18em;
+      }
+
+      .breathe-label {
+        font-size: 0.7rem;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <main class="main">
+    <div class="hero" aria-hidden="true"></div>
 
-<div class="hero"></div>
+    <section class="prompt" aria-label="Breathe entry">
+      <button
+        class="dot-button"
+        type="button"
+        aria-label="Change background image"
+      >
+        ●
+      </button>
+      <a class="breathe-label" href="/clear">BREATHE</a>
+    </section>
 
-<main class="main">
-  <div class="scene">
-    <div class="door-set" data-img="images/dive.png">
-      <div class="swing"></div>
-    </div>
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img
+            src="images/logo_light.png"
+            alt="Mackley"
+            class="footer-logo"
+          />
+        </div>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="/clear">BREATHE</a>
+          <span class="footer-divider">•</span>
+          <a href="/contact">CONTACT</a>
+        </nav>
+      </div>
+      <div class="footer-meta">
+        <span>© 2025 Mackley</span>
+        <a href="/legal">Legal</a>
+      </div>
+    </footer>
+  </main>
 
-    <div class="door-set" data-img="images/surf.png">
-      <div class="swing"></div>
-    </div>
-  </div>
-</main>
+  <script>
+    const hero = document.querySelector(".hero");
+    const dotButton = document.querySelector(".dot-button");
 
-<footer>
-  <img src="images/logo_light.png" alt="Mackley logo" />
-  <a href="/clear">BREATHE</a>
-  ·
-  <a href="/deep">DEEPER</a>
-  ·
-  <a href="/contact">CONTACT</a>
+    const images = [
+      "images/fight.png",
+      "images/run.png",
+      "images/dive.png",
+      "images/surf.png"
+    ];
 
-  <div class="legal-line">© 2025 Mackley — <a href="/legal">Legal</a></div>
-</footer>
+    let currentIndex = -1;
 
-<script>
-  const hero = document.querySelector('.hero');
-  const doorSets = document.querySelectorAll('.door-set');
+    function setRandomBackground() {
+      if (!hero) return;
 
-  let openDoor = null;
+      let nextIndex;
+      if (images.length === 0) return;
 
-  doorSets.forEach(set => {
-    const door = set.querySelector('.swing');
+      do {
+        nextIndex = Math.floor(Math.random() * images.length);
+      } while (images.length > 1 && nextIndex === currentIndex);
 
-    door.addEventListener('click', () => {
-      const isOpening = !door.classList.contains('flipped');
+      currentIndex = nextIndex;
+      hero.style.backgroundImage = `url('${images[currentIndex]}')`;
+      hero.classList.add("show");
+    }
 
-      // Close any open door
-      if (openDoor && openDoor !== door) {
-        openDoor.classList.remove('flipped');
-      }
-
-      // Reset all door visibility
-      doorSets.forEach(s => s.classList.remove('hidden'));
-
-      if (isOpening) {
-        door.classList.add('flipped');
-        openDoor = door;
-
-        // Background update
-        hero.style.backgroundImage = `url('${set.dataset.img}')`;
-        hero.classList.add('show');
-
-        // Hide other door
-        doorSets.forEach(other => {
-          if (other !== set) other.classList.add('hidden');
-        });
-
-      } else {
-        // Closing the door
-        door.classList.remove('flipped');
-        openDoor = null;
-        hero.classList.remove('show');
-
-        // Reveal all doors
-        doorSets.forEach(s => s.classList.remove('hidden'));
-      }
-    });
-  });
-</script>
-
+    if (dotButton) {
+      dotButton.addEventListener("click", setRandomBackground);
+    }
+  </script>
 </body>
 </html>
