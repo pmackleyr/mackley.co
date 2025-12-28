@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>MACKLEY — Original Neti Pot</title>
+  <title>MACKLEY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Favicons (dark/light) -->
-  <link rel="icon" href="images/icon_dark.png" media="(prefers-color-scheme: light)" />
-  <link rel="icon" href="images/icon_light.png" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="bg/icon_dark.png" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="bg/icon_light.png" media="(prefers-color-scheme: dark)" />
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,98 +28,53 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      opacity: 0;
-      transition: opacity 0.7s ease, filter 0.7s ease;
       z-index: 0;
     }
-    .hero-bg.show {
-      opacity: 1;
-      filter: brightness(0.95);
+
+    /* ===== HEADER ===== */
+    .site-header {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.5em;
+      font-size: 12px;
+      text-transform: uppercase;
+      pointer-events: none;
     }
 
-    /* ===== CENTERED DOT / INFINITY ===== */
-    .hero-overlay {
+    .site-icon {
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
+
+    /* ===== CENTER TEXT ===== */
+    .center-text {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 28px;
       z-index: 1;
+      font-size: clamp(18px, 4vw, 32px);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
       pointer-events: none;
     }
 
-    .pulse-wrapper {
+    .center-action {
       pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pulse {
-      width: min(72px, 18vw);
-      height: min(72px, 18vw);
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       cursor: pointer;
-      transition: box-shadow 0.35s ease,
-                  background-color 0.35s ease,
-                  border-color 0.35s ease,
-                  transform 0.35s ease;
-      background-color: transparent;
-      backdrop-filter: blur(4px);
-      position: relative;
-    }
-
-    .pulse-inner-dot,
-    .pulse-inner-symbol {
-      font-size: 18px;
-      line-height: 1;
-      transition: color 0.3s ease,
-                  opacity 0.3s ease,
-                  transform 0.3s ease;
-    }
-
-    /* Base: white dot */
-    .pulse-inner-dot { color: #fff; }
-
-    /* Hover: black infinity (hidden by default) */
-    .pulse-inner-symbol {
-      position: absolute;
-      color: #000;
-      opacity: 0;
-      transform: scale(0.9);
-    }
-
-    .pulse-label {
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
       color: #fff;
-      text-decoration: none;
-      transition: color 0.3s ease, opacity 0.3s ease;
-    }
-
-    /* Hover transitions */
-    .pulse-wrapper:hover .pulse {
-      background: #fff;
-      border-color: #fff;
-      box-shadow: 0 0 24px rgba(0,0,0,0.75);
-      transform: scale(1.02);
-    }
-    .pulse-wrapper:hover .pulse-inner-dot {
-      opacity: 0;
-      transform: scale(0.7);
-    }
-    .pulse-wrapper:hover .pulse-inner-symbol {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .pulse-wrapper:hover .pulse-label {
-      color: #000;
+      user-select: none;
     }
 
     /* ===== FOOTER ===== */
@@ -188,14 +143,14 @@
 <body>
   <div class="hero-bg" id="heroBg"></div>
 
-  <main class="hero-overlay">
-    <div class="pulse-wrapper" id="pulseWrapper">
-      <button class="pulse" id="pulseButton" aria-label="Breathe">
-        <span class="pulse-inner-dot">●</span>
-        <span class="pulse-inner-symbol">∞</span>
-      </button>
-      <a href="#" id="pulseLabelLink" class="pulse-label">Breathe</a>
-    </div>
+  <header class="site-header">
+    <img src="bg/icon_light.png" alt="" class="site-icon" id="siteIcon" />
+    <span>MACKLEY</span>
+  </header>
+
+  <main class="center-text">
+    <span class="center-action" id="breatheAction" role="button" tabindex="0">1. BREATHE</span>
+    <span class="center-action" id="deeperAction" role="button" tabindex="0">2. DEEPER</span>
   </main>
 
   <div class="footer-shell">
@@ -216,45 +171,84 @@
 
   <script>
     const heroBg = document.getElementById("heroBg");
-    const pulseWrapper = document.getElementById("pulseWrapper");
-    const pulseButton = document.getElementById("pulseButton");
-    const pulseLabel = document.getElementById("pulseLabelLink");
-    const footerProduct = document.getElementById("footerProduct");
+    const breatheAction = document.getElementById("breatheAction");
+    const deeperAction = document.getElementById("deeperAction");
+    const siteIcon = document.getElementById("siteIcon");
 
-    const PRODUCT_URL = "/neti-pot";
+    const iconLight = new Image();
+    iconLight.src = "bg/icon_light.png";
+    const iconDark = new Image();
+    iconDark.src = "bg/icon_dark.png";
 
-    const images = [
-      "images/fight.png",
-      "images/run.png",
-      "images/dive.png",
-      "images/surf.png",
-      "images/meditate.png"
+    const gifOptions = [
+      { src: "bg/diver.gif", isLight: false },
+      { src: "bg/fighter.gif", isLight: false },
+      { src: "bg/surfer.gif", isLight: true },
+      { src: "bg/yoga.gif", isLight: true }
     ];
 
-    function randomImage() {
-      return images[Math.floor(Math.random() * images.length)];
+    let lastGifIndex = -1;
+
+    function pickRandomGif() {
+      if (gifOptions.length === 1) {
+        lastGifIndex = 0;
+        return gifOptions[0];
+      }
+      let nextIndex = lastGifIndex;
+      while (nextIndex === lastGifIndex) {
+        nextIndex = Math.floor(Math.random() * gifOptions.length);
+      }
+      lastGifIndex = nextIndex;
+      return gifOptions[nextIndex];
     }
 
-    pulseWrapper.addEventListener("mouseenter", () => {
-      heroBg.style.backgroundImage = `url('${randomImage()}')`;
-      heroBg.classList.add("show");
-      pulseLabel.textContent = "Potential";
-      pulseButton.setAttribute("aria-label", "Potential");
-    });
-
-    pulseWrapper.addEventListener("mouseleave", () => {
-      heroBg.classList.remove("show");
-      pulseLabel.textContent = "Breathe";
-      pulseButton.setAttribute("aria-label", "Breathe");
-    });
-
-    function goToProduct() {
-      window.location.href = PRODUCT_URL;
+    function setBackground() {
+      const selection = pickRandomGif();
+      heroBg.style.backgroundImage = `url('${selection.src}')`;
+      siteIcon.src = selection.isLight ? iconDark.src : iconLight.src;
     }
 
-    pulseButton.addEventListener("click", goToProduct);
-    pulseLabel.addEventListener("click", e => { e.preventDefault(); goToProduct(); });
-    footerProduct.addEventListener("click", e => { e.preventDefault(); goToProduct(); });
+    function resetBackground() {
+      heroBg.style.backgroundImage = "none";
+      siteIcon.src = iconLight.src;
+    }
+
+    function activate(actionElement, color) {
+      actionElement.style.color = color;
+      setBackground();
+    }
+
+    function deactivate(actionElement) {
+      actionElement.style.color = "#fff";
+      resetBackground();
+    }
+
+    const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    if (hoverCapable) {
+      breatheAction.addEventListener("mouseenter", () => activate(breatheAction, "#0a84ff"));
+      breatheAction.addEventListener("mouseleave", () => deactivate(breatheAction));
+      deeperAction.addEventListener("mouseenter", () => activate(deeperAction, "#ff9ad5"));
+      deeperAction.addEventListener("mouseleave", () => deactivate(deeperAction));
+    } else {
+      const handleTouchStart = (event, actionElement, color) => {
+        event.preventDefault();
+        activate(actionElement, color);
+      };
+
+      const handleTouchEnd = (event, actionElement) => {
+        event.preventDefault();
+        deactivate(actionElement);
+      };
+
+      breatheAction.addEventListener("touchstart", event => handleTouchStart(event, breatheAction, "#0a84ff"), { passive: false });
+      breatheAction.addEventListener("touchend", event => handleTouchEnd(event, breatheAction), { passive: false });
+      breatheAction.addEventListener("touchcancel", event => handleTouchEnd(event, breatheAction), { passive: false });
+
+      deeperAction.addEventListener("touchstart", event => handleTouchStart(event, deeperAction, "#ff9ad5"), { passive: false });
+      deeperAction.addEventListener("touchend", event => handleTouchEnd(event, deeperAction), { passive: false });
+      deeperAction.addEventListener("touchcancel", event => handleTouchEnd(event, deeperAction), { passive: false });
+    }
   </script>
 
 </body>
