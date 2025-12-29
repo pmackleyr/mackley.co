@@ -1,19 +1,16 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This is a Next.js App Router project. Primary code lives in `src/app` (e.g., `layout.tsx`, `page.tsx`) with global styles in `src/app/globals.css`. Static assets (SVGs, favicons) are in `public/`. Repository-level configuration includes `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, and `postcss.config.mjs`.
+This is a static site. Primary files are `index.html` and `styles.css`. Static assets (GIFs, favicons) live in `bg/` or the repository root as needed.
 
 ## Build, Test, and Development Commands
-- `npm run dev`: Start the local Next.js dev server (default `http://localhost:3000`).
-- `npm run build`: Create a production build.
-- `npm run start`: Serve the production build locally.
-- `npm run lint`: Run ESLint checks (Next.js config).
+- No build step is required. Open `index.html` directly or serve the folder with any static file server.
 
 ## Coding Style & Naming Conventions
-Follow existing TypeScript/React patterns. Use 2-space indentation, double quotes, and semicolons (match `src/app/page.tsx`). Components should be `PascalCase`, hooks `useSomething`, and route files follow Next.js App Router conventions (`page.tsx`, `layout.tsx`). Prefer Tailwind utility classes in JSX; keep global CSS in `src/app/globals.css`.
+Use 2-space indentation, double quotes, and semicolons in HTML/CSS. Keep HTML minimal and readable; keep all styling in `styles.css`.
 
 ## Testing Guidelines
-No test framework is configured yet. For changes, rely on `npm run lint`, `npm run build`, and manual verification in `npm run dev`. If you introduce a test setup, document the runner and naming conventions in this file.
+No automated tests are configured. Manually verify in a browser.
 
 ## Commit & Pull Request Guidelines
 The Git history only contains the initial commit, so no established convention exists. Use short, imperative commit subjects (e.g., "Add hero layout"). PRs should include a brief summary, testing notes (commands run), and screenshots for visual/UI changes.
