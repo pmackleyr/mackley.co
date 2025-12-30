@@ -135,35 +135,8 @@ a {
 
 .inside-hover,
 .outside-hover {
-  position: relative;
-  cursor: pointer;
-  text-decoration-line: underline;
-  text-decoration-thickness: 2px;
-  text-decoration-color: rgba(245, 245, 244, 0.95);
-  text-underline-offset: 0.25em;
-}
-
-.inside-hover:focus-visible,
-.outside-hover:focus-visible {
-  outline: 1px solid rgba(245, 245, 244, 0.6);
-  outline-offset: 4px;
-}
-
-.inside-hover:hover,
-.outside-hover:hover,
-.inside-hover:focus,
-.outside-hover:focus {
-  text-shadow: 0 0 10px rgba(245, 245, 244, 0.35);
-}
-
-.inside-hover,
-.outside-hover {
-  text-shadow: none;
-}
-
-.paragraph.active .inside-hover,
-.paragraph.active .outside-hover {
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  cursor: default;
 }
 
 .product-block {

@@ -16,13 +16,13 @@
   <main class="narrative" id="narrative" aria-label="Narrative">
     <div class="snap-spacer" aria-hidden="true"></div>
     <div class="paragraph">
-      <p class="line">MACKLEY is a middle name.</p>
+      <p class="line">MACKLEY means evolution:</p>
     </div>
     <div class="paragraph">
-      <p class="line">Between who you are <span class="inside-hover" tabindex="0">inside</span>-</p>
+      <p class="line">from who you are <span class="inside-hover" tabindex="0">inside</span>,</p>
     </div>
     <div class="paragraph">
-      <p class="line">and who you become <span class="outside-hover" tabindex="0">outside</span>.</p>
+      <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
     <div class="paragraph">
       <p class="line">Close the gap.</p>
@@ -56,8 +56,6 @@
     const footer = document.querySelector(".site-footer");
     const paragraphs = Array.from(document.querySelectorAll(".paragraph"));
     const bgLayer = document.getElementById("bg-layer");
-    const insideTargets = document.querySelectorAll(".inside-hover");
-    const outsideTargets = document.querySelectorAll(".outside-hover");
 
     const insideGifs = [
       "/public/inside/lightning.gif",
@@ -83,6 +81,13 @@
       "/public/outside/surfer.gif",
       "/public/outside/yogi.gif"
     ];
+
+    function poolForParagraph(paragraphEl) {
+      if (!paragraphEl) return null;
+      if (paragraphEl.querySelector(".inside-hover")) return insideGifs;
+      if (paragraphEl.querySelector(".outside-hover")) return outsideGifs;
+      return null;
+    }
 
     let gifTimer = null;
     let currentPool = null;
@@ -144,41 +149,16 @@
       bgLayer.style.backgroundImage = "none";
     }
 
-    insideTargets.forEach((el) => {
-      el.addEventListener("mouseenter", () => startGifLoop(insideGifs));
-      el.addEventListener("mouseleave", stopGifLoop);
-      el.addEventListener("focus", () => startGifLoop(insideGifs));
-      el.addEventListener("blur", stopGifLoop);
-      el.addEventListener("pointerdown", (event) => {
-        if (event.pointerType === "touch") {
-          startGifLoop(insideGifs);
-        }
-      });
-      el.addEventListener("pointerup", (event) => {
-        if (event.pointerType === "touch") {
-          stopGifLoop();
-        }
-      });
-      el.addEventListener("pointercancel", stopGifLoop);
-    });
+    let activeParagraphEl = null;
 
-    outsideTargets.forEach((el) => {
-      el.addEventListener("mouseenter", () => startGifLoop(outsideGifs));
-      el.addEventListener("mouseleave", stopGifLoop);
-      el.addEventListener("focus", () => startGifLoop(outsideGifs));
-      el.addEventListener("blur", stopGifLoop);
-      el.addEventListener("pointerdown", (event) => {
-        if (event.pointerType === "touch") {
-          startGifLoop(outsideGifs);
-        }
-      });
-      el.addEventListener("pointerup", (event) => {
-        if (event.pointerType === "touch") {
-          stopGifLoop();
-        }
-      });
-      el.addEventListener("pointercancel", stopGifLoop);
-    });
+    function setActiveParagraph(paragraphEl) {
+      if (activeParagraphEl === paragraphEl) return;
+      activeParagraphEl = paragraphEl;
+
+      const pool = poolForParagraph(paragraphEl);
+      if (pool) startGifLoop(pool);
+      else stopGifLoop();
+    }
 
     function updateInsets() {
       const root = document.documentElement;
@@ -224,6 +204,8 @@
         closest.classList.add("active");
         closest.style.opacity = "1";
       }
+
+      setActiveParagraph(closest);
     }
 
     function fitLineToContainer(line) {
