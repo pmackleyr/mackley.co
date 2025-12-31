@@ -74,6 +74,7 @@
     const footer = document.querySelector(".site-footer");
     const paragraphs = Array.from(document.querySelectorAll(".paragraph"));
     const bgLayer = document.getElementById("bg-layer");
+    const preloadCache = new Map();
 
     const insideGifs = [
       "/public/inside/lightning.gif",
@@ -122,11 +123,32 @@
       return next;
     }
 
+    let pendingGifId = 0;
+
+    function preloadGif(url) {
+      if (preloadCache.has(url)) return preloadCache.get(url);
+      const img = new Image();
+      img.src = url;
+      preloadCache.set(url, img);
+      return img;
+    }
+
     function setGif(pool) {
       const next = nextFromPool(pool);
-      const cacheBust = `${next}?t=${Date.now()}`;
-      bgLayer.style.backgroundImage = `url(${cacheBust})`;
-      bgLayer.classList.add("active");
+      const requestId = ++pendingGifId;
+      const img = preloadGif(next);
+
+      const applyNext = () => {
+        if (pendingGifId !== requestId) return;
+        bgLayer.style.backgroundImage = `url(${next})`;
+        bgLayer.classList.add("active");
+      };
+
+      if (img.complete) {
+        applyNext();
+      } else {
+        img.onload = applyNext;
+      }
     }
 
     function scheduleNextGif() {
