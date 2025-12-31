@@ -28,22 +28,22 @@
   <div id="bg-layer" aria-hidden="true"></div>
 
   <header class="site-header" aria-label="Site">
-    <div class="site-title">MACKLEY</div>
+    <a class="site-title" href="/"><span class="brand">MACKLEY</span></a>
   </header>
 
   <main class="narrative" id="narrative" aria-label="Narrative">
     <div class="snap-spacer" aria-hidden="true"></div>
     <div class="paragraph">
-      <p class="line">MACKLEY means REVOLUTION:</p>
+      <p class="line"><span class="brand">MACKLEY</span> means <span class="revolution-hover brand" tabindex="0">REVOLUTION</span>:</p>
     </div>
     <div class="paragraph">
       <p class="line">from who you are <span class="inside-hover" tabindex="0">inside</span>,</p>
     </div>
     <div class="paragraph">
-      <p class="line">to who you become <span class="outside-hover" tabindex="0">outside</span>.</p>
+      <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
     <div class="paragraph">
-      <p class="line">Close that gap.</p>
+      <p class="line">Change begins by <a class="underline" href="/breath">breath</a>.</p>
     </div>
     <section class="product-block paragraph" aria-label="Product">
       <div class="product-block__image">
@@ -51,21 +51,21 @@
       </div>
 
       <div class="product-block__text">
-        <h2 class="product-block__title">Original Neti Pot</h2>
+        <h2 class="product-block__title">Original Neti Pot™</h2>
         <p class="product-block__description">
-          Hand-shaped from pure copper using methods refined over thousands of years, this neti pot clears the nasal passage—the point where breath enters the body.
-          When that passage is clear, breath improves, and everything downstream functions better.
+          Clear your nasal passage. Breathe deeper.
         </p>
-        <a class="product-block__cta" href="/original">Discover Original</a>
+        <a class="product-block__cta" href="/original">Learn more</a>
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
   </main>
 
   <footer class="site-footer">
-    <span>@MACKLEY 2026</span>
-    <a class="site-footer__link" href="/original">Original Neti Pot</a>
-    <span>Legal</span>
+    <a class="site-footer__link" href="/">@<span class="brand">MACKLEY</span> 2026</a>
+    <a class="site-footer__link" href="/original">Original Neti Pot™</a>
+    <a class="site-footer__link" href="/contact">Contact</a>
+    <a class="site-footer__link" href="/legal">Legal</a>
   </footer>
 
   <script>
@@ -80,24 +80,27 @@
       "/public/inside/chamber.gif",
       "/public/inside/heart.gif",
       "/public/inside/storm.gif",
-      "/public/inside/vortex.gif",
-      "/public/inside/water.gif"
+      "/public/inside/vortex.gif"
+    ];
+
+    const revolutionGifs = [
+      "/public/revolution/american.gif",
+      "/public/revolution/march.gif",
+      "/public/revolution/wall.gif",
+      "/public/revolution/woodstock.gif"
     ];
 
     const outsideGifs = [
       "/public/outside/astronaut.gif",
-      "/public/outside/cowgirl.gif",
       "/public/outside/diver.gif",
-      "/public/outside/fighter.gif",
-      "/public/outside/jogger.gif",
       "/public/outside/slackliner.gif",
-      "/public/outside/sufi.gif",
       "/public/outside/surfer.gif",
       "/public/outside/yogi.gif"
     ];
 
     function poolForParagraph(paragraphEl) {
       if (!paragraphEl) return null;
+      if (paragraphEl.querySelector(".revolution-hover")) return revolutionGifs;
       if (paragraphEl.querySelector(".inside-hover")) return insideGifs;
       if (paragraphEl.querySelector(".outside-hover")) return outsideGifs;
       return null;
@@ -105,28 +108,18 @@
 
     let gifTimer = null;
     let currentPool = null;
-    const poolQueues = new Map();
-
-    function shuffle(list) {
-      for (let i = list.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-      }
-      return list;
-    }
+    const poolIndices = new Map();
 
     function resetQueue(pool) {
       if (!pool) return;
-      poolQueues.set(pool, []);
+      poolIndices.set(pool, 0);
     }
 
     function nextFromPool(pool) {
-      let queue = poolQueues.get(pool);
-      if (!queue || queue.length === 0) {
-        queue = shuffle([...pool]);
-        poolQueues.set(pool, queue);
-      }
-      return queue.shift();
+      const nextIndex = poolIndices.get(pool) ?? 0;
+      const next = pool[nextIndex % pool.length];
+      poolIndices.set(pool, (nextIndex + 1) % pool.length);
+      return next;
     }
 
     function setGif(pool) {
