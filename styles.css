@@ -171,7 +171,7 @@ a {
   grid-template-columns: minmax(280px, 440px) minmax(0, 1fr);
   gap: clamp(24px, 6vw, 80px);
   align-items: center;
-  padding: clamp(40px, 10vh, 80px) 0;
+  padding: clamp(24px, 6vh, 56px) 0;
   padding-inline: 0;
   scroll-snap-align: center;
   text-align: left;
@@ -180,7 +180,7 @@ a {
 .product-block-group {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 4vh, 32px);
+  gap: clamp(12px, 2.5vh, 20px);
   align-items: center;
 }
 
