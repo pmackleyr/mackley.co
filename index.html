@@ -42,26 +42,44 @@
     <div class="paragraph">
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
-    <div class="paragraph">
-      <p class="line">Change begins with a <a class="underline" href="/breath">breath</a>.</p>
-    </div>
-    <section class="product-block paragraph" aria-label="Product">
-      <div class="product-block__image">
-        <div class="image-placeholder image-placeholder--image">
-          <img class="image-placeholder__img" src="/public/product/ad.gif" alt="Original Neti Pot™ in use" />
+    <section class="paragraph product-block-group" aria-label="Product">
+      <p class="line product-block-line">Change begins with a single <a class="underline" href="/breath">breath</a>.</p>
+      <div class="product-block">
+        <div class="product-block__image">
+          <section class="carousel" aria-label="Product images">
+            <div class="carousel-viewport" tabindex="0">
+              <div class="carousel-track">
+                <div class="carousel-slide">
+                  <img class="carousel-image" src="/public/product/ad1.gif" alt="Original Neti Pot™ in use" />
+                </div>
+                <div class="carousel-slide">
+                  <img class="carousel-image" src="/public/product/ad2.gif" alt="Original Neti Pot™ in use" />
+                </div>
+                <div class="carousel-slide">
+                  <img class="carousel-image" src="/public/product/product.png" alt="Original Neti Pot™" />
+                </div>
+                <div class="carousel-slide">
+                  <img class="carousel-image" src="/public/product/material.png" alt="Original Neti Pot™ material detail" />
+                </div>
+              </div>
+            </div>
+            <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
+            <button class="carousel-button carousel-button--next" type="button" aria-label="Next slide">›</button>
+            <div class="carousel-dots" aria-label="Carousel slides"></div>
+          </section>
         </div>
-      </div>
 
-      <div class="product-block__text">
-        <h2 class="product-block__title">Original Neti Pot™</h2>
-        <p class="product-block__description">
-          Clear your nasal passage. Breathe deeper.
-        </p>
-        <div class="product-block__actions">
-          <a class="product-block__cta" href="/checkout" data-instant-checkout="true" data-qty="1">Buy</a>
-          <a class="product-block__cta" href="/original">Learn more</a>
+        <div class="product-block__text">
+          <h2 class="product-block__title">Original Neti Pot™</h2>
+          <p class="product-block__description">
+            Clear your nasal passage. Breathe deeper.
+          </p>
+          <div class="product-block__actions">
+            <a class="product-block__cta" href="/checkout" data-instant-checkout="true" data-qty="1">Buy</a>
+            <a class="product-block__cta" href="/original">Learn more</a>
+          </div>
+          <p class="social-proof" data-proof="view" data-page="home" data-window="900" data-label="people viewed recently" data-singular="person viewed recently" aria-live="polite">Live activity updating</p>
         </div>
-        <p class="social-proof" data-proof="view" data-page="home" data-window="900" data-label="people viewed recently" data-singular="person viewed recently" aria-live="polite">Live activity updating</p>
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
@@ -304,6 +322,7 @@
 
     narrative.addEventListener("scroll", onScroll);
   </script>
+  <script type="module" src="/carousel.js"></script>
   <script type="module" src="/social-proof.js"></script>
 </body>
 </html>
