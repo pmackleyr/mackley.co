@@ -1,13 +1,32 @@
-const ALLOWED_ORIGINS = new Set([
-  "https://mackley.co",
-  "https://www.mackley.co",
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://127.0.0.1:5500"
+const ALLOWED_HOSTS = new Set([
+  "mackley.co",
+  "mackley.co:443",
+  "www.mackley.co",
+  "www.mackley.co:443",
+  "localhost:3000",
+  "localhost:5173",
+  "127.0.0.1:5500"
 ]);
 
+function originFromHeader(value) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return `${url.protocol}//${url.host}`;
+  } catch (error) {
+    return null;
+  }
+}
+
 function isAllowedOrigin(origin) {
-  return Boolean(origin && ALLOWED_ORIGINS.has(origin));
+  const normalized = originFromHeader(origin);
+  if (!normalized) return false;
+  const host = new URL(normalized).host;
+  return ALLOWED_HOSTS.has(host);
+}
+
+function inferOriginFromReferer(referer) {
+  return originFromHeader(referer);
 }
 
 function corsOriginForSocialProof(origin) {
@@ -107,10 +126,17 @@ function isValidPage(page) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
+    const referer = request.headers.get("Referer");
+    const inferredOrigin = origin ? null : inferOriginFromReferer(referer);
+    const effectiveOrigin = isAllowedOrigin(origin)
+      ? originFromHeader(origin)
+      : inferredOrigin && isAllowedOrigin(inferredOrigin)
+        ? inferredOrigin
+        : null;
 
     const url = new URL(request.url);
     if (url.pathname === "/social-proof") {
-      const corsOrigin = corsOriginForSocialProof(origin);
+      const corsOrigin = corsOriginForSocialProof(origin || effectiveOrigin);
       if (request.method === "OPTIONS") {
         return new Response(null, {
           status: 204,
@@ -158,35 +184,35 @@ export default {
       return jsonResponse(200, data, corsOrigin);
     }
 
-    if (!isAllowedOrigin(origin)) {
-      return jsonResponse(403, { error: "Origin not allowed." }, origin);
+    if (!effectiveOrigin) {
+      return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
     }
 
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: withCorsHeaders(new Headers(), origin)
+        headers: withCorsHeaders(new Headers(), effectiveOrigin)
       });
     }
 
     if (request.method !== "POST") {
-      return jsonResponse(405, { error: "Method not allowed." }, origin);
+      return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
     }
 
     if (url.pathname !== "/create-payment-intent") {
-      return jsonResponse(404, { error: "Not found." }, origin);
+      return jsonResponse(404, { error: "Not found." }, effectiveOrigin);
     }
 
     let payload = null;
     try {
       payload = await request.json();
     } catch (error) {
-      return jsonResponse(400, { error: "Invalid JSON." }, origin);
+      return jsonResponse(400, { error: "Invalid JSON." }, effectiveOrigin);
     }
 
     const validationError = validateBody(payload);
     if (validationError) {
-      return jsonResponse(400, { error: validationError }, origin);
+      return jsonResponse(400, { error: validationError }, effectiveOrigin);
     }
 
     const quantity = Number(payload.quantity);
@@ -233,12 +259,12 @@ export default {
 
       const data = await response.json();
       if (!response.ok || !data.client_secret) {
-        return jsonResponse(500, { error: "Stripe error." }, origin);
+        return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
       }
 
-      return jsonResponse(200, { clientSecret: data.client_secret }, origin);
+      return jsonResponse(200, { clientSecret: data.client_secret }, effectiveOrigin);
     } catch (error) {
-      return jsonResponse(500, { error: "Stripe error." }, origin);
+      return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
     }
   }
 };
