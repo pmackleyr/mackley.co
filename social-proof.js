@@ -29,8 +29,7 @@ async function fetchProof(el, record) {
     type: el.dataset.proof,
     page: el.dataset.page || "site",
     window: getWindowSeconds(el),
-    record: Boolean(record),
-    total: el.dataset.total === "true"
+    record: Boolean(record)
   };
 
   const response = await fetch(PROOF_ENDPOINT, {
