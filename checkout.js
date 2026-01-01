@@ -26,6 +26,8 @@ const discountRow = document.getElementById("discount-row");
 const accordionItems = Array.from(document.querySelectorAll(".accordion-item"));
 const paymentElementContainer = document.getElementById("payment-element");
 const paymentFallback = document.querySelector(".payment-fallback");
+const paymentFallbackText = document.getElementById("payment-fallback-text");
+const paymentRetryButton = document.getElementById("payment-retry");
 const addressElementContainer = document.getElementById("shipping-address-element");
 const shippingFields = document.querySelector(".shipping-fields");
 
@@ -41,9 +43,20 @@ let stripeReady = false;
 let shippingComplete = false;
 let shippingAddressValue = null;
 let debounceTimer = null;
+let setupInFlight = false;
+let retryTimer = null;
+let retryAttempt = 0;
+const retryDelays = [1200, 2500, 5000];
 const header = document.querySelector(".site-header");
 const footer = document.querySelector(".site-footer");
 const successMode = new URLSearchParams(window.location.search).get("success") === "1";
+const shippingRequiredInputs = [
+  document.getElementById("address-line1"),
+  document.getElementById("city"),
+  document.getElementById("state"),
+  document.getElementById("postal"),
+  document.getElementById("country")
+].filter(Boolean);
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -176,6 +189,48 @@ function updateCTAState() {
   placeOrderButton.disabled = !(contactValid && shippingValid && stripeReady);
 }
 
+function showPaymentFallback(message) {
+  stripeReady = false;
+  if (paymentFallbackText && message) {
+    paymentFallbackText.textContent = message;
+  }
+  if (paymentFallback) {
+    paymentFallback.hidden = false;
+  }
+  updateCTAState();
+}
+
+function hidePaymentFallback() {
+  if (paymentFallback) {
+    paymentFallback.hidden = true;
+  }
+  if (paymentFallbackText) {
+    paymentFallbackText.textContent = "Payment temporarily unavailable.";
+  }
+}
+
+function clearRetryTimer() {
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+}
+
+function schedulePaymentRetry(message) {
+  showPaymentFallback(message || "Payment temporarily unavailable. Retrying...");
+  if (retryAttempt >= retryDelays.length) return;
+  const delay = retryDelays[retryAttempt];
+  retryAttempt += 1;
+  clearRetryTimer();
+  retryTimer = setTimeout(() => {
+    if (!stripe || !elements) {
+      setupStripe();
+    } else {
+      createPaymentIntent();
+    }
+  }, delay);
+}
+
 function recordPurchaseProof(force) {
   if (!successMode && !force) return;
   if (sessionStorage.getItem(purchaseRecordKey)) return;
@@ -286,6 +341,46 @@ function updateInsets() {
   root.style.setProperty("--footer-h", `${footerHeight}px`);
 }
 
+function useManualShippingFields() {
+  if (addressElementContainer) {
+    addressElementContainer.hidden = true;
+    addressElementContainer.innerHTML = "";
+  }
+  if (!shippingFields) return;
+  shippingFields.hidden = false;
+  shippingRequiredInputs.forEach((input) => {
+    input.setAttribute("required", "");
+  });
+}
+
+function useAddressElementFields() {
+  if (addressElementContainer) {
+    addressElementContainer.hidden = false;
+  }
+  if (!shippingFields) return;
+  shippingFields.hidden = true;
+  shippingRequiredInputs.forEach((input) => {
+    input.removeAttribute("required");
+  });
+}
+
+function mountPaymentElement() {
+  if (!elements || !paymentElementContainer) return;
+  stripeReady = false;
+  if (paymentElement) {
+    paymentElement.unmount();
+  }
+  paymentElementContainer.innerHTML = "";
+  paymentElement = elements.create("payment");
+  paymentElement.mount(paymentElementContainer);
+  paymentElement.on("ready", () => {
+    stripeReady = true;
+    hidePaymentFallback();
+    retryAttempt = 0;
+    updateCTAState();
+  });
+}
+
 async function createPaymentIntent() {
   if (!stripe || !elements) return;
   const { email, name } = getCustomerData();
@@ -315,18 +410,9 @@ async function createPaymentIntent() {
     if (!data.clientSecret) throw new Error("Missing client secret");
     stripeReady = false;
     elements.update({ clientSecret: data.clientSecret });
-    if (paymentElement) {
-      paymentElement.unmount();
-    }
-    paymentElementContainer.innerHTML = "";
-    paymentElement = elements.create("payment");
-    paymentElement.mount(paymentElementContainer);
-    paymentElement.on("ready", () => {
-      stripeReady = true;
-      updateCTAState();
-    });
+    mountPaymentElement();
   } catch (error) {
-    setPaymentFallback();
+    schedulePaymentRetry("Payment temporarily unavailable. Retrying...");
   }
 }
 
@@ -338,27 +424,31 @@ function debounceCreateIntent() {
   }, 350);
 }
 
-function setPaymentFallback() {
-  stripeReady = false;
-  if (paymentFallback) {
-    paymentFallback.hidden = false;
-  }
-  if (paymentElementContainer) {
-    paymentElementContainer.innerHTML = "";
-  }
-  updateCTAState();
-}
-
 async function setupStripe() {
+  if (setupInFlight) return;
+  setupInFlight = true;
+  clearRetryTimer();
   const metaKey = document.querySelector("meta[name=\"stripe-pk\"]")?.content;
   const key = window.STRIPE_PUBLISHABLE_KEY || metaKey;
   if (!key || !window.Stripe) {
-    setPaymentFallback();
+    setupInFlight = false;
+    schedulePaymentRetry("Payment temporarily unavailable. Retrying...");
     return;
   }
 
   stripe = window.Stripe(key);
   try {
+    if (addressElement) {
+      try {
+        addressElement.unmount();
+      } catch (error) {
+        // Best-effort cleanup before reinitializing Stripe Elements.
+      }
+      addressElement = null;
+    }
+    shippingComplete = false;
+    shippingAddressValue = null;
+
     const response = await fetch(`${API_BASE}/create-payment-intent`, {
       method: "POST",
       headers: {
@@ -377,36 +467,42 @@ async function setupStripe() {
     if (!data.clientSecret) throw new Error("Missing client secret");
 
     elements = stripe.elements({ clientSecret: data.clientSecret, appearance: { theme: "night" } });
-
-    if (addressElementContainer) {
-      addressElement = elements.create("address", { mode: "shipping" });
-      addressElement.mount(addressElementContainer);
-      addressElement.on("change", (event) => {
-        shippingComplete = event.complete;
-        shippingAddressValue = event.value;
-        if (event.complete) {
-          const city = event.value.address.city || "";
-          const state = event.value.address.state || "";
-          const postal = event.value.address.postal_code || "";
-          updateSummary("shipping", `${[city, state].filter(Boolean).join(", ")}${postal ? ` · ${postal}` : ""}` || "Complete");
-          setAccordionOpen("payment");
-        }
-        updateCTAState();
-      });
-      shippingFields.hidden = true;
-      shippingFields.querySelectorAll("input[required]").forEach((input) => {
-        input.removeAttribute("required");
-      });
+    let addressReady = false;
+    if (addressElementContainer && shippingFields) {
+      try {
+        addressElement = elements.create("address", { mode: "shipping" });
+        addressElement.mount(addressElementContainer);
+        addressElement.on("change", (event) => {
+          shippingComplete = event.complete;
+          shippingAddressValue = event.value;
+          if (event.complete) {
+            const city = event.value.address.city || "";
+            const state = event.value.address.state || "";
+            const postal = event.value.address.postal_code || "";
+            updateSummary("shipping", `${[city, state].filter(Boolean).join(", ")}${postal ? ` · ${postal}` : ""}` || "Complete");
+            setAccordionOpen("payment");
+          }
+          updateCTAState();
+        });
+        addressReady = true;
+      } catch (error) {
+        addressElement = null;
+        shippingComplete = false;
+        shippingAddressValue = null;
+      }
     }
 
-    paymentElement = elements.create("payment");
-    paymentElement.mount(paymentElementContainer);
-    paymentElement.on("ready", () => {
-      stripeReady = true;
-      updateCTAState();
-    });
+    if (addressReady) {
+      useAddressElementFields();
+    } else {
+      useManualShippingFields();
+    }
+
+    mountPaymentElement();
+    setupInFlight = false;
   } catch (error) {
-    setPaymentFallback();
+    setupInFlight = false;
+    schedulePaymentRetry("Payment temporarily unavailable. Retrying...");
   }
 }
 
@@ -423,6 +519,7 @@ async function handleSubmit(event) {
   }
 
   if (!stripe || !elements || !stripeReady) {
+    schedulePaymentRetry("Payment is still loading. Retrying...");
     return;
   }
 
@@ -452,7 +549,7 @@ async function handleSubmit(event) {
     if (result.error.type === "validation_error") {
       return;
     }
-    setPaymentFallback();
+    showPaymentFallback("Payment failed. Please review your details and retry.");
     return;
   }
 
@@ -521,6 +618,18 @@ function initQuantity() {
 
 updateInsets();
 window.addEventListener("resize", updateInsets);
+
+if (paymentRetryButton) {
+  paymentRetryButton.addEventListener("click", () => {
+    retryAttempt = 0;
+    clearRetryTimer();
+    if (!stripe || !elements) {
+      setupStripe();
+    } else {
+      createPaymentIntent();
+    }
+  });
+}
 
 if (successMode) {
   const savedEmail = localStorage.getItem(emailStorageKey) || "—";
