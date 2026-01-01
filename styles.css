@@ -800,6 +800,12 @@ a {
   background: rgba(12, 13, 14, 0.7);
 }
 
+.accordion-item.is-open {
+  overflow: visible;
+  position: relative;
+  z-index: 2;
+}
+
 .accordion-header {
   width: 100%;
   display: flex;
@@ -827,16 +833,24 @@ a {
   overflow: hidden;
   padding: 0 16px;
   transition: max-height 0.3s ease, padding 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .accordion-item.is-open .accordion-body {
-  max-height: 420px;
+  max-height: 1200px;
   padding: 12px 16px 16px;
+  overflow: visible;
 }
 
 #payment-element,
 #shipping-address-element {
-  min-height: 120px;
+  min-height: 160px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 9, 10, 0.6);
+  padding: 10px;
 }
 
 .field {
@@ -927,7 +941,7 @@ a {
   }
 
   .accordion-item.is-open .accordion-body {
-    max-height: 300px;
+    max-height: 900px;
   }
 }
 
@@ -945,7 +959,7 @@ a {
   }
 
   .accordion-item.is-open .accordion-body {
-    max-height: 240px;
+    max-height: 800px;
   }
 }
 
