@@ -171,7 +171,9 @@ export default {
       return jsonResponse(400, { error: validationError }, origin);
     }
 
-    const amount = Number(payload.quantity) * 5000;
+    const quantity = Number(payload.quantity);
+    const discount = Math.max(0, (quantity - 1) * 500);
+    const amount = Math.max(0, quantity * 5000 - discount);
     const params = new URLSearchParams();
     params.set("amount", String(amount));
     params.set("currency", "usd");
