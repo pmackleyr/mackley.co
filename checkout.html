@@ -133,21 +133,21 @@
             <span>Multi-pack savings</span>
             <span id="discount-amount">-$0</span>
           </div>
-          <div class="summary-row summary-qty">
+          <div class="summary-row summary-qty summary-qty--merged">
             <span>Quantity</span>
-            <div class="qty-chips" role="listbox" aria-label="Quick quantity">
-              <button type="button" class="qty-chip" data-qty="1">1</button>
-              <button type="button" class="qty-chip" data-qty="2">2</button>
-              <button type="button" class="qty-chip" data-qty="3">3</button>
-              <button type="button" class="qty-chip" data-qty="5">5</button>
-            </div>
-          </div>
-          <div class="summary-row summary-qty">
-            <span>Adjust</span>
-            <div class="qty-control">
-              <button type="button" class="qty-button" id="qty-decrease" aria-label="Decrease quantity">−</button>
-              <input id="quantity" name="quantity" type="number" min="1" max="10" value="1" />
-              <button type="button" class="qty-button" id="qty-increase" aria-label="Increase quantity">+</button>
+            <div class="qty-stack" aria-label="Quantity controls">
+              <div class="qty-chips" role="listbox" aria-label="Quick quantity">
+                <button type="button" class="qty-chip" data-qty="1">1</button>
+                <button type="button" class="qty-chip" data-qty="2">2</button>
+                <button type="button" class="qty-chip" data-qty="3">3</button>
+                <button type="button" class="qty-chip" data-qty="5">5</button>
+                <button type="button" class="qty-chip qty-chip--custom" data-qty="6" hidden></button>
+              </div>
+              <div class="qty-control">
+                <button type="button" class="qty-button" id="qty-decrease" aria-label="Decrease quantity">−</button>
+                <input id="quantity" name="quantity" type="number" min="1" max="10" value="1" />
+                <button type="button" class="qty-button" id="qty-increase" aria-label="Increase quantity">+</button>
+              </div>
             </div>
           </div>
           <p class="summary-microcopy summary-microcopy--highlight">Save $5 per additional unit.</p>
@@ -170,7 +170,7 @@
   </main>
 
   <footer class="site-footer checkout-footer">
-    <a class="site-footer__link" href="/">@<span class="brand">MACKLEY</span> 2026</a>
+    <a class="site-footer__link site-footer__link--tight" href="/">@<span class="brand">MACKLEY</span> 2026</a>
     <a class="site-footer__link" href="/original">Original Neti Pot™</a>
     <a class="site-footer__link" href="mailto:revolution@mackley.co">Contact</a>
     <a class="site-footer__link" href="/legal">Legal</a>

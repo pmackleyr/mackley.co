@@ -59,7 +59,7 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: clamp(11px, 1.3vw, 13px);
-  color: var(--muted);
+  color: #fff;
 }
 
 .site-header {
@@ -71,6 +71,7 @@ a {
   font-weight: 600;
   text-decoration: none;
   font-size: clamp(33px, 3.9vw, 39px);
+  color: inherit;
 }
 
 .brand {
@@ -261,7 +262,14 @@ a {
   text-decoration: none;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 13, 14, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.site-footer__link--tight {
+  padding: 5px 10px;
 }
 
 .site-footer span,
@@ -601,6 +609,18 @@ a {
 
 .summary-qty {
   align-items: center;
+}
+
+.summary-qty--merged {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.qty-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
 }
 
 .summary-total {

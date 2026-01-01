@@ -18,6 +18,7 @@ const qtyInput = document.getElementById("quantity");
 const qtyDecrease = document.getElementById("qty-decrease");
 const qtyIncrease = document.getElementById("qty-increase");
 const qtyChips = Array.from(document.querySelectorAll(".qty-chip"));
+const customChip = document.querySelector(".qty-chip--custom");
 const totalPrice = document.getElementById("total-price");
 const unitPrice = document.getElementById("unit-price");
 const discountAmount = document.getElementById("discount-amount");
@@ -85,6 +86,15 @@ function updateTotals() {
 }
 
 function updateChipState(qty) {
+  if (customChip) {
+    if (qty > 4) {
+      customChip.hidden = false;
+      customChip.textContent = String(qty);
+      customChip.dataset.qty = String(qty);
+    } else {
+      customChip.hidden = true;
+    }
+  }
   qtyChips.forEach((chip) => {
     chip.classList.toggle("is-active", Number(chip.dataset.qty) === qty);
   });
