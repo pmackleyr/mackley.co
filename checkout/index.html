@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout | MACKLEY</title>
+  <meta name="stripe-pk" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
+  <link rel="icon" href="/public/assets/logo_dark_180.png" type="image/png" sizes="180x180" />
+  <link rel="icon" href="/public/assets/logo_dark_192.png" type="image/png" sizes="192x192" />
+  <link rel="icon" href="/public/assets/logo_dark_512.png" type="image/png" sizes="512x512" />
+  <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_dark_180.png" type="image/png" sizes="180x180" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_dark_192.png" type="image/png" sizes="192x192" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_dark_512.png" type="image/png" sizes="512x512" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="/public/assets/logo_light_16.png" type="image/png" sizes="16x16" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/public/assets/logo_light_32.png" type="image/png" sizes="32x32" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/public/assets/logo_light_48.png" type="image/png" sizes="48x48" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/public/assets/logo_light_180.png" type="image/png" sizes="180x180" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/public/assets/logo_light_192.png" type="image/png" sizes="192x192" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/public/assets/logo_light_512.png" type="image/png" sizes="512x512" media="(prefers-color-scheme: dark)" />
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body class="checkout-page">
+  <div id="bg-layer" aria-hidden="true"></div>
+
+  <header class="site-header" aria-label="Site">
+    <a class="site-title" href="/"><span class="brand">MACKLEY</span></a>
+  </header>
+
+  <main class="checkout" aria-label="Checkout">
+    <header class="checkout-header">
+      <h1 class="page-title">Checkout</h1>
+      <p class="page-subhead">Pre-order Original Neti Pot™</p>
+    </header>
+
+    <div class="checkout-grid">
+      <form class="checkout-form" id="checkout-form" novalidate>
+        <section class="accordion">
+          <div class="accordion-item" data-step="contact">
+            <button class="accordion-header" type="button" aria-expanded="true">
+              <span>Contact</span>
+              <span class="accordion-summary" data-summary="contact">Required</span>
+            </button>
+            <div class="accordion-body">
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-error" />
+                <span class="field-error" id="email-error" role="alert"></span>
+              </div>
+              <div class="field">
+                <label for="full-name">Full name</label>
+                <input id="full-name" name="fullName" type="text" autocomplete="name" required aria-describedby="name-error" />
+                <span class="field-error" id="name-error" role="alert"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-step="shipping">
+            <button class="accordion-header" type="button" aria-expanded="false">
+              <span>Shipping</span>
+              <span class="accordion-summary" data-summary="shipping">Required</span>
+            </button>
+            <div class="accordion-body">
+              <div id="shipping-address-element"></div>
+              <div class="shipping-fields">
+                <div class="field">
+                  <label for="address-line1">Address line 1</label>
+                  <input id="address-line1" name="line1" type="text" autocomplete="address-line1" required aria-describedby="line1-error" />
+                  <span class="field-error" id="line1-error" role="alert"></span>
+                </div>
+                <div class="field">
+                  <label for="address-line2">Address line 2</label>
+                  <input id="address-line2" name="line2" type="text" autocomplete="address-line2" />
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="city">City</label>
+                    <input id="city" name="city" type="text" autocomplete="address-level2" required aria-describedby="city-error" />
+                    <span class="field-error" id="city-error" role="alert"></span>
+                  </div>
+                  <div class="field">
+                    <label for="state">State / Province</label>
+                    <input id="state" name="state" type="text" autocomplete="address-level1" required aria-describedby="state-error" />
+                    <span class="field-error" id="state-error" role="alert"></span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="postal">Postal code</label>
+                    <input id="postal" name="postal" type="text" autocomplete="postal-code" required aria-describedby="postal-error" />
+                    <span class="field-error" id="postal-error" role="alert"></span>
+                  </div>
+                  <div class="field">
+                    <label for="country">Country</label>
+                    <input id="country" name="country" type="text" autocomplete="country-name" required aria-describedby="country-error" />
+                    <span class="field-error" id="country-error" role="alert"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-step="payment">
+            <button class="accordion-header" type="button" aria-expanded="false">
+              <span>Payment</span>
+              <span class="accordion-summary" data-summary="payment">Required</span>
+            </button>
+            <div class="accordion-body">
+              <div id="payment-element"></div>
+              <div class="payment-fallback" hidden>
+                <p class="checkout-muted">Payment temporarily unavailable.</p>
+                <a class="cta" href="mailto:revolution@mackley.co?subject=Pre-order%20request&body=Hi%20MACKLEY%2C%20I%27d%20like%20to%20place%20a%20pre-order%20for%20the%20Original%20Neti%20Pot%E2%84%A2.">Email to place order</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <section class="checkout-summary" aria-label="Order summary">
+        <div class="checkout-card">
+          <h2 class="checkout-title">Order Summary</h2>
+          <div class="summary-row">
+            <span>Original Neti Pot™</span>
+            <span id="unit-price">$50</span>
+          </div>
+          <div class="summary-row summary-qty">
+            <span>Quantity</span>
+            <div class="qty-chips" role="listbox" aria-label="Quick quantity">
+              <button type="button" class="qty-chip" data-qty="1">1</button>
+              <button type="button" class="qty-chip" data-qty="2">2</button>
+              <button type="button" class="qty-chip" data-qty="3">3</button>
+              <button type="button" class="qty-chip" data-qty="5">5</button>
+            </div>
+          </div>
+          <div class="summary-row summary-qty">
+            <span>Adjust</span>
+            <div class="qty-control">
+              <button type="button" class="qty-button" id="qty-decrease" aria-label="Decrease quantity">−</button>
+              <input id="quantity" name="quantity" type="number" min="1" max="10" value="1" />
+              <button type="button" class="qty-button" id="qty-increase" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+          <p class="summary-microcopy">Most households keep two.</p>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <span id="total-price">$50</span>
+          </div>
+          <button class="cta cta--primary" type="submit" form="checkout-form" id="place-order" disabled>Place pre-order</button>
+          <p class="checkout-terms">By placing a pre-order, you agree to <a href="/legal">Legal</a>.</p>
+          <div class="checkout-trust">
+            <p>Ships Spring 2026 (estimate)</p>
+            <p>Cancel anytime before it ships</p>
+            <p>Questions: <a href="mailto:revolution@mackley.co">revolution@mackley.co</a></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer checkout-footer">
+    <a class="site-footer__link" href="/">@<span class="brand">MACKLEY</span> 2026</a>
+    <a class="site-footer__link" href="/original">Original Neti Pot™</a>
+    <a class="site-footer__link" href="mailto:revolution@mackley.co">Contact</a>
+    <a class="site-footer__link" href="/legal">Legal</a>
+  </footer>
+
+  <script type="module" src="/checkout.js"></script>
+</body>
+</html>

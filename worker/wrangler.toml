@@ -1,0 +1,9 @@
+name = "mackley-payments"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+account_id = "e23bc9f2899c5065f73cf561b5524378"
+zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657"
+
+routes = [
+  { pattern = "api.mackley.co/*", zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657" }
+]
