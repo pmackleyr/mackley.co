@@ -951,6 +951,12 @@ a {
     text-align: center;
   }
 
+  .product-block-group {
+    scroll-snap-align: start;
+    scroll-margin-top: calc(var(--header-h) + 12px);
+    padding-top: calc(var(--header-h) + 8px);
+  }
+
   .product-block__image {
     justify-content: center;
   }
@@ -965,6 +971,7 @@ a {
     white-space: normal;
     overflow: visible;
     text-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+    padding-inline: clamp(10px, 4vw, 22px);
   }
 
   .product-block__text {
