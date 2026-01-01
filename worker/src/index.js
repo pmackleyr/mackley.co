@@ -43,27 +43,45 @@ function isNonEmpty(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function hasAnyShippingField(shipping) {
+  if (!shipping || typeof shipping !== "object") return false;
+  return ["line1", "line2", "city", "state", "postal", "country"].some((key) => isNonEmpty(shipping[key]));
+}
+
+function isCompleteShipping(shipping) {
+  if (!shipping || typeof shipping !== "object") return false;
+  return isNonEmpty(shipping.line1)
+    && isNonEmpty(shipping.city)
+    && isNonEmpty(shipping.state)
+    && isNonEmpty(shipping.postal)
+    && isNonEmpty(shipping.country);
+}
+
 function validateBody(body) {
   if (!body || typeof body !== "object") {
     return "Invalid payload.";
   }
 
+  const allowIncomplete = Boolean(body.allowIncomplete);
   const quantity = Number(body.quantity);
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
     return "Quantity must be between 1 and 10.";
   }
 
-  if (!isValidEmail(body.email)) {
-    return "Email is required.";
+  if (!allowIncomplete || isNonEmpty(body.email)) {
+    if (!isValidEmail(body.email)) {
+      return "Email is required.";
+    }
   }
 
-  if (!isNonEmpty(body.name)) {
-    return "Name is required.";
+  if (!allowIncomplete || isNonEmpty(body.name)) {
+    if (!isNonEmpty(body.name)) {
+      return "Name is required.";
+    }
   }
 
-  if (body.shipping) {
-    const shipping = body.shipping;
-    if (!isNonEmpty(shipping.line1) || !isNonEmpty(shipping.city) || !isNonEmpty(shipping.state) || !isNonEmpty(shipping.postal) || !isNonEmpty(shipping.country)) {
+  if (body.shipping && hasAnyShippingField(body.shipping)) {
+    if (!isCompleteShipping(body.shipping)) {
       return "Shipping address is incomplete.";
     }
   }
@@ -178,14 +196,20 @@ export default {
     params.set("amount", String(amount));
     params.set("currency", "usd");
     params.set("automatic_payment_methods[enabled]", "true");
-    params.set("receipt_email", payload.email);
+    if (isValidEmail(payload.email)) {
+      params.set("receipt_email", payload.email);
+    }
     params.set("metadata[product]", "Original Neti Pot");
     params.set("metadata[sku]", "DB-01");
     params.set("metadata[quantity]", String(payload.quantity));
-    params.set("metadata[email]", payload.email);
-    params.set("metadata[name]", payload.name);
+    if (isNonEmpty(payload.email)) {
+      params.set("metadata[email]", payload.email);
+    }
+    if (isNonEmpty(payload.name)) {
+      params.set("metadata[name]", payload.name);
+    }
 
-    if (payload.shipping) {
+    if (isCompleteShipping(payload.shipping)) {
       params.set("shipping[name]", payload.name);
       params.set("shipping[address][line1]", payload.shipping.line1);
       if (payload.shipping.line2) {

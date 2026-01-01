@@ -289,7 +289,10 @@ function updateInsets() {
 async function createPaymentIntent() {
   if (!stripe || !elements) return;
   const { email, name } = getCustomerData();
-  const shipping = getShippingData();
+  const contactValid = validateContact();
+  if (!contactValid) return;
+  const shippingValid = validateShippingFields();
+  const shipping = shippingValid ? getShippingData() : undefined;
   const quantity = getQuantity();
 
   try {
@@ -298,7 +301,13 @@ async function createPaymentIntent() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ quantity, email, name, shipping })
+      body: JSON.stringify({
+        quantity,
+        email,
+        name,
+        shipping,
+        allowIncomplete: !shippingValid
+      })
     });
 
     if (!response.ok) throw new Error("Request failed");
@@ -359,7 +368,7 @@ async function setupStripe() {
         quantity: getQuantity(),
         email: "",
         name: "",
-        shipping: {}
+        allowIncomplete: true
       })
     });
 
