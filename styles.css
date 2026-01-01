@@ -946,6 +946,19 @@ a {
 }
 
 @media (max-width: 800px) {
+  .narrative {
+    scroll-snap-type: y proximity;
+    scroll-snap-stop: normal;
+  }
+
+  .paragraph {
+    scroll-snap-stop: normal;
+  }
+
+  .snap-spacer {
+    height: 35vh;
+  }
+
   .product-block {
     grid-template-columns: 1fr;
     text-align: center;
