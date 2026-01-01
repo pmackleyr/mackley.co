@@ -50,16 +50,16 @@
             <div class="carousel-viewport" tabindex="0">
               <div class="carousel-track">
                 <div class="carousel-slide">
-                  <img class="carousel-image" src="/public/product/ad1.gif" alt="Original Neti Pot™ in use" />
+                  <img class="carousel-image" src="/public/product/ad1.gif" alt="Original Neti Pot™ in use" decoding="async" fetchpriority="high" />
                 </div>
                 <div class="carousel-slide">
-                  <img class="carousel-image" src="/public/product/ad2.gif" alt="Original Neti Pot™ in use" />
+                  <img class="carousel-image" src="/public/product/ad2.gif" alt="Original Neti Pot™ in use" loading="lazy" decoding="async" />
                 </div>
                 <div class="carousel-slide">
-                  <img class="carousel-image" src="/public/product/product.png" alt="Original Neti Pot™" />
+                  <img class="carousel-image" src="/public/product/product.png" alt="Original Neti Pot™" loading="lazy" decoding="async" />
                 </div>
                 <div class="carousel-slide">
-                  <img class="carousel-image" src="/public/product/material.png" alt="Original Neti Pot™ material detail" />
+                  <img class="carousel-image" src="/public/product/material.png" alt="Original Neti Pot™ material detail" loading="lazy" decoding="async" />
                 </div>
               </div>
             </div>
@@ -236,13 +236,22 @@
       return Math.max(floor, Math.exp(-k * t));
     }
 
-    function updateOpacity() {
-      const centerY = window.innerHeight / 2;
-      const step = paragraphs[0] ? paragraphs[0].getBoundingClientRect().height : 1;
+    let paragraphMeta = [];
 
-      paragraphs.forEach((paragraph) => {
-        const rect = paragraph.getBoundingClientRect();
-        const paragraphCenter = rect.top + rect.height / 2;
+    function measureParagraphs() {
+      paragraphMeta = paragraphs.map((paragraph) => ({
+        paragraph,
+        top: paragraph.offsetTop,
+        height: paragraph.offsetHeight
+      }));
+    }
+
+    function updateOpacity() {
+      const centerY = narrative.scrollTop + narrative.clientHeight / 2;
+      const step = paragraphMeta[0] ? paragraphMeta[0].height : 1;
+
+      paragraphMeta.forEach(({ paragraph, top, height }) => {
+        const paragraphCenter = top + height / 2;
         const distance = Math.abs(paragraphCenter - centerY);
         const opacity = opacityForDistance(distance, step);
         paragraph.style.opacity = opacity.toFixed(3);
@@ -251,9 +260,8 @@
 
       let closest = null;
       let closestDistance = Infinity;
-      paragraphs.forEach((paragraph) => {
-        const rect = paragraph.getBoundingClientRect();
-        const paragraphCenter = rect.top + rect.height / 2;
+      paragraphMeta.forEach(({ paragraph, top, height }) => {
+        const paragraphCenter = top + height / 2;
         const distance = Math.abs(paragraphCenter - centerY);
         if (distance < closestDistance) {
           closestDistance = distance;
@@ -311,16 +319,20 @@
 
     fitAllLines();
     updateInsets();
+    measureParagraphs();
     centerFirstParagraph();
     updateOpacity();
 
     window.addEventListener("resize", () => {
       updateInsets();
-      updateOpacity();
-      requestAnimationFrame(fitAllLines);
+      requestAnimationFrame(() => {
+        fitAllLines();
+        measureParagraphs();
+        updateOpacity();
+      });
     });
 
-    narrative.addEventListener("scroll", onScroll);
+    narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
   <script type="module" src="/carousel.js"></script>
   <script type="module" src="/social-proof.js"></script>

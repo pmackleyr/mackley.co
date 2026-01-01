@@ -117,7 +117,7 @@ a {
   text-align: center;
   gap: clamp(28px, 6vh, 56px);
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: auto;
+  -webkit-overflow-scrolling: touch;
   scroll-behavior: auto;
 }
 
@@ -570,13 +570,14 @@ a {
 }
 
 .checkout-page {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .checkout {
   position: relative;
   z-index: 1;
-  height: calc(100vh - var(--header-h) - var(--footer-h));
+  min-height: calc(100vh - var(--header-h) - var(--footer-h));
   margin-top: var(--header-h);
   margin-bottom: var(--footer-h);
   padding: clamp(12px, 2.5vh, 24px) var(--page-pad);
