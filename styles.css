@@ -194,6 +194,18 @@ a {
   text-transform: uppercase;
 }
 
+.image-placeholder--image {
+  padding: 0;
+}
+
+.image-placeholder__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
 .product-block__text {
   display: flex;
   flex-direction: column;
@@ -345,6 +357,14 @@ a {
   filter: blur(1.5px);
   transition: opacity 260ms ease, filter 260ms ease;
   background: rgba(15, 16, 18, 0.6);
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .carousel-slide.is-active {
