@@ -959,6 +959,14 @@ a {
     text-align: center;
   }
 
+  .product-block-line .line {
+    font-size: clamp(18px, 6.5vw, 30px);
+    line-height: 1.2;
+    white-space: normal;
+    overflow: visible;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+  }
+
   .product-block__text {
     align-items: center;
     text-align: center;
