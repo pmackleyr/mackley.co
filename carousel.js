@@ -23,7 +23,9 @@ class Carousel {
     this.translateX = 0;
     this.isDragging = false;
     this.startX = 0;
+    this.startY = 0;
     this.startTranslate = 0;
+    this.dragAxis = null;
     this.setupDots();
     this.bindEvents();
     this.measure();
@@ -122,15 +124,30 @@ class Carousel {
   }
 
   onPointerDown(event) {
-    this.isDragging = true;
+    this.isDragging = false;
     this.startX = event.clientX;
+    this.startY = event.clientY;
     this.startTranslate = this.translateX;
+    this.dragAxis = null;
     this.track.style.transition = "none";
     this.viewport.setPointerCapture(event.pointerId);
   }
 
   onPointerMove(event) {
-    if (!this.isDragging) return;
+    const deltaX = event.clientX - this.startX;
+    const deltaY = event.clientY - this.startY;
+
+    if (!this.dragAxis) {
+      const threshold = 8;
+      if (Math.abs(deltaX) < threshold && Math.abs(deltaY) < threshold) return;
+      this.dragAxis = Math.abs(deltaX) > Math.abs(deltaY) ? "x" : "y";
+    }
+
+    if (this.dragAxis !== "x") return;
+    if (!this.isDragging) {
+      this.isDragging = true;
+    }
+    event.preventDefault();
     const delta = event.clientX - this.startX;
     this.translateX = this.startTranslate + delta;
     this.applyTransform(false);
@@ -139,6 +156,7 @@ class Carousel {
   onPointerUp() {
     if (!this.isDragging) return;
     this.isDragging = false;
+    this.dragAxis = null;
     const slideWidth = this.slides[0].getBoundingClientRect().width;
     const base = (this.viewportWidth - slideWidth) / 2;
     const index = Math.round((base - this.translateX) / this.step);
