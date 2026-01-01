@@ -5,6 +5,10 @@ const API_BASE = "https://api.mackley.co";
 const SOCIAL_PROOF_ENDPOINT = `${API_BASE}/social-proof`;
 const emailStorageKey = "mackley_checkout_email";
 const purchaseRecordKey = "mackley_purchase_recorded";
+const ORDER_METADATA = {
+  order_type: "preorder",
+  production_run: "v1"
+};
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -320,10 +324,10 @@ function renderSuccess(data) {
   const orderId = data?.orderId ?? `MK-${Date.now()}`;
   main.innerHTML = `
     <section class="checkout-confirm" aria-live="polite">
-      <h1 class="page-title">Order confirmed.</h1>
+      <h1 class="page-title">Pre-order confirmed.</h1>
       <p class="page-subhead">We’ll email updates before shipping.</p>
       <div class="checkout-card">
-        <div class="summary-row"><span>Order #</span><span>${orderId}</span></div>
+        <div class="summary-row"><span>Pre-order #</span><span>${orderId}</span></div>
         <div class="summary-row"><span>Email</span><span>${email}</span></div>
         <div class="summary-row"><span>Quantity</span><span>${qty}</span></div>
         <div class="summary-row summary-total"><span>Total</span><span>${total}</span></div>
@@ -401,7 +405,8 @@ async function createPaymentIntent() {
         email,
         name,
         shipping,
-        allowIncomplete: !shippingValid
+        allowIncomplete: !shippingValid,
+        metadata: ORDER_METADATA
       })
     });
 
@@ -458,7 +463,8 @@ async function setupStripe() {
         quantity: getQuantity(),
         email: "",
         name: "",
-        allowIncomplete: true
+        allowIncomplete: true,
+        metadata: ORDER_METADATA
       })
     });
 
@@ -524,7 +530,7 @@ async function handleSubmit(event) {
   }
 
   placeOrderButton.disabled = true;
-  placeOrderButton.textContent = "Placing...";
+  placeOrderButton.textContent = "Placing pre-order...";
 
   const { email, name } = getCustomerData();
   const shipping = getShippingData();
@@ -545,7 +551,7 @@ async function handleSubmit(event) {
 
   if (result.error) {
     placeOrderButton.disabled = false;
-    placeOrderButton.textContent = "Place order";
+    placeOrderButton.textContent = "Pre-Order";
     if (result.error.type === "validation_error") {
       return;
     }
