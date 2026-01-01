@@ -3,12 +3,16 @@ const PROOF_ENDPOINT = `${API_BASE}/social-proof`;
 const PROOF_REFRESH_MS = 60000;
 const formatter = new Intl.NumberFormat("en-US");
 
-const proofs = Array.from(document.querySelectorAll(".social-proof[data-proof]"));
+const proofs = Array.from(document.querySelectorAll("[data-proof]"));
 
 function getWindowSeconds(el) {
   const parsed = Number(el.dataset.window);
   if (!Number.isNaN(parsed) && parsed > 0) return parsed;
   return el.dataset.proof === "purchase" ? 3600 : 900;
+}
+
+function isTotalMode(el) {
+  return el.dataset.total === "true";
 }
 
 function shouldRecordOnLoad(el) {
@@ -25,12 +29,17 @@ function formatProofText(el, count) {
 }
 
 async function fetchProof(el, record) {
+  const totalMode = isTotalMode(el);
   const payload = {
     type: el.dataset.proof,
     page: el.dataset.page || "site",
-    window: getWindowSeconds(el),
-    record: Boolean(record)
+    record: Boolean(record),
+    total: totalMode
   };
+
+  if (!totalMode) {
+    payload.window = getWindowSeconds(el);
+  }
 
   const response = await fetch(PROOF_ENDPOINT, {
     method: "POST",
