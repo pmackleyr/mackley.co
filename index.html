@@ -47,9 +47,24 @@
     </div>
     <section class="product-block paragraph" aria-label="Product">
       <div class="product-block__image">
-        <div class="image-placeholder image-placeholder--image">
-          <img class="image-placeholder__img" src="/public/product/product.png" alt="Original Neti Pot™" />
-        </div>
+        <section class="carousel" aria-label="Product images">
+          <div class="carousel-viewport" tabindex="0">
+            <div class="carousel-track">
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product.png" alt="Original Neti Pot™" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/ad.png" alt="Original Neti Pot™ in use" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/material.png" alt="Original Neti Pot™ material detail" />
+              </div>
+            </div>
+          </div>
+          <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
+          <button class="carousel-button carousel-button--next" type="button" aria-label="Next slide">›</button>
+          <div class="carousel-dots" aria-label="Carousel slides"></div>
+        </section>
       </div>
 
       <div class="product-block__text">
@@ -304,6 +319,7 @@
 
     narrative.addEventListener("scroll", onScroll);
   </script>
+  <script type="module" src="/carousel.js"></script>
   <script type="module" src="/social-proof.js"></script>
 </body>
 </html>
