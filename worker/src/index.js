@@ -6,6 +6,15 @@ const ALLOWED_ORIGINS = new Set([
   "http://127.0.0.1:5500"
 ]);
 
+function isAllowedOrigin(origin) {
+  return Boolean(origin && ALLOWED_ORIGINS.has(origin));
+}
+
+function corsOriginForSocialProof(origin) {
+  if (!origin || origin === "null") return "*";
+  return origin;
+}
+
 function jsonResponse(status, data, origin) {
   const headers = {
     "Content-Type": "application/json"
@@ -62,10 +71,74 @@ function validateBody(body) {
   return null;
 }
 
+function isValidProofType(type) {
+  return type === "view" || type === "purchase";
+}
+
+function normalizeWindow(windowSeconds) {
+  const parsed = Number(windowSeconds);
+  if (Number.isNaN(parsed)) return null;
+  const clamped = Math.max(60, Math.min(parsed, 86400));
+  return clamped;
+}
+
+function isValidPage(page) {
+  return typeof page === "string" && /^[a-z0-9-]+$/.test(page) && page.length <= 64;
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
-    if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+
+    const url = new URL(request.url);
+    if (url.pathname === "/social-proof") {
+      const corsOrigin = corsOriginForSocialProof(origin);
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: withCorsHeaders(new Headers(), corsOrigin)
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, corsOrigin);
+      }
+
+      let payload = null;
+      try {
+        payload = await request.json();
+      } catch (error) {
+        return jsonResponse(400, { error: "Invalid JSON." }, corsOrigin);
+      }
+
+      if (!payload || typeof payload !== "object") {
+        return jsonResponse(400, { error: "Invalid payload." }, corsOrigin);
+      }
+
+      const type = payload.type;
+      const page = payload.page;
+      const windowSeconds = normalizeWindow(payload.window);
+      if (!isValidProofType(type) || !isValidPage(page) || !windowSeconds) {
+        return jsonResponse(400, { error: "Invalid payload." }, corsOrigin);
+      }
+
+      const record = Boolean(payload.record);
+      const id = env.SOCIAL_PROOF.idFromName("social-proof");
+      const stub = env.SOCIAL_PROOF.get(id);
+      const response = await stub.fetch("https://social-proof", {
+        method: "POST",
+        body: JSON.stringify({
+          key: `${type}:${page}`,
+          window: windowSeconds,
+          record
+        })
+      });
+
+      const data = await response.json();
+      return jsonResponse(200, data, corsOrigin);
+    }
+
+    if (!isAllowedOrigin(origin)) {
       return jsonResponse(403, { error: "Origin not allowed." }, origin);
     }
 
@@ -80,7 +153,6 @@ export default {
       return jsonResponse(405, { error: "Method not allowed." }, origin);
     }
 
-    const url = new URL(request.url);
     if (url.pathname !== "/create-payment-intent") {
       return jsonResponse(404, { error: "Not found." }, origin);
     }
@@ -142,3 +214,48 @@ export default {
     }
   }
 };
+
+export class SocialProof {
+  constructor(state) {
+    this.state = state;
+  }
+
+  async fetch(request) {
+    if (request.method !== "POST") {
+      return new Response("Method not allowed.", { status: 405 });
+    }
+
+    let payload = null;
+    try {
+      payload = await request.json();
+    } catch (error) {
+      return new Response("Invalid JSON.", { status: 400 });
+    }
+
+    const key = payload?.key;
+    const windowSeconds = normalizeWindow(payload?.window);
+    const record = Boolean(payload?.record);
+    if (typeof key !== "string" || !windowSeconds) {
+      return new Response("Invalid payload.", { status: 400 });
+    }
+
+    const now = Date.now();
+    const cutoff = now - windowSeconds * 1000;
+    const stored = await this.state.storage.get(key);
+    const events = Array.isArray(stored) ? stored : [];
+    const fresh = events.filter((timestamp) => typeof timestamp === "number" && timestamp >= cutoff);
+
+    if (record) {
+      fresh.push(now);
+    }
+
+    const trimmed = fresh.slice(-5000);
+    await this.state.storage.put(key, trimmed);
+
+    return new Response(JSON.stringify({ count: trimmed.length }), {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  }
+}

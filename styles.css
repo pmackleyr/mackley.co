@@ -454,6 +454,44 @@ a {
   color: var(--muted);
 }
 
+.social-proof {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(12, 13, 14, 0.55);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(245, 245, 244, 0.7);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: var(--proof-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.social-proof.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.social-proof::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(196, 255, 210, 0.9);
+  box-shadow: 0 0 8px rgba(196, 255, 210, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-proof {
+    transition: none;
+    transform: none;
+  }
+}
+
 .prose {
   width: 100%;
   max-width: 800px;

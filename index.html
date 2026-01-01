@@ -43,7 +43,7 @@
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
     <div class="paragraph">
-      <p class="line">Change begins by <a class="underline" href="/breath">breath</a>.</p>
+      <p class="line">Change begins with a <a class="underline" href="/breath">breath</a>.</p>
     </div>
     <section class="product-block paragraph" aria-label="Product">
       <div class="product-block__image">
@@ -55,7 +55,11 @@
         <p class="product-block__description">
           Clear your nasal passage. Breathe deeper.
         </p>
-        <a class="product-block__cta" href="/original">Learn more</a>
+        <p class="social-proof" data-proof="view" data-page="home" data-window="900" data-label="people just viewed this" data-singular="person just viewed this" aria-live="polite">Live activity updating</p>
+        <div class="product-block__actions">
+          <a class="product-block__cta" href="/checkout.html" data-instant-checkout="true" data-qty="1">buy</a>
+          <a class="product-block__cta" href="/original">Learn more</a>
+        </div>
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
@@ -98,6 +102,14 @@
       "/public/outside/surfer.gif",
       "/public/outside/yogi.gif"
     ];
+
+    const instantCheckout = document.querySelector("[data-instant-checkout]");
+    if (instantCheckout) {
+      instantCheckout.addEventListener("click", () => {
+        const qty = Number(instantCheckout.dataset.qty) || 1;
+        localStorage.setItem("mackley_checkout_qty", String(qty));
+      });
+    }
 
     function poolForParagraph(paragraphEl) {
       if (!paragraphEl) return null;
@@ -290,5 +302,6 @@
 
     narrative.addEventListener("scroll", onScroll);
   </script>
+  <script type="module" src="/social-proof.js"></script>
 </body>
 </html>

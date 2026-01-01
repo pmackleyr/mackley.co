@@ -2,7 +2,9 @@ const UNIT_PRICE = 50;
 const DISCOUNT_PER_EXTRA = 5;
 const STORAGE_KEY = "mackley_checkout_qty";
 const API_BASE = "https://api.mackley.co";
+const SOCIAL_PROOF_ENDPOINT = `${API_BASE}/social-proof`;
 const emailStorageKey = "mackley_checkout_email";
+const purchaseRecordKey = "mackley_purchase_recorded";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -162,6 +164,28 @@ function updateCTAState() {
   const contactValid = validateContact();
   const shippingValid = validateShippingFields();
   placeOrderButton.disabled = !(contactValid && shippingValid && stripeReady);
+}
+
+function recordPurchaseProof(force) {
+  if (!successMode && !force) return;
+  if (sessionStorage.getItem(purchaseRecordKey)) return;
+  sessionStorage.setItem(purchaseRecordKey, String(Date.now()));
+
+  fetch(SOCIAL_PROOF_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "purchase",
+      page: "checkout",
+      window: 3600,
+      record: true
+    }),
+    keepalive: true
+  }).catch(() => {
+    // Best-effort; ignore failures.
+  });
 }
 
 function handleContactAdvance() {
@@ -418,6 +442,7 @@ async function handleSubmit(event) {
     quantity: getQuantity(),
     orderId: `MK-${Date.now()}`
   });
+  recordPurchaseProof(true);
 }
 
 function initAccordion() {
@@ -486,6 +511,7 @@ if (successMode) {
     quantity: savedQty,
     orderId: `MK-${Date.now()}`
   });
+  recordPurchaseProof();
 } else {
   initAccordion();
   initFields();

@@ -7,3 +7,9 @@ zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657"
 routes = [
   { pattern = "api.mackley.co/*", zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657" }
 ]
+
+durable_objects = { bindings = [{ name = "SOCIAL_PROOF", class_name = "SocialProof" }] }
+
+migrations = [
+  { tag = "v1", new_sqlite_classes = ["SocialProof"] }
+]
