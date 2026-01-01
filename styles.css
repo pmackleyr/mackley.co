@@ -570,17 +570,19 @@ a {
 }
 
 .checkout-page {
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .checkout {
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - var(--header-h) - var(--footer-h));
+  --checkout-pad: clamp(12px, 2.5vh, 24px);
+  height: calc(100vh - var(--header-h) - var(--footer-h));
   margin-top: var(--header-h);
-  margin-bottom: var(--footer-h);
-  padding: clamp(12px, 2.5vh, 24px) var(--page-pad);
+  padding: var(--checkout-pad) var(--page-pad);
+  padding-bottom: calc(var(--checkout-pad) + var(--footer-h));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2vh, 20px);
@@ -903,7 +905,7 @@ a {
   }
 
   .checkout-summary {
-    order: -1;
+    order: 1;
   }
 }
 
