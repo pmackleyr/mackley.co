@@ -117,8 +117,9 @@ export default {
 
       const type = payload.type;
       const page = payload.page;
-      const windowSeconds = normalizeWindow(payload.window);
-      if (!isValidProofType(type) || !isValidPage(page) || !windowSeconds) {
+      const totalMode = Boolean(payload.total);
+      const windowSeconds = totalMode ? null : normalizeWindow(payload.window);
+      if (!isValidProofType(type) || !isValidPage(page) || (!totalMode && !windowSeconds)) {
         return jsonResponse(400, { error: "Invalid payload." }, corsOrigin);
       }
 
@@ -130,7 +131,8 @@ export default {
         body: JSON.stringify({
           key: `${type}:${page}`,
           window: windowSeconds,
-          record
+          record,
+          total: totalMode
         })
       });
 
@@ -233,10 +235,23 @@ export class SocialProof {
     }
 
     const key = payload?.key;
-    const windowSeconds = normalizeWindow(payload?.window);
+    const totalMode = Boolean(payload?.total);
+    const windowSeconds = totalMode ? null : normalizeWindow(payload?.window);
     const record = Boolean(payload?.record);
-    if (typeof key !== "string" || !windowSeconds) {
+    if (typeof key !== "string" || (!totalMode && !windowSeconds)) {
       return new Response("Invalid payload.", { status: 400 });
+    }
+
+    if (totalMode) {
+      const stored = await this.state.storage.get(key);
+      const current = Number.isFinite(stored) ? stored : 0;
+      const next = record ? current + 1 : current;
+      await this.state.storage.put(key, next);
+      return new Response(JSON.stringify({ count: next }), {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
     }
 
     const now = Date.now();

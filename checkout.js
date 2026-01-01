@@ -180,7 +180,8 @@ function recordPurchaseProof(force) {
       type: "purchase",
       page: "checkout",
       window: 3600,
-      record: true
+      record: true,
+      total: true
     }),
     keepalive: true
   }).catch(() => {
