@@ -261,6 +261,16 @@ a {
   color: #fff;
 }
 
+.product-block__title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-block__title-link:hover,
+.product-block__title-link:focus-visible {
+  text-decoration: underline;
+}
+
 .product-block__description {
   max-width: 52ch;
   font-size: clamp(16px, 1.6vw, 18px);
