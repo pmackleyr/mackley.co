@@ -87,6 +87,17 @@ a {
   text-decoration-thickness: 0.08em;
 }
 
+.text-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
 .site-title .brand {
   font-size: 1em;
 }
