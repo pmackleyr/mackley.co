@@ -187,7 +187,8 @@ a {
 .product-block-line {
   width: 100%;
   max-width: 1100px;
-  text-align: left;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .product-block__image {
