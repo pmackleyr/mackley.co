@@ -1,8 +1,11 @@
 const UNIT_PRICE = 50;
 const DISCOUNT_PER_EXTRA = 5;
 const STORAGE_KEY = "mackley_checkout_qty";
-const API_BASE = "https://api.mackley.co";
-const SOCIAL_PROOF_ENDPOINT = `${API_BASE}/social-proof`;
+const PAYMENT_API_BASES = [
+  "https://ffudhrbpontjqugimvup.functions.supabase.co",
+  "https://api.mackley.co"
+];
+const SOCIAL_PROOF_ENDPOINT = "https://api.mackley.co/social-proof";
 const emailStorageKey = "mackley_checkout_email";
 const purchaseRecordKey = "mackley_purchase_recorded";
 const ORDER_METADATA = {
@@ -395,24 +398,14 @@ async function createPaymentIntent() {
   const quantity = getQuantity();
 
   try {
-    const response = await fetch(`${API_BASE}/create-payment-intent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        quantity,
-        email,
-        name,
-        shipping,
-        allowIncomplete: !shippingValid,
-        metadata: ORDER_METADATA
-      })
+    const data = await requestPaymentIntent({
+      quantity,
+      email,
+      name,
+      shipping,
+      allowIncomplete: !shippingValid,
+      metadata: ORDER_METADATA
     });
-
-    if (!response.ok) throw new Error("Request failed");
-    const data = await response.json();
-    if (!data.clientSecret) throw new Error("Missing client secret");
     stripeReady = false;
     elements.update({ clientSecret: data.clientSecret });
     mountPaymentElement();
@@ -427,6 +420,35 @@ function debounceCreateIntent() {
   debounceTimer = setTimeout(() => {
     createPaymentIntent();
   }, 350);
+}
+
+async function requestPaymentIntent(payload) {
+  let lastError = null;
+  for (const base of PAYMENT_API_BASES) {
+    try {
+      const response = await fetch(`${base}/create-payment-intent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        lastError = new Error("Request failed");
+        continue;
+      }
+      const data = await response.json();
+      if (!data.clientSecret) {
+        lastError = new Error("Missing client secret");
+        continue;
+      }
+      return data;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("Request failed");
 }
 
 async function setupStripe() {
@@ -454,23 +476,13 @@ async function setupStripe() {
     shippingComplete = false;
     shippingAddressValue = null;
 
-    const response = await fetch(`${API_BASE}/create-payment-intent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        quantity: getQuantity(),
-        email: "",
-        name: "",
-        allowIncomplete: true,
-        metadata: ORDER_METADATA
-      })
+    const data = await requestPaymentIntent({
+      quantity: getQuantity(),
+      email: "",
+      name: "",
+      allowIncomplete: true,
+      metadata: ORDER_METADATA
     });
-
-    if (!response.ok) throw new Error("Request failed");
-    const data = await response.json();
-    if (!data.clientSecret) throw new Error("Missing client secret");
 
     elements = stripe.elements({ clientSecret: data.clientSecret, appearance: { theme: "night" } });
     let addressReady = false;
