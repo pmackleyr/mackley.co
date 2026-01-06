@@ -125,11 +125,10 @@
       const formData = new FormData(waitlistForm);
       const firstName = String(formData.get("firstName") || "").trim();
       const email = String(formData.get("email") || "").trim();
-      const intent = String(formData.get("intent") || "").trim();
       if (email) {
         const subject = encodeURIComponent("Waitlist signup");
         const body = encodeURIComponent(
-          `New waitlist signup:\nName: ${firstName || "N/A"}\nEmail: ${email}\nIntent: ${intent || "N/A"}`
+          `New waitlist signup:\nName: ${firstName || "N/A"}\nEmail: ${email}`
         );
         window.location.href = `mailto:contact@mackley.co?subject=${subject}&body=${body}`;
       }
