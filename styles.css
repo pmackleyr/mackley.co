@@ -602,6 +602,10 @@ a {
   overflow: hidden;
 }
 
+.checkout-loading .checkout {
+  visibility: hidden;
+}
+
 .checkout {
   position: relative;
   z-index: 1;

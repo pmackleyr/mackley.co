@@ -56,6 +56,8 @@ let setupInFlight = false;
 let retryTimer = null;
 let retryAttempt = 0;
 const retryDelays = [1200, 2500, 5000];
+let prefetchedClientSecret = null;
+let redirectInFlight = false;
 const header = document.querySelector(".site-header");
 const footer = document.querySelector(".site-footer");
 const successMode = new URLSearchParams(window.location.search).get("success") === "1";
@@ -198,6 +200,12 @@ function updateCTAState() {
   placeOrderButton.disabled = !(contactValid && shippingValid && stripeReady);
 }
 
+function redirectToStripe() {
+  if (redirectInFlight) return;
+  redirectInFlight = true;
+  window.location.replace(STRIPE_PAYMENT_LINK);
+}
+
 function showPaymentFallback(message) {
   stripeReady = false;
   if (paymentFallbackText && message) {
@@ -228,7 +236,7 @@ function clearRetryTimer() {
 function schedulePaymentRetry(message) {
   showPaymentFallback(message || "Payment temporarily unavailable. Retrying...");
   if (retryAttempt >= retryDelays.length) {
-    window.location.assign(STRIPE_PAYMENT_LINK);
+    redirectToStripe();
     return;
   }
   const delay = retryDelays[retryAttempt];
@@ -464,7 +472,7 @@ async function setupStripe() {
   const key = window.STRIPE_PUBLISHABLE_KEY || metaKey;
   if (!key || !window.Stripe) {
     setupInFlight = false;
-    window.location.assign(STRIPE_PAYMENT_LINK);
+    redirectToStripe();
     return;
   }
 
@@ -481,13 +489,16 @@ async function setupStripe() {
     shippingComplete = false;
     shippingAddressValue = null;
 
-    const data = await requestPaymentIntent({
-      quantity: getQuantity(),
-      email: "",
-      name: "",
-      allowIncomplete: true,
-      metadata: ORDER_METADATA
-    });
+    const data = prefetchedClientSecret
+      ? { clientSecret: prefetchedClientSecret }
+      : await requestPaymentIntent({
+        quantity: getQuantity(),
+        email: "",
+        name: "",
+        allowIncomplete: true,
+        metadata: ORDER_METADATA
+      });
+    prefetchedClientSecret = null;
 
     elements = stripe.elements({ clientSecret: data.clientSecret, appearance: { theme: "night" } });
     let addressReady = false;
@@ -572,7 +583,7 @@ async function handleSubmit(event) {
     if (result.error.type === "validation_error") {
       return;
     }
-    window.location.assign(STRIPE_PAYMENT_LINK);
+    redirectToStripe();
     return;
   }
 
@@ -639,6 +650,29 @@ function initQuantity() {
   });
 }
 
+async function gateCheckout() {
+  if (successMode) return true;
+  try {
+    const data = await Promise.race([
+      requestPaymentIntent({
+        quantity: getQuantity(),
+        email: "",
+        name: "",
+        allowIncomplete: true,
+        metadata: ORDER_METADATA
+      }),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout")), 2500);
+      })
+    ]);
+    prefetchedClientSecret = data.clientSecret;
+    return true;
+  } catch (error) {
+    redirectToStripe();
+    return false;
+  }
+}
+
 updateInsets();
 window.addEventListener("resize", updateInsets);
 
@@ -663,11 +697,16 @@ if (successMode) {
     orderId: `MK-${Date.now()}`
   });
   recordPurchaseProof();
+  document.documentElement.classList.remove("checkout-loading");
 } else {
   initAccordion();
   initFields();
   initQuantity();
   form.addEventListener("submit", handleSubmit);
-  setupStripe();
-  updateCTAState();
+  gateCheckout().then((ok) => {
+    if (!ok) return;
+    setupStripe();
+    updateCTAState();
+    document.documentElement.classList.remove("checkout-loading");
+  });
 }
