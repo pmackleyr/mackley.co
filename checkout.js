@@ -2,7 +2,7 @@ const UNIT_PRICE = 50;
 const DISCOUNT_PER_EXTRA = 5;
 const STORAGE_KEY = "mackley_checkout_qty";
 const PAYMENT_API_BASES = [
-  "https://ffudhrbpontjqugimvup.functions.supabase.co",
+  "https://ffudhrbpontjqugimvup.supabase.co/functions/v1",
   "https://api.mackley.co"
 ];
 const SOCIAL_PROOF_ENDPOINT = "https://api.mackley.co/social-proof";
