@@ -809,10 +809,14 @@ body.modal-open .narrative {
     justify-items: center;
     text-align: center;
     row-gap: 10px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
   }
 
   .site-footer__group {
     justify-content: center;
+    flex-wrap: nowrap;
+    gap: 10px;
   }
 
   .site-footer__center {
