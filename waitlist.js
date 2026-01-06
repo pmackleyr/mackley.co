@@ -137,29 +137,25 @@
       }
 
       try {
-        if (endpoint && !endpoint.includes("your-id")) {
-          const payload = {
-            firstName: firstName || "N/A",
-            email
-          };
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
+        if (!endpoint || endpoint.includes("your-id")) {
+          throw new Error("Missing Formspree endpoint.");
+        }
 
-          if (!response.ok) {
-            throw new Error("Submission failed.");
-          }
-        } else if (email) {
-          const subject = encodeURIComponent("Waitlist signup");
-          const body = encodeURIComponent(
-            `New waitlist signup:\nName: ${firstName || "N/A"}\nEmail: ${email}`
-          );
-          window.location.href = `mailto:contact@mackley.co?subject=${subject}&body=${body}`;
+        const payload = new FormData();
+        payload.append("firstName", firstName || "N/A");
+        payload.append("email", email);
+        payload.append("source", window.location.pathname);
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Accept": "application/json"
+          },
+          body: payload
+        });
+
+        if (!response.ok) {
+          throw new Error("Submission failed.");
         }
       } catch (error) {
         // Keep share modal available even if submission fails.
