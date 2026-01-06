@@ -43,7 +43,7 @@
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
     <section class="paragraph product-block-group" aria-label="Product">
-      <p class="line product-block-line">Change begins by <span class="underline">breath</span>.</p>
+      <p class="line product-block-line">Change begins by <a class="underline" href="/breath">breath</a>.</p>
       <div class="product-block">
         <div class="product-block__image">
           <section class="carousel" aria-label="Product images">
@@ -112,6 +112,13 @@
           <input class="modal__input" id="waitlist-name" name="firstName" type="text" placeholder="Your First Name" autocomplete="given-name" />
           <label class="sr-only" for="waitlist-email">Your Email Address</label>
           <input class="modal__input" id="waitlist-email" name="email" type="email" placeholder="Your Email Address*" autocomplete="email" required />
+          <label class="sr-only" for="waitlist-intent">Your Intent</label>
+          <select class="modal__input" id="waitlist-intent" name="intent" required>
+            <option value="" disabled selected>Intent*</option>
+            <option value="1">Buying 1</option>
+            <option value="multiple">Buying multiple</option>
+            <option value="wholesale">Wholesale</option>
+          </select>
           <button class="modal__button" type="submit">Join our waitlist</button>
         </form>
       </div>
