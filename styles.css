@@ -633,6 +633,15 @@ a {
   min-height: 0;
 }
 
+.checkout-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.checkout-grid--single .checkout-card {
+  width: min(520px, 100%);
+}
+
 .checkout-form {
   display: flex;
   flex-direction: column;
