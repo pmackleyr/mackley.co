@@ -120,7 +120,7 @@
   });
 
   if (waitlistForm) {
-    waitlistForm.addEventListener("submit", (event) => {
+    waitlistForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!waitlistForm.checkValidity()) {
         waitlistForm.reportValidity();
@@ -129,12 +129,45 @@
       const formData = new FormData(waitlistForm);
       const firstName = String(formData.get("firstName") || "").trim();
       const email = String(formData.get("email") || "").trim();
-      if (email) {
-        const subject = encodeURIComponent("Waitlist signup");
-        const body = encodeURIComponent(
-          `New waitlist signup:\nName: ${firstName || "N/A"}\nEmail: ${email}`
-        );
-        window.location.href = `mailto:contact@mackley.co?subject=${subject}&body=${body}`;
+      const endpoint = waitlistForm.dataset.endpoint;
+      const submitButton = waitlistForm.querySelector("button[type=\"submit\"]");
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting...";
+      }
+
+      try {
+        if (endpoint && !endpoint.includes("your-id")) {
+          const payload = {
+            firstName: firstName || "N/A",
+            email
+          };
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error("Submission failed.");
+          }
+        } else if (email) {
+          const subject = encodeURIComponent("Waitlist signup");
+          const body = encodeURIComponent(
+            `New waitlist signup:\nName: ${firstName || "N/A"}\nEmail: ${email}`
+          );
+          window.location.href = `mailto:contact@mackley.co?subject=${subject}&body=${body}`;
+        }
+      } catch (error) {
+        // Keep share modal available even if submission fails.
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = "Join our waitlist";
+        }
       }
       const referralUrl = buildReferralUrl();
       openShareModal(referralUrl);
