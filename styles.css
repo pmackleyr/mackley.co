@@ -808,6 +808,7 @@ body.modal-open .narrative {
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
+    row-gap: 10px;
   }
 
   .site-footer__group {
@@ -816,6 +817,18 @@ body.modal-open .narrative {
 
   .site-footer__center {
     width: 100%;
+  }
+
+  .site-footer__center {
+    order: 1;
+  }
+
+  .site-footer__group--start {
+    order: 2;
+  }
+
+  .site-footer__group--end {
+    order: 3;
   }
 
   .share-row {

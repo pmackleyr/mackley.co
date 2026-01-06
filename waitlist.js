@@ -122,6 +122,10 @@
   if (waitlistForm) {
     waitlistForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!waitlistForm.checkValidity()) {
+        waitlistForm.reportValidity();
+        return;
+      }
       const formData = new FormData(waitlistForm);
       const firstName = String(formData.get("firstName") || "").trim();
       const email = String(formData.get("email") || "").trim();
