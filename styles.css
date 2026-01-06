@@ -633,15 +633,6 @@ a {
   min-height: 0;
 }
 
-.checkout-grid--single {
-  grid-template-columns: minmax(0, 1fr);
-  justify-items: center;
-}
-
-.checkout-grid--single .checkout-card {
-  width: min(520px, 100%);
-}
-
 .checkout-form {
   display: flex;
   flex-direction: column;
@@ -816,13 +807,6 @@ a {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-}
-
-.checkout-alt-pay {
-  width: 100%;
-  margin-top: 10px;
-  text-align: center;
-  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .accordion {

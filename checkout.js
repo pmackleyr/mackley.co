@@ -6,6 +6,8 @@ const PAYMENT_API_BASES = [
   "https://api.mackley.co"
 ];
 const SOCIAL_PROOF_ENDPOINT = "https://api.mackley.co/social-proof";
+const STRIPE_PAYMENT_LINK = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content
+  || "https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00";
 const emailStorageKey = "mackley_checkout_email";
 const purchaseRecordKey = "mackley_purchase_recorded";
 const ORDER_METADATA = {
@@ -225,7 +227,10 @@ function clearRetryTimer() {
 
 function schedulePaymentRetry(message) {
   showPaymentFallback(message || "Payment temporarily unavailable. Retrying...");
-  if (retryAttempt >= retryDelays.length) return;
+  if (retryAttempt >= retryDelays.length) {
+    window.location.assign(STRIPE_PAYMENT_LINK);
+    return;
+  }
   const delay = retryDelays[retryAttempt];
   retryAttempt += 1;
   clearRetryTimer();
@@ -459,7 +464,7 @@ async function setupStripe() {
   const key = window.STRIPE_PUBLISHABLE_KEY || metaKey;
   if (!key || !window.Stripe) {
     setupInFlight = false;
-    schedulePaymentRetry("Payment temporarily unavailable. Retrying...");
+    window.location.assign(STRIPE_PAYMENT_LINK);
     return;
   }
 
@@ -567,7 +572,7 @@ async function handleSubmit(event) {
     if (result.error.type === "validation_error") {
       return;
     }
-    showPaymentFallback("Payment failed. Please review your details and retry.");
+    window.location.assign(STRIPE_PAYMENT_LINK);
     return;
   }
 
