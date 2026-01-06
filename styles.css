@@ -65,6 +65,8 @@ a {
 .site-header {
   top: 0;
   padding: clamp(14px, 3vw, 28px) var(--page-pad);
+  min-height: 64px;
+  align-items: center;
 }
 
 .site-title {
@@ -72,6 +74,10 @@ a {
   text-decoration: none;
   font-size: clamp(33px, 3.9vw, 39px);
   color: inherit;
+  max-width: min(80vw, 720px);
+  text-align: center;
+  line-height: 1;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
 }
 
 .brand {
@@ -384,7 +390,7 @@ a {
   z-index: 1;
   height: 100vh;
   overflow-y: auto;
-  padding: clamp(96px, 14vh, 160px) var(--page-pad) clamp(80px, 12vh, 140px);
+  padding: calc(var(--header-h) + clamp(32px, 8vh, 72px)) var(--page-pad) clamp(80px, 12vh, 140px);
   display: flex;
   flex-direction: column;
   gap: clamp(36px, 7vh, 70px);

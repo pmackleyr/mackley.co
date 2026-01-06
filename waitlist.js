@@ -6,7 +6,20 @@
   const referralInput = document.getElementById("referral-link");
   const shareLinks = Array.from(document.querySelectorAll("[data-share]"));
   const copyButton = document.querySelector("[data-copy]");
+  const header = document.querySelector(".site-header");
+  const footer = document.querySelector(".site-footer");
   let lastActiveElement = null;
+
+  function updateInsets() {
+    const root = document.documentElement;
+    const headerHeight = header ? header.offsetHeight : 0;
+    const footerHeight = footer ? footer.offsetHeight : 0;
+    root.style.setProperty("--header-h", `${headerHeight}px`);
+    root.style.setProperty("--footer-h", `${footerHeight}px`);
+  }
+
+  updateInsets();
+  window.addEventListener("resize", updateInsets);
 
   if (!waitlistTriggers.length || !waitlistModal || !shareModal) {
     return;
