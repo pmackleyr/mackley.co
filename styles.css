@@ -110,15 +110,16 @@ a {
 
 .site-footer {
   bottom: 0;
-  justify-content: space-between;
-  gap: clamp(10px, 3vw, 28px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: clamp(8px, 2vw, 18px);
   padding: clamp(10px, 2.2vw, 24px) var(--page-pad);
   background: transparent;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   white-space: nowrap;
-  font-size: clamp(9px, 1.5vw, 12px);
-  letter-spacing: clamp(0.08em, 0.45vw, 0.18em);
+  font-size: clamp(10px, 1.8vw, 12px);
+  letter-spacing: clamp(0.09em, 0.5vw, 0.18em);
 }
 
 .site-footer__group {
@@ -137,14 +138,17 @@ a {
   align-items: center;
   justify-content: center;
   flex: 1;
+  justify-self: center;
 }
 
 .site-footer__group--start {
   justify-content: flex-start;
+  justify-self: start;
 }
 
 .site-footer__group--end {
   justify-content: flex-end;
+  justify-self: end;
 }
 
 .site-footer__link,
@@ -801,7 +805,8 @@ body.modal-open .narrative {
 
 @media (max-width: 640px) {
   .site-footer {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
   }
 
