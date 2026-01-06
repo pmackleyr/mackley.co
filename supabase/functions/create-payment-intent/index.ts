@@ -114,33 +114,29 @@ serve(async (request) => {
     ? originFromHeader(origin)
     : inferredOrigin && isAllowedOrigin(inferredOrigin)
       ? inferredOrigin
-      : null;
-
-  if (!effectiveOrigin) {
-    return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
-  }
+      : originFromHeader(origin) || inferredOrigin || "*";
 
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: withCorsHeaders(new Headers(), effectiveOrigin)
+      headers: withCorsHeaders(new Headers(), effectiveOrigin === "*" ? null : effectiveOrigin)
     });
   }
 
   if (request.method !== "POST") {
-    return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+    return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin === "*" ? null : effectiveOrigin);
   }
 
   let payload: Record<string, unknown> | null = null;
   try {
     payload = await request.json();
   } catch {
-    return jsonResponse(400, { error: "Invalid JSON." }, effectiveOrigin);
+    return jsonResponse(400, { error: "Invalid JSON." }, effectiveOrigin === "*" ? null : effectiveOrigin);
   }
 
   const validationError = validateBody(payload);
   if (validationError) {
-    return jsonResponse(400, { error: validationError }, effectiveOrigin);
+    return jsonResponse(400, { error: validationError }, effectiveOrigin === "*" ? null : effectiveOrigin);
   }
 
   const quantity = Number(payload.quantity);
@@ -178,7 +174,7 @@ serve(async (request) => {
 
   const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!secretKey) {
-    return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
+    return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin === "*" ? null : effectiveOrigin);
   }
 
   try {
@@ -193,11 +189,11 @@ serve(async (request) => {
 
     const data = await response.json();
     if (!response.ok || !data.client_secret) {
-      return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
+      return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin === "*" ? null : effectiveOrigin);
     }
 
-    return jsonResponse(200, { clientSecret: data.client_secret }, effectiveOrigin);
+    return jsonResponse(200, { clientSecret: data.client_secret }, effectiveOrigin === "*" ? null : effectiveOrigin);
   } catch {
-    return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
+    return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin === "*" ? null : effectiveOrigin);
   }
 });
