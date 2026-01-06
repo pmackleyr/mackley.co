@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Checkout | MACKLEY</title>
-  <meta name="stripe-pk" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
+  <meta name="stripe-payment-link" content="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00" />
+  <script>
+    const stripeLink = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content;
+    if (stripeLink) {
+      window.location.replace(stripeLink);
+    }
+  </script>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -24,159 +30,17 @@
   <link rel="icon" href="/public/assets/logo_light_180.png" type="image/png" sizes="180x180" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="/public/assets/logo_light_192.png" type="image/png" sizes="192x192" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="/public/assets/logo_light_512.png" type="image/png" sizes="512x512" media="(prefers-color-scheme: dark)" />
-  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body class="checkout-page">
   <div id="bg-layer" aria-hidden="true"></div>
 
-  <header class="site-header" aria-label="Site">
-    <a class="site-title" href="/"><span class="brand">MACKLEY</span></a>
-  </header>
-
-  <main class="checkout" aria-label="Checkout">
-    <header class="checkout-header">
-      <h1 class="page-title">Checkout</h1>
-      <p class="page-subhead">Pre-Order · <a class="text-link" href="/original">Original Neti Pot™</a></p>
-    </header>
-
-    <div class="checkout-grid">
-      <form class="checkout-form" id="checkout-form" novalidate>
-        <section class="accordion">
-          <div class="accordion-item is-open" data-step="contact">
-            <button class="accordion-header" type="button" aria-expanded="true">
-              <span>Contact</span>
-              <span class="accordion-summary" data-summary="contact">Required</span>
-            </button>
-            <div class="accordion-body">
-              <div class="field">
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-error" />
-                <span class="field-error" id="email-error" role="alert"></span>
-              </div>
-              <div class="field">
-                <label for="full-name">Full name</label>
-                <input id="full-name" name="fullName" type="text" autocomplete="name" required aria-describedby="name-error" />
-                <span class="field-error" id="name-error" role="alert"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item" data-step="shipping">
-            <button class="accordion-header" type="button" aria-expanded="false">
-              <span>Shipping</span>
-              <span class="accordion-summary" data-summary="shipping">Required</span>
-            </button>
-            <div class="accordion-body">
-              <div id="shipping-address-element"></div>
-              <div class="shipping-fields">
-                <div class="field">
-                  <label for="address-line1">Address line 1</label>
-                  <input id="address-line1" name="line1" type="text" autocomplete="address-line1" required aria-describedby="line1-error" />
-                  <span class="field-error" id="line1-error" role="alert"></span>
-                </div>
-                <div class="field">
-                  <label for="address-line2">Address line 2</label>
-                  <input id="address-line2" name="line2" type="text" autocomplete="address-line2" />
-                </div>
-                <div class="field-row">
-                  <div class="field">
-                    <label for="city">City</label>
-                    <input id="city" name="city" type="text" autocomplete="address-level2" required aria-describedby="city-error" />
-                    <span class="field-error" id="city-error" role="alert"></span>
-                  </div>
-                  <div class="field">
-                    <label for="state">State / Province</label>
-                    <input id="state" name="state" type="text" autocomplete="address-level1" required aria-describedby="state-error" />
-                    <span class="field-error" id="state-error" role="alert"></span>
-                  </div>
-                </div>
-                <div class="field-row">
-                  <div class="field">
-                    <label for="postal">Postal code</label>
-                    <input id="postal" name="postal" type="text" autocomplete="postal-code" required aria-describedby="postal-error" />
-                    <span class="field-error" id="postal-error" role="alert"></span>
-                  </div>
-                  <div class="field">
-                    <label for="country">Country</label>
-                    <input id="country" name="country" type="text" autocomplete="country-name" required aria-describedby="country-error" />
-                    <span class="field-error" id="country-error" role="alert"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item" data-step="payment">
-            <button class="accordion-header" type="button" aria-expanded="false">
-              <span>Payment</span>
-              <span class="accordion-summary" data-summary="payment">Required</span>
-            </button>
-            <div class="accordion-body">
-              <div id="payment-element"></div>
-              <div class="payment-fallback" hidden>
-                <p class="checkout-muted" id="payment-fallback-text">Payment temporarily unavailable.</p>
-                <button class="cta" type="button" id="payment-retry">Retry payment</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </form>
-
-      <section class="checkout-summary" aria-label="Order summary">
-        <div class="checkout-card">
-          <h2 class="checkout-title">Order Summary</h2>
-          <div class="summary-row">
-            <a class="text-link" href="/original">Original Neti Pot™</a>
-            <span id="unit-price">$50</span>
-          </div>
-          <div class="summary-row summary-qty summary-qty--merged">
-            <span>Quantity</span>
-            <div class="qty-stack" aria-label="Quantity controls">
-              <div class="qty-chips" role="listbox" aria-label="Quick quantity">
-                <button type="button" class="qty-chip" data-qty="1">1</button>
-                <button type="button" class="qty-chip" data-qty="2">2</button>
-                <button type="button" class="qty-chip" data-qty="3">3</button>
-                <button type="button" class="qty-chip" data-qty="5">5</button>
-                <button type="button" class="qty-chip qty-chip--custom" data-qty="6" hidden></button>
-              </div>
-              <div class="qty-control">
-                <button type="button" class="qty-button" id="qty-decrease" aria-label="Decrease quantity">−</button>
-                <input id="quantity" name="quantity" type="number" min="1" max="10" value="1" />
-                <button type="button" class="qty-button" id="qty-increase" aria-label="Increase quantity">+</button>
-              </div>
-            </div>
-          </div>
-          <div class="summary-row summary-discount" id="discount-row">
-            <span>Quantity adjustment</span>
-            <span id="discount-amount">-$0</span>
-          </div>
-          <p class="summary-microcopy summary-microcopy--highlight">Additional units reduce per-unit cost.</p>
-          <p class="summary-microcopy">Payment reserves a unit from the first run.</p>
-          <div class="summary-row summary-total">
-            <span>Total</span>
-            <span id="total-price">$50</span>
-          </div>
-          <button class="cta cta--primary" type="submit" form="checkout-form" id="place-order" disabled>Pre-Order</button>
-          <p class="social-proof" data-proof="purchase" data-page="checkout" data-total="true" data-label="pre-orders to date" data-singular="pre-order to date" data-record="false" aria-live="polite">Live activity updating</p>
-          <p class="checkout-terms">By placing a pre-order, you agree to <a href="/legal">Legal</a>.</p>
-          <div class="checkout-trust">
-            <p>First production run (500 units)</p>
-            <p>Estimated ship: Spring 2026</p>
-            <p>Cancel anytime before shipment · Full refund</p>
-          </div>
-        </div>
-      </section>
-    </div>
+  <main class="checkout checkout-embed" aria-label="Checkout">
+    <section class="checkout-card checkout-embed-card" aria-label="Stripe checkout">
+      <h1 class="page-title">Redirecting to secure checkout…</h1>
+      <p class="checkout-muted">
+        If you are not redirected automatically, <a class="text-link" href="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00">continue to Stripe</a>.
+      </p>
+    </section>
   </main>
-
-  <footer class="site-footer checkout-footer">
-    <a class="site-footer__link site-footer__link--tight" href="/breath">@<span class="brand">MACKLEY</span> 2026</a>
-    <a class="site-footer__link" href="/original">Original Neti Pot™</a>
-    <a class="site-footer__link" href="mailto:contact@mackley.co">Contact</a>
-    <a class="site-footer__link" href="/legal">Legal</a>
-  </footer>
-
-  <script type="module" src="/checkout.js"></script>
-  <script type="module" src="/social-proof.js"></script>
 </body>
 </html>

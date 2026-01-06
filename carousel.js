@@ -22,6 +22,7 @@ class Carousel {
     this.step = 0;
     this.translateX = 0;
     this.isDragging = false;
+    this.isPointerDown = false;
     this.startX = 0;
     this.startY = 0;
     this.startTranslate = 0;
@@ -124,6 +125,7 @@ class Carousel {
   }
 
   onPointerDown(event) {
+    this.isPointerDown = true;
     this.isDragging = false;
     this.startX = event.clientX;
     this.startY = event.clientY;
@@ -134,6 +136,7 @@ class Carousel {
   }
 
   onPointerMove(event) {
+    if (!this.isPointerDown) return;
     const deltaX = event.clientX - this.startX;
     const deltaY = event.clientY - this.startY;
 
@@ -154,6 +157,8 @@ class Carousel {
   }
 
   onPointerUp() {
+    if (!this.isPointerDown) return;
+    this.isPointerDown = false;
     if (!this.isDragging) return;
     this.isDragging = false;
     this.dragAxis = null;
