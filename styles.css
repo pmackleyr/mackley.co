@@ -809,6 +809,13 @@ a {
   transform: none;
 }
 
+.checkout-alt-pay {
+  width: 100%;
+  margin-top: 10px;
+  text-align: center;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 .accordion {
   display: flex;
   flex-direction: column;
