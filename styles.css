@@ -621,6 +621,10 @@ a {
   gap: clamp(12px, 2vh, 20px);
 }
 
+.checkout-embed {
+  align-items: center;
+}
+
 .checkout-header {
   text-align: center;
   display: flex;
@@ -650,6 +654,16 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.checkout-embed-card {
+  width: min(640px, 100%);
+  align-items: center;
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.checkout-embed-card stripe-buy-button {
+  display: block;
 }
 
 .checkout-title {
