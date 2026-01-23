@@ -15,6 +15,7 @@ class Carousel {
     this.viewport = root.querySelector(".carousel-viewport");
     this.track = root.querySelector(".carousel-track");
     this.slides = Array.from(root.querySelectorAll(".carousel-slide"));
+    this.images = Array.from(root.querySelectorAll(".carousel-image"));
     this.prevButton = root.querySelector(".carousel-button--prev");
     this.nextButton = root.querySelector(".carousel-button--next");
     this.dots = root.querySelector(".carousel-dots");
@@ -27,10 +28,17 @@ class Carousel {
     this.startY = 0;
     this.startTranslate = 0;
     this.dragAxis = null;
+    this.preloadImages();
     this.setupDots();
     this.bindEvents();
     this.measure();
     this.goTo(0, false);
+  }
+
+  preloadImages() {
+    this.images.forEach((image) => {
+      image.loading = "eager";
+    });
   }
 
   setupDots() {
