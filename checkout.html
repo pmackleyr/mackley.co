@@ -3,14 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="/site-lock.js"></script>
   <title>Checkout | MACKLEY</title>
   <meta name="stripe-pk" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
   <meta name="stripe-payment-link" content="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00" />
   <script>
     const stripeLink = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content;
-    if (stripeLink) {
+    const accessKey = "mackley-site-access-v1";
+    const accessHash = "102d3e336bf22875508dfc94e8d703c21589db448a4b4ba2f0c4838d2cb97e68";
+    const hasAccess = () => {
+      try {
+        return window.sessionStorage.getItem(accessKey) === accessHash;
+      } catch (error) {
+        return false;
+      }
+    };
+    const redirectToStripe = () => {
+      if (!stripeLink || !hasAccess()) return;
       window.location.replace(stripeLink);
-    }
+    };
+    redirectToStripe();
+    window.addEventListener("mackley:unlocked", redirectToStripe, { once: true });
   </script>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
