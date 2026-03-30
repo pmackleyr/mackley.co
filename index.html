@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="/site-lock.js"></script>
+  <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>MACKLEY</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
@@ -56,7 +56,7 @@
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
     <section class="paragraph product-block-group" aria-label="Product">
-      <p class="line product-block-line">Close the <a class="underline" href="/purpose">gap</a>.</p>
+      <p class="line product-block-line">Close the <a class="underline" href="/purpose/">gap</a>.</p>
       <div class="product-block">
         <div class="product-block__image">
           <section class="carousel" aria-label="Product images">
@@ -91,7 +91,8 @@
             Clear your nasal passage. Breathe deeper.
           </p>
           <div class="product-block__actions">
-            <a class="product-block__cta" href="/product">Learn more</a>
+            <a class="product-block__cta" href="/product/" data-track="learn-more" data-item="Original Neti Pot">Learn more</a>
+            <a class="product-block__cta" href="/checkout/" data-track="buy-now" data-item="Original Neti Pot" data-value="50">Buy now</a>
           </div>
           <p class="social-proof" data-proof="view" data-page="home" data-total="true" data-label="people viewed" data-singular="person viewed" aria-live="polite">Live activity updating</p>
         </div>
@@ -102,15 +103,15 @@
 
   <footer class="site-footer">
     <div class="site-footer__group site-footer__group--start">
-      <a class="site-footer__link" href="/purpose">Purpose</a>
-      <a class="site-footer__link" href="/product">Product</a>
+      <a class="site-footer__link" href="/purpose/">Purpose</a>
+      <a class="site-footer__link" href="/product/">Product</a>
     </div>
     <div class="site-footer__center">
-      <button class="cta cta--primary waitlist-trigger" type="button">Join waitlist</button>
+      <a class="cta cta--primary" href="/checkout/" data-track="buy-now" data-item="Original Neti Pot" data-value="50">Buy now</a>
     </div>
     <div class="site-footer__group site-footer__group--end site-footer__legal">
-      <a class="site-footer__link" href="/legal">Privacy Policy</a>
-      <a class="site-footer__link" href="/cookie">Cookie Policy</a>
+      <a class="site-footer__link" href="/legal/">Privacy Policy</a>
+      <a class="site-footer__link" href="/cookie/">Cookie Policy</a>
       <span class="site-footer__copy">@MACKLEY 2026</span>
     </div>
   </footer>
@@ -176,6 +177,7 @@
     </div>
   </div>
 
+  <script src="/ads.js"></script>
   <script>
     const narrative = document.getElementById("narrative");
     const header = document.querySelector(".site-header");
@@ -411,7 +413,6 @@
 
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
-  <script src="/waitlist.js"></script>
   <script type="module" src="/carousel.js"></script>
   <script type="module" src="/social-proof.js"></script>
 </body>

@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="/site-lock.js"></script>
   <title>Cookie Policy | MACKLEY</title>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
@@ -34,30 +33,74 @@
 
   <main class="page" aria-label="Cookie Policy">
     <section class="page-hero">
+      <p class="page-kicker">Effective March 30, 2026</p>
       <h1 class="page-title">Cookie Policy</h1>
+      <p class="page-subhead">This page explains what cookies and similar technologies do on MACKLEY, including analytics and Google ad measurement.</p>
     </section>
 
-    <section class="prose" aria-label="Cookie policy">
-      <p>We use cookies and similar technologies to keep MACKLEY running, measure performance, and improve the experience. This policy explains what we use and why.</p>
-      <p><strong>Essential cookies</strong> keep the site secure and functioning. Without these, the site will not load or operate properly.</p>
-      <p><strong>Analytics cookies</strong> help us understand how visitors move through the site so we can improve content and flow. These cookies do not identify you personally.</p>
-      <p><strong>Marketing cookies</strong> may be used to measure interest in the waitlist and outreach. We do not sell personal data.</p>
-      <p>You can control cookies in your browser settings and delete them at any time. If you disable cookies, some parts of the site may not work as expected.</p>
-      <p>If you have questions, contact us at <a class="underline" href="mailto:contact@mackley.co">contact@mackley.co</a>.</p>
+    <section class="policy-grid" aria-label="Cookie summary">
+      <article class="policy-card policy-card--wide">
+        <p class="policy-meta">Quick summary</p>
+        <h2>How cookies are used here</h2>
+        <ul class="policy-list">
+          <li>Some cookies are required for basic site behavior, checkout flow, and security.</li>
+          <li>Some cookies or local storage keys help us understand page views, traffic sources, and whether a visit leads to checkout or purchase intent.</li>
+          <li>If Google ad or conversion tags are active, Google may use cookies or similar technologies to measure impressions, clicks, and conversions.</li>
+          <li>You can control most cookies in your browser settings, although disabling them may affect parts of the site.</li>
+        </ul>
+      </article>
+      <article class="policy-card">
+        <p class="policy-meta">Essential</p>
+        <h2>Cookies we need to operate</h2>
+        <p>These technologies keep the site loading properly, preserve basic preferences, and support checkout or fraud-prevention functions when needed.</p>
+      </article>
+      <article class="policy-card">
+        <p class="policy-meta">Analytics and ads</p>
+        <h2>Cookies used for measurement</h2>
+        <p>We may use analytics, ad tags, and conversion measurement to understand where visitors come from, which pages perform well, and which clicks lead toward checkout.</p>
+      </article>
+    </section>
+
+    <section class="policy-grid" aria-label="Cookie details">
+      <article class="policy-card">
+        <p class="policy-meta">Local storage and browser storage</p>
+        <h2>More than browser cookies</h2>
+        <p>MACKLEY may also use local storage or similar browser storage for product preferences, checkout state, and ad or conversion debugging. We treat those tools like cookies for policy purposes.</p>
+      </article>
+      <article class="policy-card">
+        <p class="policy-meta">Google technologies</p>
+        <h2>When Google tools are active</h2>
+        <p>Google tags or Google Ads placements may set or read identifiers to measure ad impressions, clicks, page visits, and conversion events. Google may process that information according to Google&rsquo;s own privacy terms.</p>
+      </article>
+      <article class="policy-card">
+        <p class="policy-meta">How to control</p>
+        <h2>Your options</h2>
+        <p>You can block or delete cookies through your browser, use private browsing, or use ad settings and privacy controls offered by Google and other vendors.</p>
+      </article>
+      <article class="policy-card">
+        <p class="policy-meta">What happens if you disable them</p>
+        <h2>Potential impact</h2>
+        <p>If you block essential cookies or related browser storage, parts of the site, forms, measurement flows, or checkout handoff may not work correctly.</p>
+      </article>
+    </section>
+
+    <section class="note-panel" aria-label="Questions">
+      <h2>Questions about cookies</h2>
+      <p>If you have questions about cookies, local storage, or advertising technologies on this site, email <a class="underline" href="mailto:contact@mackley.co">contact@mackley.co</a>.</p>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="site-footer__group site-footer__group--start">
-      <a class="site-footer__link" href="/purpose">Purpose</a>
-      <a class="site-footer__link" href="/product">Product</a>
+      <a class="site-footer__link" href="/purpose/">Purpose</a>
+      <a class="site-footer__link" href="/product/">Product</a>
     </div>
     <div class="site-footer__center">
-      <button class="cta cta--primary waitlist-trigger" type="button">Join waitlist</button>
+      <a class="cta cta--primary" href="/checkout/" data-track="buy-now" data-item="Original Neti Pot" data-value="50">Buy now</a>
     </div>
     <div class="site-footer__group site-footer__group--end site-footer__legal">
-      <a class="site-footer__link" href="/legal">Privacy Policy</a>
-      <a class="site-footer__link" href="/cookie">Cookie Policy</a>
+      <a class="site-footer__link" href="/legal/">Privacy Policy</a>
+      <a class="site-footer__link" href="/cookie/">Cookie Policy</a>
       <span class="site-footer__copy">@MACKLEY 2026</span>
     </div>
   </footer>
@@ -123,6 +166,6 @@
     </div>
   </div>
 
-  <script src="/waitlist.js"></script>
+  <script src="/ads.js"></script>
 </body>
 </html>
