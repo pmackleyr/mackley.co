@@ -149,7 +149,7 @@ serve(async (request) => {
   if (isValidEmail(payload.email)) {
     params.set("receipt_email", String(payload.email));
   }
-  params.set("metadata[product]", "Copper Neti Pot");
+  params.set("metadata[product]", "Original Copper Neti Pot™");
   params.set("metadata[sku]", "DB-01");
   params.set("metadata[quantity]", String(payload.quantity));
   if (isNonEmpty(payload.email)) {
