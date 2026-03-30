@@ -225,7 +225,7 @@ export default {
     if (isValidEmail(payload.email)) {
       params.set("receipt_email", payload.email);
     }
-    params.set("metadata[product]", "Original Neti Pot");
+    params.set("metadata[product]", "Copper Neti Pot");
     params.set("metadata[sku]", "DB-01");
     params.set("metadata[quantity]", String(payload.quantity));
     if (isNonEmpty(payload.email)) {
