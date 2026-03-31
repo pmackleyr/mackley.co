@@ -153,7 +153,7 @@ a {
   font-size: inherit;
   letter-spacing: inherit;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: #fff;
 }
 
 .site-footer__link {
@@ -390,7 +390,7 @@ a {
   max-width: 52ch;
   font-size: clamp(16px, 1.6vw, 18px);
   line-height: 1.7;
-  color: rgba(245, 245, 244, 0.75);
+  color: #fff;
 }
 
 .product-block__meta {
@@ -621,7 +621,7 @@ a {
 
 .page-subhead {
   font-size: clamp(16px, 2vw, 20px);
-  color: var(--muted);
+  color: #fff;
 }
 
 .social-proof {
@@ -907,6 +907,10 @@ body.modal-open .narrative {
     width: 18px;
     height: 18px;
   }
+
+  .purpose-copy {
+    padding-inline: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .social-proof {
@@ -928,11 +932,28 @@ body.modal-open .narrative {
   gap: 18px;
   font-size: clamp(16px, 1.9vw, 19px);
   line-height: 1.8;
-  color: rgba(245, 245, 244, 0.84);
+  color: #fff;
 }
 
 .prose p {
   margin: 0;
+}
+
+.purpose-copy {
+  max-width: min(920px, calc(100vw - (var(--page-pad) * 2)));
+  align-items: stretch;
+}
+
+.purpose-copy .prose {
+  max-width: 100%;
+  text-align: left;
+}
+
+.purpose-copy__closing {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .page-kicker {

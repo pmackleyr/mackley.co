@@ -5,10 +5,7 @@
   <script src="/google-tag.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Checkout | MACKLEY</title>
-  <meta name="stripe-pk" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
-  <script src="/ads.js"></script>
-  <script src="/checkout-redirect.js"></script>
+  <title>Thank You | MACKLEY</title>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -29,19 +26,46 @@
   <link rel="icon" href="/public/assets/logo_light_192.png" type="image/png" sizes="192x192" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="/public/assets/logo_light_512.png" type="image/png" sizes="512x512" media="(prefers-color-scheme: dark)" />
 </head>
-<body class="checkout-page">
+<body>
   <div id="bg-layer" aria-hidden="true"></div>
 
-  <main class="checkout checkout-embed" aria-label="Checkout">
-    <section class="checkout-card checkout-embed-card" aria-label="Stripe checkout">
-      <h1 class="page-title">Redirecting to secure checkout…</h1>
-      <p class="checkout-muted" id="checkout-status">
-        We are creating your Stripe Checkout session now.
-      </p>
-      <p class="checkout-muted">
-        If you are not redirected automatically, <a class="text-link" id="checkout-fallback-link" href="/checkout.html">try checkout again</a>.
-      </p>
+  <header class="site-header" aria-label="Site">
+    <a class="site-title" href="/"><span class="brand">MACKLEY</span></a>
+  </header>
+
+  <main class="page" aria-label="Thank you">
+    <section class="page-hero">
+      <h1 class="page-title" id="thank-you-heading">Verifying your order...</h1>
+      <p class="page-subhead" id="thank-you-body">We are checking Stripe before we confirm anything on this page.</p>
+    </section>
+
+    <section class="checkout-card" id="thank-you-details" hidden>
+      <div class="summary-row"><span>Total</span><span id="thank-you-total">-</span></div>
+      <div class="summary-row"><span>Email</span><span id="thank-you-email">-</span></div>
+      <div class="summary-row"><span>Order</span><span id="thank-you-order">-</span></div>
+    </section>
+
+    <section class="page-hero">
+      <a class="cta cta--primary" href="/product/">Back to product</a>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__group site-footer__group--start">
+      <a class="site-footer__link" href="/purpose/">Purpose</a>
+      <a class="site-footer__link" href="/product/">Product</a>
+    </div>
+    <div class="site-footer__center">
+      <a class="cta cta--primary" href="/product/">Shop again</a>
+    </div>
+    <div class="site-footer__group site-footer__group--end site-footer__legal">
+      <a class="site-footer__link" href="/legal/">Privacy Policy</a>
+      <a class="site-footer__link" href="/cookie/">Cookie Policy</a>
+      <span class="site-footer__copy">@MACKLEY 2026</span>
+    </div>
+  </footer>
+
+  <script src="/ads.js"></script>
+  <script src="/thank-you.js"></script>
 </body>
 </html>

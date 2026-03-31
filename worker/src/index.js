@@ -8,6 +8,13 @@ const ALLOWED_HOSTS = new Set([
   "127.0.0.1:5500"
 ]);
 
+const CLICK_TRACKING_KEYS = ["gclid", "gclsrc", "wbraid", "gbraid"];
+const CHECKOUT_SUCCESS_URL = "https://mackley.co/thank-you?session_id={CHECKOUT_SESSION_ID}";
+const CHECKOUT_CANCEL_URL = "https://mackley.co/checkout";
+const PRODUCT_NAME = "Original Copper Neti Pot™";
+const PRODUCT_SKU = "DB-01";
+const PRODUCT_UNIT_AMOUNT = 5000;
+
 function originFromHeader(value) {
   if (!value) return null;
   try {
@@ -76,14 +83,22 @@ function isCompleteShipping(shipping) {
     && isNonEmpty(shipping.country);
 }
 
-function validateBody(body) {
+function normalizeQuantity(value) {
+  const quantity = Number(value);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+    return null;
+  }
+  return quantity;
+}
+
+function validatePaymentIntentBody(body) {
   if (!body || typeof body !== "object") {
     return "Invalid payload.";
   }
 
   const allowIncomplete = Boolean(body.allowIncomplete);
-  const quantity = Number(body.quantity);
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+  const quantity = normalizeQuantity(body.quantity);
+  if (!quantity) {
     return "Quantity must be between 1 and 10.";
   }
 
@@ -108,6 +123,37 @@ function validateBody(body) {
   return null;
 }
 
+function validateCheckoutSessionBody(body) {
+  if (!body || typeof body !== "object") {
+    return "Invalid payload.";
+  }
+
+  const quantity = normalizeQuantity(body.quantity);
+  if (!quantity) {
+    return "Quantity must be between 1 and 10.";
+  }
+
+  return null;
+}
+
+function sanitizeTrackingValue(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, 255);
+}
+
+function normalizeTracking(body) {
+  const tracking = body && typeof body === "object" ? body.tracking : null;
+  if (!tracking || typeof tracking !== "object") return {};
+
+  return CLICK_TRACKING_KEYS.reduce((result, key) => {
+    const value = sanitizeTrackingValue(tracking[key]);
+    if (value) {
+      result[key] = value;
+    }
+    return result;
+  }, {});
+}
+
 function isValidProofType(type) {
   return type === "view" || type === "purchase";
 }
@@ -121,6 +167,92 @@ function normalizeWindow(windowSeconds) {
 
 function isValidPage(page) {
   return typeof page === "string" && /^[a-z0-9-]+$/.test(page) && page.length <= 64;
+}
+
+async function stripePost(path, params, env) {
+  return fetch(`https://api.stripe.com/v1/${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: params.toString()
+  });
+}
+
+async function stripeGet(path, env) {
+  return fetch(`https://api.stripe.com/v1/${path}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`
+    }
+  });
+}
+
+function buildPaymentIntentParams(payload) {
+  const quantity = normalizeQuantity(payload.quantity);
+  const discount = Math.max(0, (quantity - 1) * 500);
+  const amount = Math.max(0, quantity * PRODUCT_UNIT_AMOUNT - discount);
+  const params = new URLSearchParams();
+  params.set("amount", String(amount));
+  params.set("currency", "usd");
+  params.set("automatic_payment_methods[enabled]", "true");
+  if (isValidEmail(payload.email)) {
+    params.set("receipt_email", payload.email);
+  }
+  params.set("metadata[product]", PRODUCT_NAME);
+  params.set("metadata[sku]", PRODUCT_SKU);
+  params.set("metadata[quantity]", String(quantity));
+  if (isNonEmpty(payload.email)) {
+    params.set("metadata[email]", payload.email);
+  }
+  if (isNonEmpty(payload.name)) {
+    params.set("metadata[name]", payload.name);
+  }
+
+  if (isCompleteShipping(payload.shipping)) {
+    params.set("shipping[name]", payload.name);
+    params.set("shipping[address][line1]", payload.shipping.line1);
+    if (payload.shipping.line2) {
+      params.set("shipping[address][line2]", payload.shipping.line2);
+    }
+    params.set("shipping[address][city]", payload.shipping.city);
+    params.set("shipping[address][state]", payload.shipping.state);
+    params.set("shipping[address][postal_code]", payload.shipping.postal);
+    params.set("shipping[address][country]", payload.shipping.country);
+  }
+
+  return params;
+}
+
+function buildCheckoutSessionParams(payload) {
+  const quantity = normalizeQuantity(payload.quantity);
+  const tracking = normalizeTracking(payload);
+  const params = new URLSearchParams();
+
+  params.set("mode", "payment");
+  params.set("success_url", CHECKOUT_SUCCESS_URL);
+  params.set("cancel_url", CHECKOUT_CANCEL_URL);
+  params.set("line_items[0][price_data][currency]", "usd");
+  params.set("line_items[0][price_data][product_data][name]", PRODUCT_NAME);
+  params.set("line_items[0][price_data][product_data][metadata][sku]", PRODUCT_SKU);
+  params.set("line_items[0][price_data][unit_amount]", String(PRODUCT_UNIT_AMOUNT));
+  params.set("line_items[0][quantity]", String(quantity));
+  params.set("billing_address_collection", "auto");
+  params.set("shipping_address_collection[allowed_countries][0]", "US");
+  params.set("metadata[product]", PRODUCT_NAME);
+  params.set("metadata[sku]", PRODUCT_SKU);
+  params.set("metadata[quantity]", String(quantity));
+  params.set("payment_intent_data[metadata][product]", PRODUCT_NAME);
+  params.set("payment_intent_data[metadata][sku]", PRODUCT_SKU);
+  params.set("payment_intent_data[metadata][quantity]", String(quantity));
+
+  Object.entries(tracking).forEach(([key, value]) => {
+    params.set(`metadata[${key}]`, value);
+    params.set(`payment_intent_data[metadata][${key}]`, value);
+  });
+
+  return params;
 }
 
 export default {
@@ -199,10 +331,6 @@ export default {
       return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
     }
 
-    if (url.pathname !== "/create-payment-intent") {
-      return jsonResponse(404, { error: "Not found." }, effectiveOrigin);
-    }
-
     let payload = null;
     try {
       payload = await request.json();
@@ -210,62 +338,85 @@ export default {
       return jsonResponse(400, { error: "Invalid JSON." }, effectiveOrigin);
     }
 
-    const validationError = validateBody(payload);
-    if (validationError) {
-      return jsonResponse(400, { error: validationError }, effectiveOrigin);
-    }
-
-    const quantity = Number(payload.quantity);
-    const discount = Math.max(0, (quantity - 1) * 500);
-    const amount = Math.max(0, quantity * 5000 - discount);
-    const params = new URLSearchParams();
-    params.set("amount", String(amount));
-    params.set("currency", "usd");
-    params.set("automatic_payment_methods[enabled]", "true");
-    if (isValidEmail(payload.email)) {
-      params.set("receipt_email", payload.email);
-    }
-    params.set("metadata[product]", "Original Copper Neti Pot™");
-    params.set("metadata[sku]", "DB-01");
-    params.set("metadata[quantity]", String(payload.quantity));
-    if (isNonEmpty(payload.email)) {
-      params.set("metadata[email]", payload.email);
-    }
-    if (isNonEmpty(payload.name)) {
-      params.set("metadata[name]", payload.name);
-    }
-
-    if (isCompleteShipping(payload.shipping)) {
-      params.set("shipping[name]", payload.name);
-      params.set("shipping[address][line1]", payload.shipping.line1);
-      if (payload.shipping.line2) {
-        params.set("shipping[address][line2]", payload.shipping.line2);
+    if (url.pathname === "/create-payment-intent") {
+      const validationError = validatePaymentIntentBody(payload);
+      if (validationError) {
+        return jsonResponse(400, { error: validationError }, effectiveOrigin);
       }
-      params.set("shipping[address][city]", payload.shipping.city);
-      params.set("shipping[address][state]", payload.shipping.state);
-      params.set("shipping[address][postal_code]", payload.shipping.postal);
-      params.set("shipping[address][country]", payload.shipping.country);
-    }
 
-    try {
-      const response = await fetch("https://api.stripe.com/v1/payment_intents", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: params.toString()
-      });
+      try {
+        const response = await stripePost("payment_intents", buildPaymentIntentParams(payload), env);
+        const data = await response.json();
+        if (!response.ok || !data.client_secret) {
+          return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
+        }
 
-      const data = await response.json();
-      if (!response.ok || !data.client_secret) {
+        return jsonResponse(200, { clientSecret: data.client_secret }, effectiveOrigin);
+      } catch (error) {
         return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
       }
-
-      return jsonResponse(200, { clientSecret: data.client_secret }, effectiveOrigin);
-    } catch (error) {
-      return jsonResponse(500, { error: "Stripe error." }, effectiveOrigin);
     }
+
+    if (url.pathname === "/create-checkout-session") {
+      const validationError = validateCheckoutSessionBody(payload);
+      if (validationError) {
+        return jsonResponse(400, { error: validationError }, effectiveOrigin);
+      }
+
+      try {
+        const response = await stripePost("checkout/sessions", buildCheckoutSessionParams(payload), env);
+        const data = await response.json();
+        if (!response.ok || !data.url || !data.id) {
+          return jsonResponse(500, { error: "Stripe checkout error." }, effectiveOrigin);
+        }
+
+        return jsonResponse(200, {
+          sessionId: data.id,
+          url: data.url
+        }, effectiveOrigin);
+      } catch (error) {
+        return jsonResponse(500, { error: "Stripe checkout error." }, effectiveOrigin);
+      }
+    }
+
+    if (url.pathname === "/verify-checkout-session") {
+      const sessionId = sanitizeTrackingValue(payload?.sessionId);
+      if (!sessionId) {
+        return jsonResponse(400, { error: "Session id is required." }, effectiveOrigin);
+      }
+
+      try {
+        const encodedSessionId = encodeURIComponent(sessionId);
+        const stripePath = `checkout/sessions/${encodedSessionId}?expand[]=payment_intent`;
+        const response = await stripeGet(stripePath, env);
+        const data = await response.json();
+        if (!response.ok || !data.id) {
+          return jsonResponse(500, { error: "Stripe checkout error." }, effectiveOrigin);
+        }
+
+        const paymentIntentId = typeof data.payment_intent === "string"
+          ? data.payment_intent
+          : data.payment_intent && typeof data.payment_intent === "object"
+            ? data.payment_intent.id
+            : null;
+        const verified = data.status === "complete" && data.payment_status === "paid";
+
+        return jsonResponse(200, {
+          amountTotal: Number.isFinite(data.amount_total) ? data.amount_total : 0,
+          currency: typeof data.currency === "string" ? data.currency : "usd",
+          customerEmail: data.customer_details?.email || data.customer_email || null,
+          paymentIntentId,
+          paymentStatus: data.payment_status || null,
+          sessionId: data.id,
+          status: data.status || null,
+          verified
+        }, effectiveOrigin);
+      } catch (error) {
+        return jsonResponse(500, { error: "Stripe checkout error." }, effectiveOrigin);
+      }
+    }
+
+    return jsonResponse(404, { error: "Not found." }, effectiveOrigin);
   }
 };
 

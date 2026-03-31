@@ -1,23 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18048135651"></script>
+  <script src="/google-tag.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Checkout | MACKLEY</title>
-  <meta name="stripe-payment-link" content="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00" />
   <script src="/ads.js"></script>
-  <script>
-    const stripeLink = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content;
-    const redirectToStripe = () => {
-      if (!stripeLink) return;
-      if (window.MACKLEYAds && typeof window.MACKLEYAds.redirectTo === "function") {
-        window.MACKLEYAds.redirectTo(stripeLink, { event: "begin_checkout", conversion: true, value: 50 });
-        return;
-      }
-      window.location.replace(stripeLink);
-    };
-    redirectToStripe();
-  </script>
+  <script src="/checkout-redirect.js"></script>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -44,8 +34,11 @@
   <main class="checkout checkout-embed" aria-label="Checkout">
     <section class="checkout-card checkout-embed-card" aria-label="Stripe checkout">
       <h1 class="page-title">Redirecting to secure checkout…</h1>
+      <p class="checkout-muted" id="checkout-status">
+        We are creating your Stripe Checkout session now.
+      </p>
       <p class="checkout-muted">
-        If you are not redirected automatically, <a class="text-link" href="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00">continue to Stripe</a>.
+        If you are not redirected automatically, <a class="text-link" id="checkout-fallback-link" href="/checkout/">try checkout again</a>.
       </p>
     </section>
   </main>
