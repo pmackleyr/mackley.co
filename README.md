@@ -18,3 +18,20 @@ wrangler deploy
 ```
 
 After deploy, confirm `https://api.mackley.co/create-payment-intent` responds.
+
+## Event Counts
+
+Query first-party hourly counters from the live social proof store:
+
+```sh
+node scripts/social-proof-count.mjs buy-now 72
+```
+
+Common metrics:
+
+- `buy-now`
+- `checkout-start`
+- `checkout-redirect`
+- `checkout-session-created`
+- `checkout-session-failed`
+- `checkout-link-fallback`

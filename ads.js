@@ -5,6 +5,7 @@
   const sampleAdsEnabled = params.get("sampleAds") === "1" || storage.getItem("mackley_sample_ads") === "1";
   const clickParamsKey = "mackley_google_click_params";
   const checkoutSkipKey = "mackley_skip_checkout_tracking";
+  const socialProofEndpoint = "https://api.mackley.co/social-proof";
   const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid"];
 
   function readMeta(name) {
@@ -44,6 +45,56 @@
   function sanitizeTrackingValue(value) {
     if (typeof value !== "string") return "";
     return value.trim().slice(0, 255);
+  }
+
+  function padNumber(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function normalizeMetricKey(value, suffix) {
+    const normalized = sanitizeTrackingValue(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    if (!normalized) return "";
+    const extra = suffix ? `-${suffix}` : "";
+    return `${normalized}${extra}`.slice(0, 64);
+  }
+
+  function currentHourStamp() {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = padNumber(now.getUTCMonth() + 1);
+    const day = padNumber(now.getUTCDate());
+    const hour = padNumber(now.getUTCHours());
+    return `${year}${month}${day}${hour}`;
+  }
+
+  function postMetric(page) {
+    if (!page) return;
+    fetch(socialProofEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        type: "view",
+        page,
+        record: true,
+        total: true
+      }),
+      keepalive: true
+    }).catch(() => {
+      // Best-effort metric; ignore failures.
+    });
+  }
+
+  function recordSiteMetric(metricName) {
+    const metricKey = normalizeMetricKey(metricName);
+    if (!metricKey) return;
+
+    postMetric(metricKey);
+    postMetric(normalizeMetricKey(metricName, currentHourStamp()));
   }
 
   function setCheckoutSkip() {
@@ -310,6 +361,7 @@
           window.location.assign(appendClickParams(href));
         };
 
+        recordSiteMetric("buy-now");
         trackEvent("begin_checkout", payload, navigate);
         window.setTimeout(navigate, 150);
       });
@@ -359,6 +411,7 @@
   }
 
   if (window.location.pathname.startsWith("/checkout") && !shouldSkipCheckoutTracking) {
+    recordSiteMetric("checkout-start");
     trackEvent("begin_checkout", {
       currency: config.currency,
       value: config.value,
@@ -375,6 +428,7 @@
 
   window.MACKLEYAds = {
     getClickParams,
+    recordSiteMetric,
     redirectTo,
     trackEvent,
     trackPurchaseConversion

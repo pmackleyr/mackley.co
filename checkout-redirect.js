@@ -1,5 +1,8 @@
 (function () {
   const apiBase = "https://api.mackley.co";
+  const stripePaymentLink = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content
+    || "https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00";
+  let redirectInFlight = false;
 
   function setStatus(message) {
     const statusText = document.getElementById("checkout-status");
@@ -11,8 +14,20 @@
   function setFallbackLink() {
     const fallbackLink = document.getElementById("checkout-fallback-link");
     if (fallbackLink) {
-      fallbackLink.href = `${window.location.pathname}${window.location.search}`;
+      fallbackLink.href = stripePaymentLink;
     }
+  }
+
+  function recordMetric(name) {
+    if (window.MACKLEYAds && typeof window.MACKLEYAds.recordSiteMetric === "function") {
+      window.MACKLEYAds.recordSiteMetric(name);
+    }
+  }
+
+  function redirectTo(url) {
+    if (redirectInFlight) return;
+    redirectInFlight = true;
+    window.location.replace(url);
   }
 
   async function createCheckoutSession() {
@@ -40,14 +55,27 @@
       throw new Error("Missing checkout URL.");
     }
 
-    window.location.replace(data.url);
+    return data.url;
   }
 
   function start() {
     setFallbackLink();
-    createCheckoutSession().catch(() => {
-      setStatus("We could not start checkout automatically. Retry this page to create a fresh Stripe Checkout session.");
-    });
+    recordMetric("checkout-redirect");
+    setStatus("Taking you to secure checkout now.");
+
+    createCheckoutSession()
+      .then((url) => {
+        recordMetric("checkout-session-created");
+        redirectTo(url);
+      })
+      .catch(() => {
+        recordMetric("checkout-session-failed");
+        recordMetric("checkout-link-fallback");
+        setStatus("Continuing via secure Stripe checkout.");
+        window.setTimeout(() => {
+          redirectTo(stripePaymentLink);
+        }, 60);
+      });
   }
 
   if (document.readyState === "loading") {
