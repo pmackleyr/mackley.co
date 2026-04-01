@@ -108,6 +108,16 @@ a {
   font-size: 1em;
 }
 
+.purpose-page .site-title {
+  font-size: clamp(28px, 3.3vw, 34px);
+}
+
+.purpose-page .narrative {
+  padding-top: calc(var(--header-h) + clamp(10px, 2.2vh, 22px));
+  padding-bottom: calc(var(--footer-h) + clamp(12px, 2.4vh, 22px));
+  gap: clamp(24px, 4.5vh, 42px);
+}
+
 .site-footer {
   bottom: 0;
   display: flex;
@@ -910,6 +920,15 @@ body.modal-open .narrative {
 
   .purpose-copy {
     padding-inline: 0;
+    min-height: auto;
+    padding-top: 0;
+    padding-bottom: calc(var(--footer-h) + 68px);
+  }
+
+  .purpose-copy .prose {
+    font-size: clamp(15px, 4.2vw, 17px);
+    line-height: 1.6;
+    gap: 14px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -942,11 +961,20 @@ body.modal-open .narrative {
 .purpose-copy {
   max-width: min(920px, calc(100vw - (var(--page-pad) * 2)));
   align-items: stretch;
+  min-height: calc(100vh - var(--header-h) - var(--footer-h) - 36px);
+  justify-content: center;
+  scroll-snap-align: start;
+  scroll-margin-top: calc(var(--header-h) + 8px);
+  padding-top: clamp(18px, 3vh, 26px);
+  padding-bottom: clamp(16px, 2.5vh, 24px);
 }
 
 .purpose-copy .prose {
-  max-width: 100%;
+  max-width: min(720px, 100%);
   text-align: left;
+  gap: clamp(8px, 1.2vh, 12px);
+  font-size: clamp(13px, 0.82vw + 0.12vh, 15px);
+  line-height: 1.42;
 }
 
 .purpose-copy__closing {

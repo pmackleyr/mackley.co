@@ -373,7 +373,7 @@ function renderSuccess(data) {
         <div class="summary-row"><span>Quantity</span><span>${qty}</span></div>
         <div class="summary-row summary-total"><span>Total</span><span>${total}</span></div>
       </div>
-      <a class="cta" href="/product">Back to Product</a>
+      <a class="cta" href="/">Back to Product</a>
     </section>
   `;
 }
