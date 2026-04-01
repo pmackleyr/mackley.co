@@ -1,12 +1,12 @@
 {
   "redirects": [
     {
-      "source": "/product",
+      "source": "/purpose",
       "destination": "/",
       "permanent": true
     },
     {
-      "source": "/product/",
+      "source": "/purpose/",
       "destination": "/",
       "permanent": true
     }
