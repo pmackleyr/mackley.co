@@ -3,7 +3,6 @@ const RECENT_SESSION_LIMIT = 40;
 const MAX_TIMELINE_EVENTS = 24;
 const MAX_UNIQUE_ITEMS = 8;
 const VALID_DAY_WINDOWS = [7, 14, 30, 60, RETENTION_DAYS];
-const DASHBOARD_PASSWORD_HEADER = "x-dashboard-password";
 
 function jsonResponse(status, data) {
   return new Response(JSON.stringify(data), {
@@ -251,16 +250,6 @@ function formatPercent(numerator, denominator) {
 function formatPercentCapped(numerator, denominator) {
   if (!denominator) return 0;
   return formatPercent(Math.min(numerator, denominator), denominator);
-}
-
-function dashboardPasswordFor(env) {
-  return normalizeString(env.DASHBOARD_PASSWORD || "", 160);
-}
-
-function dashboardAuthorized(request, env) {
-  const password = dashboardPasswordFor(env);
-  if (!password) return false;
-  return request.headers.get(DASHBOARD_PASSWORD_HEADER) === password;
 }
 
 function normalizeDays(value) {
@@ -942,35 +931,11 @@ export async function handleAnalyticsCollect(request, env) {
   });
 }
 
-export async function handleAnalyticsDashboard(request, env) {
-  if (!dashboardAuthorized(request, env)) {
-    return jsonResponse(401, { ok: false, error: "unauthorized" });
-  }
-
-  const url = new URL(request.url);
-  const days = normalizeDays(url.searchParams.get("days"));
-  const id = env.ANALYTICS_STORE.idFromName("analytics");
-  const stub = env.ANALYTICS_STORE.get(id);
-  const response = await stub.fetch("https://analytics/dashboard", {
-    method: "POST",
-    body: JSON.stringify({ days })
-  });
-  const text = await response.text();
-
-  return new Response(text, {
-    status: response.status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store"
-    }
-  });
-}
-
 export function analyticsCorsHeaders(headers, origin) {
   if (!origin) return headers;
   headers.set("Access-Control-Allow-Origin", origin);
-  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", `Content-Type, ${DASHBOARD_PASSWORD_HEADER}`);
+  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type");
   headers.set("Vary", "Origin");
   return headers;
 }

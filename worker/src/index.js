@@ -1,8 +1,7 @@
 import {
   AnalyticsStore,
   analyticsCorsHeaders,
-  handleAnalyticsCollect,
-  handleAnalyticsDashboard
+  handleAnalyticsCollect
 } from "./analytics.js";
 
 const ALLOWED_HOSTS = new Set([
@@ -325,7 +324,7 @@ export default {
       return jsonResponse(200, data, corsOrigin);
     }
 
-    if (url.pathname === "/analytics/collect" || url.pathname === "/analytics/dashboard") {
+    if (url.pathname === "/analytics/collect") {
       if (!effectiveOrigin) {
         return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
       }
@@ -337,24 +336,14 @@ export default {
         });
       }
 
-      if (url.pathname === "/analytics/collect" && request.method !== "POST") {
+      if (request.method !== "POST") {
         return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
       }
-
-      if (url.pathname === "/analytics/dashboard" && request.method !== "GET") {
-        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
-      }
-
-      const response = url.pathname === "/analytics/collect"
-        ? await handleAnalyticsCollect(request, env)
-        : await handleAnalyticsDashboard(request, env);
+      const response = await handleAnalyticsCollect(request, env);
 
       const payload = await response.text();
       const headers = analyticsCorsHeaders(new Headers(response.headers), effectiveOrigin);
       headers.set("Content-Type", "application/json");
-      if (url.pathname === "/analytics/dashboard") {
-        headers.set("Cache-Control", "no-store");
-      }
 
       return new Response(payload, {
         status: response.status,
