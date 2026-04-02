@@ -17,6 +17,12 @@
   const socialProofEndpoint = "https://api.mackley.co/social-proof";
   const collectorUrl = "https://api.mackley.co/analytics/collect";
   const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid", "fbclid", "msclkid"];
+  const buyNowPreviewImages = [
+    "/public/product/carousel-01.png",
+    "/public/product/carousel-02.png",
+    "/public/product/carousel-03.png",
+    "/public/product/carousel-04.png"
+  ];
   const itemName = "Original Copper Neti Pot";
   const scrollMilestones = [25, 50, 75, 90];
   const slotDefaults = {
@@ -26,6 +32,12 @@
   };
 
   let adsLoaded = false;
+  let buyNowPreview = null;
+  let buyNowPreviewImage = null;
+  let buyNowPreviewDots = [];
+  let buyNowPreviewIndex = 0;
+  let buyNowPreviewTimer = null;
+  let activeBuyNowPreviewLink = null;
   let flushingQueue = false;
   let maxScrollPercent = 0;
   let pageExitTracked = false;
@@ -252,6 +264,97 @@
       return `${destination.pathname}${destination.search}${destination.hash}`;
     } catch (error) {
       return url;
+    }
+  }
+
+  function supportsHoverPreview() {
+    if (typeof win.matchMedia !== "function") return true;
+    return win.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  function clearBuyNowPreviewTimer() {
+    if (!buyNowPreviewTimer) return;
+    win.clearInterval(buyNowPreviewTimer);
+    buyNowPreviewTimer = null;
+  }
+
+  function renderBuyNowPreview(index) {
+    if (!buyNowPreview || !buyNowPreviewImage) return;
+    buyNowPreviewImage.src = buyNowPreviewImages[index];
+    buyNowPreviewDots.forEach((dot, dotIndex) => {
+      dot.classList.toggle("is-active", dotIndex === index);
+    });
+  }
+
+  function ensureBuyNowPreview() {
+    if (buyNowPreview || !doc.body) return;
+
+    const preview = doc.createElement("div");
+    preview.className = "buy-now-preview";
+    preview.setAttribute("aria-hidden", "true");
+    preview.innerHTML = `
+      <div class="buy-now-preview__media">
+        <img class="buy-now-preview__image" src="${buyNowPreviewImages[0]}" alt="Original Copper Neti Pot preview" />
+      </div>
+      <div class="buy-now-preview__meta">
+        <span class="buy-now-preview__title">Original Copper Neti Pot</span>
+        <div class="buy-now-preview__dots" aria-hidden="true">
+          ${buyNowPreviewImages.map(() => "<span class=\"buy-now-preview__dot\"></span>").join("")}
+        </div>
+      </div>
+      <div class="buy-now-preview__arrow" aria-hidden="true"></div>
+    `;
+
+    doc.body.appendChild(preview);
+    buyNowPreview = preview;
+    buyNowPreviewImage = preview.querySelector(".buy-now-preview__image");
+    buyNowPreviewDots = Array.from(preview.querySelectorAll(".buy-now-preview__dot"));
+    renderBuyNowPreview(0);
+
+    buyNowPreviewImages.forEach((src) => {
+      const image = new win.Image();
+      image.src = src;
+    });
+  }
+
+  function positionBuyNowPreview(link) {
+    if (!buyNowPreview) return;
+    const rect = link.getBoundingClientRect();
+    const margin = 16;
+    const maxWidth = 240;
+    const width = Math.min(maxWidth, win.innerWidth - margin * 2);
+    const left = Math.min(
+      win.innerWidth - width - margin,
+      Math.max(margin, rect.left + rect.width / 2 - width / 2)
+    );
+
+    buyNowPreview.style.width = `${width}px`;
+    buyNowPreview.style.left = `${left}px`;
+    buyNowPreview.style.bottom = `${win.innerHeight - rect.top + 18}px`;
+  }
+
+  function showBuyNowPreview(link) {
+    if (!supportsHoverPreview()) return;
+    ensureBuyNowPreview();
+    if (!buyNowPreview) return;
+
+    activeBuyNowPreviewLink = link;
+    buyNowPreviewIndex = 0;
+    renderBuyNowPreview(buyNowPreviewIndex);
+    positionBuyNowPreview(link);
+    buyNowPreview.classList.add("is-visible");
+    clearBuyNowPreviewTimer();
+    buyNowPreviewTimer = win.setInterval(() => {
+      buyNowPreviewIndex = (buyNowPreviewIndex + 1) % buyNowPreviewImages.length;
+      renderBuyNowPreview(buyNowPreviewIndex);
+    }, 1400);
+  }
+
+  function hideBuyNowPreview() {
+    activeBuyNowPreviewLink = null;
+    clearBuyNowPreviewTimer();
+    if (buyNowPreview) {
+      buyNowPreview.classList.remove("is-visible");
     }
   }
 
@@ -655,12 +758,41 @@
     const links = Array.from(doc.querySelectorAll("[data-track=\"buy-now\"]"));
     if (!links.length) return;
 
+    if (supportsHoverPreview()) {
+      ensureBuyNowPreview();
+    }
+
     links.forEach((link) => {
+      if (supportsHoverPreview()) {
+        link.addEventListener("pointerenter", () => {
+          showBuyNowPreview(link);
+        });
+
+        link.addEventListener("pointerleave", () => {
+          if (activeBuyNowPreviewLink === link) {
+            hideBuyNowPreview();
+          }
+        });
+
+        link.addEventListener("focus", () => {
+          showBuyNowPreview(link);
+        });
+
+        link.addEventListener("blur", () => {
+          if (activeBuyNowPreviewLink === link) {
+            hideBuyNowPreview();
+          }
+        });
+
+        link.addEventListener("pointerdown", hideBuyNowPreview);
+      }
+
       link.addEventListener("click", (event) => {
         const href = link.getAttribute("href");
         if (!href || href.startsWith("#")) return;
 
         event.preventDefault();
+        hideBuyNowPreview();
 
         const value = Number(link.dataset.value || config.value);
         const payload = {
@@ -813,6 +945,20 @@
     instrumentPageExit();
     instrumentCtaImpressions();
     flushQueue();
+
+    if (supportsHoverPreview()) {
+      win.addEventListener("resize", () => {
+        if (activeBuyNowPreviewLink) {
+          positionBuyNowPreview(activeBuyNowPreviewLink);
+        }
+      });
+
+      win.addEventListener("scroll", () => {
+        if (activeBuyNowPreviewLink) {
+          positionBuyNowPreview(activeBuyNowPreviewLink);
+        }
+      }, { passive: true });
+    }
 
     if (win.location.pathname.startsWith("/checkout") && !shouldSkipCheckoutTracking) {
       recordSiteMetric("checkout-start");
