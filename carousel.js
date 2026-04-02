@@ -5,6 +5,14 @@
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+function trackCarouselInteraction(payload) {
+  if (!window.MACKLEYAnalytics || typeof window.MACKLEYAnalytics.track !== "function") {
+    return;
+  }
+
+  window.MACKLEYAnalytics.track("carousel_interaction", payload);
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -56,26 +64,26 @@ class Carousel {
   bindEvents() {
     this.dotButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        this.goTo(Number(button.dataset.index), true);
+        this.goTo(Number(button.dataset.index), true, { source: "dot" });
       });
     });
 
     this.prevButton.addEventListener("click", () => {
-      this.goTo(this.currentIndex - 1, true);
+      this.goTo(this.currentIndex - 1, true, { source: "prev" });
     });
 
     this.nextButton.addEventListener("click", () => {
-      this.goTo(this.currentIndex + 1, true);
+      this.goTo(this.currentIndex + 1, true, { source: "next" });
     });
 
     this.viewport.addEventListener("keydown", (event) => {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        this.goTo(this.currentIndex - 1, true);
+        this.goTo(this.currentIndex - 1, true, { source: "keyboard" });
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        this.goTo(this.currentIndex + 1, true);
+        this.goTo(this.currentIndex + 1, true, { source: "keyboard" });
       }
     });
 
@@ -125,11 +133,20 @@ class Carousel {
     this.updateActiveStates();
   }
 
-  goTo(index, animate) {
+  goTo(index, animate, meta = null) {
+    const previousIndex = this.currentIndex;
     const nextIndex = clamp(index, 0, this.slides.length - 1);
     this.currentIndex = nextIndex;
     this.translateX = this.translateFor(nextIndex);
     this.applyTransform(animate);
+
+    if (meta?.source && nextIndex !== previousIndex) {
+      trackCarouselInteraction({
+        interaction_source: meta.source,
+        from_index: previousIndex,
+        to_index: nextIndex
+      });
+    }
   }
 
   onPointerDown(event) {
@@ -173,7 +190,7 @@ class Carousel {
     const slideWidth = this.slides[0].getBoundingClientRect().width;
     const base = (this.viewportWidth - slideWidth) / 2;
     const index = Math.round((base - this.translateX) / this.step);
-    this.goTo(index, true);
+    this.goTo(index, true, { source: "drag" });
   }
 }
 

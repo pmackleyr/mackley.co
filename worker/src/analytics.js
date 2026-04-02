@@ -1,0 +1,976 @@
+const RETENTION_DAYS = 90;
+const RECENT_SESSION_LIMIT = 40;
+const MAX_TIMELINE_EVENTS = 24;
+const MAX_UNIQUE_ITEMS = 8;
+const VALID_DAY_WINDOWS = [7, 14, 30, 60, RETENTION_DAYS];
+const DASHBOARD_PASSWORD_HEADER = "x-dashboard-password";
+
+function jsonResponse(status, data) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+function normalizeString(value, max = 160) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, max);
+}
+
+function normalizeNumber(value, fallback = 0) {
+  const next = Number(value);
+  return Number.isFinite(next) ? next : fallback;
+}
+
+function asTimestamp(value) {
+  if (typeof value === "number") {
+    return value > 1e12 ? value : value * 1000;
+  }
+
+  if (typeof value === "string" && value) {
+    const asNumber = Number(value);
+    if (Number.isFinite(asNumber)) {
+      return asNumber > 1e12 ? asNumber : asNumber * 1000;
+    }
+
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+
+  return Date.now();
+}
+
+function dayKey(timestamp) {
+  return new Date(timestamp).toISOString().slice(0, 10);
+}
+
+function hashKey(value) {
+  return encodeURIComponent(value);
+}
+
+function normalizeDeviceType(value) {
+  const next = normalizeString(value, 24).toLowerCase();
+  if (["mobile", "tablet", "desktop"].includes(next)) {
+    return next;
+  }
+  return "unknown";
+}
+
+function sourceSummaryFromPayload(payload) {
+  const source = normalizeString(payload.last_source || payload.first_source || "direct", 80) || "direct";
+  const medium = normalizeString(payload.last_medium || payload.first_medium || "direct", 80) || "direct";
+  const campaign = normalizeString(payload.last_campaign || payload.first_campaign || "", 120);
+
+  return {
+    source,
+    medium,
+    campaign,
+    key: campaign ? `${source} / ${medium} / ${campaign}` : `${source} / ${medium}`
+  };
+}
+
+function payloadHasAttribution(payload) {
+  return Boolean(
+    normalizeString(payload.last_source || payload.first_source || "", 80)
+    || normalizeString(payload.last_medium || payload.first_medium || "", 80)
+    || normalizeString(payload.last_campaign || payload.first_campaign || "", 120)
+  );
+}
+
+function sessionStorageKey(sessionId) {
+  return `session:${sessionId}`;
+}
+
+function dedupeStorageKey(eventId) {
+  return `event:${eventId}`;
+}
+
+function dailyStorageKey(day) {
+  return `daily:${day}`;
+}
+
+function sourceStorageKey(day, sourceKey) {
+  return `source:${day}:${hashKey(sourceKey)}`;
+}
+
+function clickStorageKey(day, clickKey) {
+  return `click:${day}:${hashKey(clickKey)}`;
+}
+
+function pageStorageKey(day, pageKey) {
+  return `page:${day}:${hashKey(pageKey)}`;
+}
+
+function createEmptySession(sessionId, payload, timestamp) {
+  const source = sourceSummaryFromPayload(payload);
+  const initialPath = normalizeString(payload.page_path || payload.page_location || "/", 140) || "/";
+
+  return {
+    sessionId,
+    visitorId: normalizeString(payload.visitor_id || payload.distinct_id || sessionId, 120),
+    visitorType: normalizeString(payload.visitor_type || "unknown", 30) || "unknown",
+    deviceType: normalizeDeviceType(payload.device_type),
+    language: normalizeString(payload.language || "", 24),
+    startedAt: timestamp,
+    lastEventAt: timestamp,
+    firstPath: initialPath,
+    lastPath: initialPath,
+    source: source.source,
+    medium: source.medium,
+    campaign: source.campaign,
+    sourceKey: source.key,
+    referrerDomain: normalizeString(payload.referrer_domain || "", 120),
+    pageViews: 0,
+    eventsCount: 0,
+    ctaImpression: false,
+    beginCheckout: false,
+    checkoutRedirect: false,
+    purchaseVerified: false,
+    checkoutBlocked: false,
+    blockedReason: "",
+    deepScroll: false,
+    engaged30: false,
+    maxScrollPercent: 0,
+    engagedTimeSeconds: 0,
+    carouselInteractions: 0,
+    clickCount: 0,
+    recentJourney: [],
+    pagePaths: [],
+    clickedTargets: [],
+    eventTimeline: [],
+    purchaseValue: 0,
+    transactionId: "",
+    checkoutStepMap: {}
+  };
+}
+
+function cloneValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function pushUniqueLimited(list, value, limit) {
+  if (!value) return Array.isArray(list) ? list : [];
+  const next = Array.isArray(list) ? [...list] : [];
+  const existingIndex = next.indexOf(value);
+  if (existingIndex >= 0) {
+    next.splice(existingIndex, 1);
+  }
+  next.unshift(value);
+  return next.slice(0, limit);
+}
+
+function appendJourney(list, item, limit) {
+  const next = Array.isArray(list) ? [...list] : [];
+  next.push(item);
+  return next.slice(-limit);
+}
+
+function appendTimeline(list, entry, limit) {
+  const next = Array.isArray(list) ? [...list] : [];
+  next.push(entry);
+  return next.slice(-limit);
+}
+
+function summarizeStatus(session) {
+  if (session.purchaseVerified) return "purchased";
+  if (session.checkoutBlocked) return "blocked";
+  if (session.checkoutRedirect) return "redirected";
+  if (session.beginCheckout) return "checkout";
+  if (session.deepScroll || session.engaged30) return "engaged";
+  return "bounce";
+}
+
+function createEmptyDaily(day) {
+  return {
+    day,
+    sessions: 0,
+    landingSessions: 0,
+    newSessions: 0,
+    returningSessions: 0,
+    totalEvents: 0,
+    pageViews: 0,
+    ctaImpressionSessions: 0,
+    beginCheckoutSessions: 0,
+    checkoutRedirectSessions: 0,
+    purchaseSessions: 0,
+    blockedSessions: 0,
+    deepScrollSessions: 0,
+    engagedSessions: 0,
+    carouselSessions: 0,
+    totalEngagedSeconds: 0,
+    exitCount: 0
+  };
+}
+
+function createEmptySource(day, label, source, medium, campaign) {
+  return {
+    day,
+    label,
+    source,
+    medium,
+    campaign,
+    sessions: 0,
+    beginCheckout: 0,
+    purchases: 0,
+    blocked: 0
+  };
+}
+
+function createEmptyClick(day, label, href, pagePath) {
+  return {
+    day,
+    label,
+    href,
+    pagePath,
+    clicks: 0
+  };
+}
+
+function createEmptyPage(day, pagePath) {
+  return {
+    day,
+    pagePath,
+    pageViews: 0,
+    beginCheckout: 0,
+    purchases: 0
+  };
+}
+
+async function loadOr(state, key, factory) {
+  const stored = await state.storage.get(key);
+  return stored || factory();
+}
+
+function formatPercent(numerator, denominator) {
+  if (!denominator) return 0;
+  return Number(((numerator / denominator) * 100).toFixed(1));
+}
+
+function formatPercentCapped(numerator, denominator) {
+  if (!denominator) return 0;
+  return formatPercent(Math.min(numerator, denominator), denominator);
+}
+
+function dashboardPasswordFor(env) {
+  return normalizeString(env.DASHBOARD_PASSWORD || "", 160);
+}
+
+function dashboardAuthorized(request, env) {
+  const password = dashboardPasswordFor(env);
+  if (!password) return false;
+  return request.headers.get(DASHBOARD_PASSWORD_HEADER) === password;
+}
+
+function normalizeDays(value) {
+  const next = Number(value);
+  return VALID_DAY_WINDOWS.includes(next) ? next : 14;
+}
+
+function recentSessionKey(session) {
+  return {
+    sessionId: session.sessionId,
+    lastEventAt: session.lastEventAt
+  };
+}
+
+async function updateRecentSessions(state, session) {
+  const stored = (await state.storage.get("recent_sessions")) || [];
+  const withoutCurrent = stored.filter((entry) => entry.sessionId !== session.sessionId);
+  withoutCurrent.unshift(recentSessionKey(session));
+  await state.storage.put("recent_sessions", withoutCurrent.slice(0, RECENT_SESSION_LIMIT));
+}
+
+function eventTimelineEntry(event, timestamp, payload, path) {
+  const entry = {
+    at: timestamp,
+    event,
+    path
+  };
+
+  const label = normalizeString(payload.target_label || payload.step || payload.reason || "", 120);
+  const href = normalizeString(payload.target_href || "", 240);
+  const scrollPercent = normalizeNumber(payload.percent_scrolled || payload.max_scroll_percent);
+  const seconds = normalizeNumber(payload.milestone_seconds || payload.engaged_time_seconds);
+
+  if (label) entry.label = label;
+  if (href) entry.href = href;
+  if (scrollPercent) entry.scrollPercent = scrollPercent;
+  if (seconds) entry.seconds = seconds;
+
+  return entry;
+}
+
+function buildRecommendations(metrics, sources, clicks) {
+  const recommendations = [];
+
+  if (metrics.blockedSessions > 0) {
+    recommendations.push({
+      priority: "critical",
+      title: "Checkout is leaking revenue",
+      detail: `${metrics.blockedSessions} session(s) hit a blocked checkout or redirect state in this range.`,
+      action: "Fix the broken handoff to Stripe before increasing paid traffic."
+    });
+  }
+
+  if (metrics.sessions >= 10 && metrics.ctaVisibilityRate < 70) {
+    recommendations.push({
+      priority: "high",
+      title: "Too many visitors never reach the buy moment",
+      detail: `Only ${metrics.ctaVisibilityRate}% of landing sessions see a strong CTA.`,
+      action: "Move the buying action higher, shorten the first screen, or add a sticky mobile CTA."
+    });
+  }
+
+  if (metrics.ctaImpressionSessions >= 20 && metrics.checkoutRateFromCta < 10) {
+    recommendations.push({
+      priority: "high",
+      title: "The page is generating interest but not enough intent",
+      detail: `Only ${metrics.checkoutRateFromCta}% of CTA viewers start checkout.`,
+      action: "Test clearer promise, stronger trust proof, and tighter price framing."
+    });
+  }
+
+  if (metrics.beginCheckoutSessions >= 10 && metrics.purchaseRateFromCheckout < 35) {
+    recommendations.push({
+      priority: "high",
+      title: "Checkout starts are not turning into purchases fast enough",
+      detail: `Only ${metrics.purchaseRateFromCheckout}% of checkout sessions reach verified purchase.`,
+      action: "Audit Stripe redirect, payment confirmation, and the thank-you verification path."
+    });
+  }
+
+  if (metrics.sessions >= 10 && metrics.deepScrollRate < 45) {
+    recommendations.push({
+      priority: "medium",
+      title: "Visitors are not getting deep enough into the page",
+      detail: `Only ${metrics.deepScrollRate}% of sessions pass the 50% scroll mark.`,
+      action: "Tighten the intro, surface proof faster, and reduce narrative before the decision point."
+    });
+  }
+
+  const weakSource = sources.find((source) => source.sessions >= 10 && source.checkoutRate < metrics.checkoutRate * 0.65);
+  if (weakSource) {
+    recommendations.push({
+      priority: "medium",
+      title: `${weakSource.label} traffic is underperforming`,
+      detail: `${weakSource.label} sent ${weakSource.sessions} sessions but only ${weakSource.checkoutRate}% started checkout.`,
+      action: "Match the ad promise and first-screen message more tightly."
+    });
+  }
+
+  const topClick = clicks[0];
+  if (topClick && /purpose|privacy|cookie/i.test(topClick.label)) {
+    recommendations.push({
+      priority: "medium",
+      title: "Visitors appear to want reassurance before buying",
+      detail: `"${topClick.label}" is one of the most clicked targets.`,
+      action: "Move trust, shipping clarity, and material proof closer to the main CTA."
+    });
+  }
+
+  if (!recommendations.length) {
+    recommendations.push({
+      priority: "watch",
+      title: "No single leak dominates this sample",
+      detail: "The page is likely constrained more by traffic quality or creative quality than by one broken step.",
+      action: "Run one focused change at a time and watch checkout rate, not just clicks."
+    });
+  }
+
+  return recommendations.slice(0, 4);
+}
+
+function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, recentSessions) {
+  const totals = dailyRows.reduce((acc, row) => {
+    acc.sessions += row.sessions;
+    acc.landingSessions += row.landingSessions;
+    acc.newSessions += row.newSessions;
+    acc.returningSessions += row.returningSessions;
+    acc.totalEvents += row.totalEvents;
+    acc.pageViews += row.pageViews;
+    acc.ctaImpressionSessions += row.ctaImpressionSessions;
+    acc.beginCheckoutSessions += row.beginCheckoutSessions;
+    acc.checkoutRedirectSessions += row.checkoutRedirectSessions;
+    acc.purchaseSessions += row.purchaseSessions;
+    acc.blockedSessions += row.blockedSessions;
+    acc.deepScrollSessions += row.deepScrollSessions;
+    acc.engagedSessions += row.engagedSessions;
+    acc.carouselSessions += row.carouselSessions;
+    acc.totalEngagedSeconds += row.totalEngagedSeconds;
+    acc.exitCount += row.exitCount;
+    return acc;
+  }, {
+    sessions: 0,
+    landingSessions: 0,
+    newSessions: 0,
+    returningSessions: 0,
+    totalEvents: 0,
+    pageViews: 0,
+    ctaImpressionSessions: 0,
+    beginCheckoutSessions: 0,
+    checkoutRedirectSessions: 0,
+    purchaseSessions: 0,
+    blockedSessions: 0,
+    deepScrollSessions: 0,
+    engagedSessions: 0,
+    carouselSessions: 0,
+    totalEngagedSeconds: 0,
+    exitCount: 0
+  });
+
+  const metrics = {
+    days,
+    sessions: totals.sessions,
+    landingSessions: totals.landingSessions,
+    newSessions: totals.newSessions,
+    returningSessions: totals.returningSessions,
+    returningRate: formatPercent(totals.returningSessions, totals.sessions),
+    totalEvents: totals.totalEvents,
+    pageViews: totals.pageViews,
+    ctaImpressionSessions: totals.ctaImpressionSessions,
+    beginCheckoutSessions: totals.beginCheckoutSessions,
+    checkoutRedirectSessions: totals.checkoutRedirectSessions,
+    purchaseSessions: totals.purchaseSessions,
+    blockedSessions: totals.blockedSessions,
+    deepScrollSessions: totals.deepScrollSessions,
+    engagedSessions: totals.engagedSessions,
+    carouselSessions: totals.carouselSessions,
+    ctaVisibilityRate: formatPercent(totals.ctaImpressionSessions, totals.landingSessions || totals.sessions),
+    checkoutRate: formatPercent(totals.beginCheckoutSessions, totals.landingSessions || totals.sessions),
+    checkoutRateFromCta: formatPercentCapped(totals.beginCheckoutSessions, totals.ctaImpressionSessions),
+    purchaseRate: formatPercent(totals.purchaseSessions, totals.landingSessions || totals.sessions),
+    purchaseRateFromCheckout: formatPercentCapped(totals.purchaseSessions, totals.beginCheckoutSessions),
+    deepScrollRate: formatPercent(totals.deepScrollSessions, totals.landingSessions || totals.sessions),
+    engagementRate: formatPercent(totals.engagedSessions, totals.sessions),
+    averageEngagedSeconds: totals.exitCount ? Number((totals.totalEngagedSeconds / totals.exitCount).toFixed(1)) : 0
+  };
+
+  const sources = sourceRows.reduce((acc, row) => {
+    if (!acc.has(row.label)) {
+      acc.set(row.label, {
+        label: row.label,
+        source: row.source,
+        medium: row.medium,
+        campaign: row.campaign,
+        sessions: 0,
+        beginCheckout: 0,
+        purchases: 0,
+        blocked: 0
+      });
+    }
+    const entry = acc.get(row.label);
+    entry.sessions += row.sessions;
+    entry.beginCheckout += row.beginCheckout;
+    entry.purchases += row.purchases;
+    entry.blocked += row.blocked;
+    return acc;
+  }, new Map());
+
+  const sourceList = Array.from(sources.values())
+    .map((entry) => ({
+      ...entry,
+      checkoutRate: formatPercentCapped(entry.beginCheckout, entry.sessions),
+      purchaseRate: formatPercentCapped(entry.purchases, entry.sessions),
+      blockedRate: formatPercentCapped(entry.blocked, entry.sessions)
+    }))
+    .sort((left, right) => right.sessions - left.sessions)
+    .slice(0, 8);
+
+  const clickTargets = clickRows.reduce((acc, row) => {
+    const key = `${row.label}:::${row.href}`;
+    if (!acc.has(key)) {
+      acc.set(key, {
+        label: row.label,
+        href: row.href,
+        clicks: 0,
+        pagePath: row.pagePath
+      });
+    }
+    const entry = acc.get(key);
+    entry.clicks += row.clicks;
+    return acc;
+  }, new Map());
+
+  const topClicks = Array.from(clickTargets.values())
+    .sort((left, right) => right.clicks - left.clicks)
+    .slice(0, 10);
+
+  const pages = pageRows.reduce((acc, row) => {
+    if (!acc.has(row.pagePath)) {
+      acc.set(row.pagePath, {
+        pagePath: row.pagePath,
+        pageViews: 0,
+        beginCheckout: 0,
+        purchases: 0
+      });
+    }
+    const entry = acc.get(row.pagePath);
+    entry.pageViews += row.pageViews;
+    entry.beginCheckout += row.beginCheckout;
+    entry.purchases += row.purchases;
+    return acc;
+  }, new Map());
+
+  const pageList = Array.from(pages.values())
+    .map((entry) => ({
+      ...entry,
+      checkoutRate: formatPercentCapped(entry.beginCheckout, entry.pageViews),
+      purchaseRate: formatPercentCapped(entry.purchases, entry.pageViews)
+    }))
+    .sort((left, right) => right.pageViews - left.pageViews)
+    .slice(0, 8);
+
+  const funnel = [
+    { label: "Landing sessions", value: metrics.landingSessions || metrics.sessions, rate: 100 },
+    { label: "CTA seen", value: metrics.ctaImpressionSessions, rate: metrics.ctaVisibilityRate },
+    { label: "Checkout started", value: metrics.beginCheckoutSessions, rate: metrics.checkoutRate },
+    { label: "Purchase verified", value: metrics.purchaseSessions, rate: metrics.purchaseRate }
+  ];
+
+  const timeline = dailyRows.map((row) => ({
+    date: row.day,
+    sessions: row.landingSessions || row.sessions,
+    beginCheckout: row.beginCheckoutSessions,
+    purchases: row.purchaseSessions,
+    blocked: row.blockedSessions
+  }));
+
+  const recent = recentSessions
+    .sort((left, right) => right.lastEventAt - left.lastEventAt)
+    .slice(0, 18)
+    .map((session) => ({
+      sessionId: session.sessionId,
+      source: session.sourceKey,
+      status: summarizeStatus(session),
+      visitorType: session.visitorType,
+      deviceType: session.deviceType,
+      startedAt: session.startedAt,
+      lastEventAt: session.lastEventAt,
+      firstPath: session.firstPath,
+      lastPath: session.lastPath,
+      maxScrollPercent: session.maxScrollPercent,
+      engagedTimeSeconds: session.engagedTimeSeconds,
+      clickCount: session.clickCount,
+      blockedReason: session.blockedReason,
+      transactionId: session.transactionId,
+      clickedTargets: session.clickedTargets || [],
+      journey: session.recentJourney || [],
+      eventTimeline: session.eventTimeline || [],
+      checkoutSteps: Object.keys(session.checkoutStepMap || {})
+    }));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    days,
+    metrics,
+    funnel,
+    timeline,
+    sources: sourceList,
+    topClicks,
+    pages: pageList,
+    recentSessions: recent,
+    recommendations: buildRecommendations(metrics, sourceList, topClicks)
+  };
+}
+
+function isLandingPath(path) {
+  return path === "/" || path === "/index.html" || path === "/product/" || path === "/product";
+}
+
+export class AnalyticsStore {
+  constructor(state) {
+    this.state = state;
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    if (request.method === "POST" && url.pathname.endsWith("/collect")) {
+      const payload = await request.json().catch(() => null);
+      if (!payload || typeof payload !== "object") {
+        return jsonResponse(400, { ok: false, error: "invalid_payload" });
+      }
+
+      return this.collect(payload);
+    }
+
+    if (request.method === "POST" && url.pathname.endsWith("/dashboard")) {
+      const payload = await request.json().catch(() => ({}));
+      return this.dashboard(payload);
+    }
+
+    return jsonResponse(405, { ok: false, error: "method_not_allowed" });
+  }
+
+  async collect(input) {
+    const events = Array.isArray(input.events) ? input.events.slice(0, 50) : [input];
+    if (!events.length) {
+      return jsonResponse(400, { ok: false, error: "missing_events" });
+    }
+
+    let accepted = 0;
+    let deduped = 0;
+    let rejected = 0;
+    let firstError = null;
+
+    for (const eventInput of events) {
+      const result = await this.collectOne(eventInput);
+      if (result.status === "accepted") {
+        accepted += 1;
+      } else if (result.status === "deduped") {
+        deduped += 1;
+      } else {
+        rejected += 1;
+        if (!firstError) {
+          firstError = result;
+        }
+      }
+    }
+
+    if (!accepted && !deduped) {
+      return jsonResponse(firstError?.code || 400, {
+        ok: false,
+        error: firstError?.error || "invalid_payload",
+        accepted,
+        deduped,
+        rejected
+      });
+    }
+
+    return jsonResponse(202, {
+      ok: true,
+      accepted,
+      deduped,
+      rejected
+    });
+  }
+
+  async collectOne(input) {
+    if (!input || typeof input !== "object") {
+      return { status: "rejected", code: 400, error: "invalid_event" };
+    }
+
+    const payload = input.payload && typeof input.payload === "object" ? input.payload : {};
+    const event = normalizeString(input.event || payload.event_name, 80);
+    const eventId = normalizeString(payload.event_id || input.event_id, 140);
+    const sessionId = normalizeString(payload.session_id || payload.visitor_id || "", 140);
+
+    if (!event || !eventId || !sessionId) {
+      return { status: "rejected", code: 400, error: "missing_required_fields" };
+    }
+
+    const dedupeKey = dedupeStorageKey(eventId);
+    const existingEvent = await this.state.storage.get(dedupeKey);
+    if (existingEvent) {
+      return { status: "deduped" };
+    }
+
+    const timestamp = asTimestamp(payload.event_time || payload.time);
+    const day = dayKey(timestamp);
+    const sessionKey = sessionStorageKey(sessionId);
+    const session = await loadOr(this.state, sessionKey, () => createEmptySession(sessionId, payload, timestamp));
+    const previous = cloneValue(session);
+    const source = payloadHasAttribution(payload)
+      ? sourceSummaryFromPayload(payload)
+      : {
+        source: session.source,
+        medium: session.medium,
+        campaign: session.campaign,
+        key: session.sourceKey
+      };
+    const currentPath = normalizeString(payload.page_path || payload.page_location || session.lastPath || "/", 140) || "/";
+
+    session.eventsCount += 1;
+    session.lastEventAt = timestamp;
+    session.lastPath = currentPath;
+    session.source = source.source || session.source;
+    session.medium = source.medium || session.medium;
+    session.campaign = source.campaign || session.campaign;
+    session.sourceKey = source.key || session.sourceKey;
+    session.referrerDomain = normalizeString(payload.referrer_domain || session.referrerDomain, 120) || session.referrerDomain;
+    session.deviceType = normalizeDeviceType(payload.device_type || session.deviceType);
+    session.language = normalizeString(payload.language || session.language, 24) || session.language;
+    session.pagePaths = pushUniqueLimited(session.pagePaths, session.lastPath, MAX_UNIQUE_ITEMS);
+    session.eventTimeline = appendTimeline(
+      session.eventTimeline,
+      eventTimelineEntry(event, timestamp, payload, currentPath),
+      MAX_TIMELINE_EVENTS
+    );
+
+    switch (event) {
+      case "page_view":
+        session.pageViews += 1;
+        session.firstPath = session.firstPath || session.lastPath;
+        session.recentJourney = appendJourney(session.recentJourney, `view ${session.lastPath}`, 12);
+        break;
+      case "view_item":
+        session.recentJourney = appendJourney(session.recentJourney, "product viewed", 12);
+        break;
+      case "cta_impression":
+        session.ctaImpression = true;
+        session.recentJourney = appendJourney(session.recentJourney, "cta seen", 12);
+        break;
+      case "begin_checkout":
+        session.beginCheckout = true;
+        session.checkoutStepMap = {
+          ...(session.checkoutStepMap || {}),
+          started: true
+        };
+        session.recentJourney = appendJourney(session.recentJourney, "checkout started", 12);
+        break;
+      case "checkout_redirect":
+        session.checkoutRedirect = true;
+        session.checkoutStepMap = {
+          ...(session.checkoutStepMap || {}),
+          redirected: true
+        };
+        session.recentJourney = appendJourney(session.recentJourney, "redirected to stripe", 12);
+        break;
+      case "purchase_verified":
+        session.purchaseVerified = true;
+        session.purchaseValue = normalizeNumber(payload.value, session.purchaseValue);
+        session.transactionId = normalizeString(payload.transaction_id || payload.order_id || "", 160);
+        session.checkoutStepMap = {
+          ...(session.checkoutStepMap || {}),
+          purchased: true
+        };
+        session.recentJourney = appendJourney(session.recentJourney, "purchase verified", 12);
+        break;
+      case "checkout_blocked":
+        session.checkoutBlocked = true;
+        session.blockedReason = normalizeString(payload.reason || "", 160);
+        session.recentJourney = appendJourney(session.recentJourney, "checkout blocked", 12);
+        break;
+      case "scroll_depth":
+        session.maxScrollPercent = Math.max(session.maxScrollPercent, normalizeNumber(payload.percent_scrolled));
+        if (session.maxScrollPercent >= 50) {
+          session.deepScroll = true;
+        }
+        break;
+      case "engagement_milestone":
+        session.engagedTimeSeconds = Math.max(session.engagedTimeSeconds, normalizeNumber(payload.milestone_seconds));
+        if (session.engagedTimeSeconds >= 30) {
+          session.engaged30 = true;
+        }
+        break;
+      case "page_exit":
+        session.engagedTimeSeconds = Math.max(session.engagedTimeSeconds, normalizeNumber(payload.engaged_time_seconds));
+        session.maxScrollPercent = Math.max(session.maxScrollPercent, normalizeNumber(payload.max_scroll_percent));
+        if (session.maxScrollPercent >= 50) {
+          session.deepScroll = true;
+        }
+        if (session.engagedTimeSeconds >= 30) {
+          session.engaged30 = true;
+        }
+        break;
+      case "carousel_interaction":
+        session.carouselInteractions += 1;
+        session.recentJourney = appendJourney(session.recentJourney, "carousel used", 12);
+        break;
+      case "click_target":
+        session.clickCount += 1;
+        session.clickedTargets = pushUniqueLimited(
+          session.clickedTargets,
+          normalizeString(payload.target_label || "Unknown", 120),
+          MAX_UNIQUE_ITEMS
+        );
+        session.recentJourney = appendJourney(
+          session.recentJourney,
+          `clicked ${normalizeString(payload.target_label || "target", 60)}`,
+          12
+        );
+        break;
+      case "checkout_step_completed":
+        session.checkoutStepMap = {
+          ...(session.checkoutStepMap || {}),
+          [normalizeString(payload.step || "unknown", 40)]: true
+        };
+        session.recentJourney = appendJourney(
+          session.recentJourney,
+          `step ${normalizeString(payload.step || "unknown", 40)} complete`,
+          12
+        );
+        break;
+      default:
+        session.recentJourney = appendJourney(session.recentJourney, event, 12);
+        break;
+    }
+
+    const daily = await loadOr(this.state, dailyStorageKey(day), () => createEmptyDaily(day));
+    const sourceRow = await loadOr(
+      this.state,
+      sourceStorageKey(day, session.sourceKey),
+      () => createEmptySource(day, session.sourceKey, session.source, session.medium, session.campaign)
+    );
+    const pagePathForCounts = event === "purchase_verified" ? (session.firstPath || currentPath) : currentPath;
+    const pageRow = await loadOr(
+      this.state,
+      pageStorageKey(day, pagePathForCounts),
+      () => createEmptyPage(day, pagePathForCounts)
+    );
+
+    daily.totalEvents += 1;
+
+    if (event === "page_view") {
+      daily.pageViews += 1;
+      pageRow.pageViews += 1;
+      if (previous.pageViews === 0) {
+        daily.sessions += 1;
+        sourceRow.sessions += 1;
+        if (session.visitorType === "returning") {
+          daily.returningSessions += 1;
+        } else {
+          daily.newSessions += 1;
+        }
+        if (isLandingPath(currentPath)) {
+          daily.landingSessions += 1;
+        }
+      }
+    }
+
+    if (session.ctaImpression && !previous.ctaImpression) {
+      daily.ctaImpressionSessions += 1;
+    }
+    if (session.beginCheckout && !previous.beginCheckout) {
+      daily.beginCheckoutSessions += 1;
+      sourceRow.beginCheckout += 1;
+      pageRow.beginCheckout += 1;
+    }
+    if (session.checkoutRedirect && !previous.checkoutRedirect) {
+      daily.checkoutRedirectSessions += 1;
+    }
+    if (session.purchaseVerified && !previous.purchaseVerified) {
+      daily.purchaseSessions += 1;
+      sourceRow.purchases += 1;
+      pageRow.purchases += 1;
+    }
+    if (session.checkoutBlocked && !previous.checkoutBlocked) {
+      daily.blockedSessions += 1;
+      sourceRow.blocked += 1;
+    }
+    if (session.deepScroll && !previous.deepScroll) {
+      daily.deepScrollSessions += 1;
+    }
+    if (session.engaged30 && !previous.engaged30) {
+      daily.engagedSessions += 1;
+    }
+    if (session.carouselInteractions > 0 && previous.carouselInteractions === 0) {
+      daily.carouselSessions += 1;
+    }
+    if (event === "page_exit") {
+      daily.totalEngagedSeconds += normalizeNumber(payload.engaged_time_seconds);
+      daily.exitCount += 1;
+    }
+
+    if (event === "click_target") {
+      const label = normalizeString(payload.target_label || "Unknown", 120);
+      const href = normalizeString(payload.target_href || "", 240);
+      const clickKey = `${label}:::${href}`;
+      const clickRow = await loadOr(
+        this.state,
+        clickStorageKey(day, clickKey),
+        () => createEmptyClick(day, label, href, currentPath)
+      );
+      clickRow.clicks += 1;
+      await this.state.storage.put(clickStorageKey(day, clickKey), clickRow);
+    }
+
+    await this.state.storage.put(dedupeKey, { timestamp, day });
+    await this.state.storage.put(sessionKey, session);
+    await this.state.storage.put(dailyStorageKey(day), daily);
+    await this.state.storage.put(sourceStorageKey(day, session.sourceKey), sourceRow);
+    await this.state.storage.put(pageStorageKey(day, pagePathForCounts), pageRow);
+    await updateRecentSessions(this.state, session);
+
+    return { status: "accepted" };
+  }
+
+  async dashboard(input) {
+    const days = normalizeDays(input.days);
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const dayKeys = Array.from({ length: days }, (_, index) => {
+      const date = new Date();
+      date.setUTCDate(date.getUTCDate() - (days - index - 1));
+      return dayKey(date.getTime());
+    });
+
+    const dailyRows = [];
+    const sourceRows = [];
+    const clickRows = [];
+    const pageRows = [];
+
+    for (const day of dayKeys) {
+      const daily = await loadOr(this.state, dailyStorageKey(day), () => createEmptyDaily(day));
+      dailyRows.push(daily);
+
+      const sources = await this.state.storage.list({ prefix: `source:${day}:` });
+      sourceRows.push(...Array.from(sources.values()));
+
+      const clicks = await this.state.storage.list({ prefix: `click:${day}:` });
+      clickRows.push(...Array.from(clicks.values()));
+
+      const pages = await this.state.storage.list({ prefix: `page:${day}:` });
+      pageRows.push(...Array.from(pages.values()));
+    }
+
+    const recentIds = (await this.state.storage.get("recent_sessions")) || [];
+    const recentSessions = [];
+    for (const entry of recentIds) {
+      if (!entry || entry.lastEventAt < cutoff) continue;
+      const session = await this.state.storage.get(sessionStorageKey(entry.sessionId));
+      if (session && session.lastEventAt >= cutoff) {
+        recentSessions.push(session);
+      }
+    }
+
+    return jsonResponse(200, {
+      ok: true,
+      dashboard: buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, recentSessions)
+    });
+  }
+}
+
+export async function handleAnalyticsCollect(request, env) {
+  const id = env.ANALYTICS_STORE.idFromName("analytics");
+  const stub = env.ANALYTICS_STORE.get(id);
+  const payload = await request.json().catch(() => null);
+  return stub.fetch("https://analytics/collect", {
+    method: "POST",
+    body: JSON.stringify(payload || {})
+  });
+}
+
+export async function handleAnalyticsDashboard(request, env) {
+  if (!dashboardAuthorized(request, env)) {
+    return jsonResponse(401, { ok: false, error: "unauthorized" });
+  }
+
+  const url = new URL(request.url);
+  const days = normalizeDays(url.searchParams.get("days"));
+  const id = env.ANALYTICS_STORE.idFromName("analytics");
+  const stub = env.ANALYTICS_STORE.get(id);
+  const response = await stub.fetch("https://analytics/dashboard", {
+    method: "POST",
+    body: JSON.stringify({ days })
+  });
+  const text = await response.text();
+
+  return new Response(text, {
+    status: response.status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  });
+}
+
+export function analyticsCorsHeaders(headers, origin) {
+  if (!origin) return headers;
+  headers.set("Access-Control-Allow-Origin", origin);
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  headers.set("Access-Control-Allow-Headers", `Content-Type, ${DASHBOARD_PASSWORD_HEADER}`);
+  headers.set("Vary", "Origin");
+  return headers;
+}

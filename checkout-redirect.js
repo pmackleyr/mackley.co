@@ -4,6 +4,13 @@
     || "https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00";
   let redirectInFlight = false;
 
+  function track(name, payload, options) {
+    if (!window.MACKLEYAnalytics || typeof window.MACKLEYAnalytics.track !== "function") {
+      return null;
+    }
+    return window.MACKLEYAnalytics.track(name, payload, options);
+  }
+
   function setStatus(message) {
     const statusText = document.getElementById("checkout-status");
     if (statusText) {
@@ -31,6 +38,10 @@
   }
 
   async function createCheckoutSession() {
+    track("checkout_step_completed", {
+      step: "checkout_page_loaded"
+    });
+
     const tracking = window.MACKLEYAds && typeof window.MACKLEYAds.getClickParams === "function"
       ? window.MACKLEYAds.getClickParams()
       : {};
@@ -47,13 +58,25 @@
     });
 
     if (!response.ok) {
+      track("checkout_blocked", {
+        reason: "checkout_session_request_failed"
+      });
       throw new Error("Unable to create checkout session.");
     }
 
     const data = await response.json();
     if (!data || typeof data.url !== "string" || !data.url) {
+      track("checkout_blocked", {
+        reason: "checkout_session_url_missing"
+      });
       throw new Error("Missing checkout URL.");
     }
+
+    track("checkout_redirect", {
+      target_href: data.url,
+      checkout_session_id: data.id || "",
+      destination: "stripe_checkout"
+    });
 
     return data.url;
   }

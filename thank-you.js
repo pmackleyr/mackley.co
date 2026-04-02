@@ -40,6 +40,17 @@
       return;
     }
 
+    if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
+      window.MACKLEYAnalytics.track("purchase_verified", {
+        event_id: `purchase:${order.transactionId}`,
+        transaction_id: order.transactionId,
+        value: order.value,
+        currency: order.currency
+      }, {
+        transportType: "beacon"
+      });
+    }
+
     if (typeof window.gtag === "function") {
       window.gtag("event", "purchase", {
         transaction_id: order.transactionId,

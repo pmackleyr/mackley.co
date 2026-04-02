@@ -1,8 +1,17 @@
+import {
+  AnalyticsStore,
+  analyticsCorsHeaders,
+  handleAnalyticsCollect,
+  handleAnalyticsDashboard
+} from "./analytics.js";
+
 const ALLOWED_HOSTS = new Set([
   "mackley.co",
   "mackley.co:443",
   "www.mackley.co",
   "www.mackley.co:443",
+  "mackleyco.vercel.app",
+  "mackley.vercel.app",
   "localhost:3000",
   "localhost:5173",
   "127.0.0.1:5500"
@@ -52,11 +61,11 @@ function jsonResponse(status, data, origin) {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-function withCorsHeaders(headers, origin) {
+function withCorsHeaders(headers, origin, methods = "POST, OPTIONS", allowedHeaders = "Content-Type") {
   if (!origin) return headers;
   headers.set("Access-Control-Allow-Origin", origin);
-  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type");
+  headers.set("Access-Control-Allow-Methods", methods);
+  headers.set("Access-Control-Allow-Headers", allowedHeaders);
   headers.set("Vary", "Origin");
   return headers;
 }
@@ -316,6 +325,43 @@ export default {
       return jsonResponse(200, data, corsOrigin);
     }
 
+    if (url.pathname === "/analytics/collect" || url.pathname === "/analytics/dashboard") {
+      if (!effectiveOrigin) {
+        return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
+      }
+
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin)
+        });
+      }
+
+      if (url.pathname === "/analytics/collect" && request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+      }
+
+      if (url.pathname === "/analytics/dashboard" && request.method !== "GET") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+      }
+
+      const response = url.pathname === "/analytics/collect"
+        ? await handleAnalyticsCollect(request, env)
+        : await handleAnalyticsDashboard(request, env);
+
+      const payload = await response.text();
+      const headers = analyticsCorsHeaders(new Headers(response.headers), effectiveOrigin);
+      headers.set("Content-Type", "application/json");
+      if (url.pathname === "/analytics/dashboard") {
+        headers.set("Cache-Control", "no-store");
+      }
+
+      return new Response(payload, {
+        status: response.status,
+        headers
+      });
+    }
+
     if (!effectiveOrigin) {
       return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
     }
@@ -477,3 +523,5 @@ export class SocialProof {
     });
   }
 }
+
+export { AnalyticsStore };

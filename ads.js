@@ -1,18 +1,43 @@
 (function () {
   const doc = document;
-  const params = new URLSearchParams(window.location.search);
-  const storage = window.localStorage;
+  const win = window;
+  const params = new URLSearchParams(win.location.search);
+  const storage = win.localStorage;
+  const sessionStore = win.sessionStorage;
   const sampleAdsEnabled = params.get("sampleAds") === "1" || storage.getItem("mackley_sample_ads") === "1";
   const clickParamsKey = "mackley_google_click_params";
+  const firstTouchKey = "mackley_analytics_first_touch";
+  const lastTouchKey = "mackley_analytics_last_touch";
+  const visitorIdKey = "mackley_analytics_visitor_id";
+  const sessionIdKey = "mackley_analytics_session_id";
+  const sessionCountKey = "mackley_analytics_session_count";
+  const sessionSeenKey = "mackley_analytics_session_seen";
+  const queueKey = "mackley_analytics_queue_v2";
   const checkoutSkipKey = "mackley_skip_checkout_tracking";
   const socialProofEndpoint = "https://api.mackley.co/social-proof";
-  const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid"];
+  const collectorUrl = "https://api.mackley.co/analytics/collect";
+  const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid", "fbclid", "msclkid"];
+  const itemName = "Original Copper Neti Pot";
+  const scrollMilestones = [25, 50, 75, 90];
+  const slotDefaults = {
+    banner: "6300978111",
+    rectangle: "6300978111",
+    square: "6300978111"
+  };
+
+  let adsLoaded = false;
+  let flushingQueue = false;
+  let maxScrollPercent = 0;
+  let pageExitTracked = false;
+  const pageStartedAt = Date.now();
+  const firedScrollMilestones = new Set();
+  const firedEngagementMilestones = new Set();
 
   function readMeta(name) {
     return doc.querySelector(`meta[name="${name}"]`)?.content?.trim() || "";
   }
 
-  const globalConfig = window.MACKLEYAdsConfig || {};
+  const globalConfig = win.MACKLEYAdsConfig || {};
   const config = {
     tagId: globalConfig.tagId || readMeta("google-tag-id") || storage.getItem("mackley_google_tag_id") || "",
     conversionLabel: globalConfig.conversionLabel || readMeta("google-ads-conversion-label") || storage.getItem("mackley_google_ads_conversion_label") || "",
@@ -29,22 +54,80 @@
   );
 
   const adsenseClient = config.adsenseClient || (sampleAdsEnabled ? "ca-pub-3940256099942544" : "");
-  const slotDefaults = {
-    banner: "6300978111",
-    rectangle: "6300978111",
-    square: "6300978111"
+
+  win.dataLayer = win.dataLayer || [];
+  win.gtag = win.gtag || function gtag() {
+    win.dataLayer.push(arguments);
   };
 
-  let adsLoaded = false;
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = window.gtag || function gtag() {
-    window.dataLayer.push(arguments);
-  };
-
-  function sanitizeTrackingValue(value) {
+  function sanitizeTrackingValue(value, max = 255) {
     if (typeof value !== "string") return "";
-    return value.trim().slice(0, 255);
+    return value.trim().slice(0, max);
+  }
+
+  function readStorage(area, key) {
+    try {
+      return area.getItem(key);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeStorage(area, key, value) {
+    try {
+      area.setItem(key, value);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function readJson(area, key) {
+    const raw = readStorage(area, key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeJson(area, key, value) {
+    writeStorage(area, key, JSON.stringify(value));
+  }
+
+  function createId() {
+    if (win.crypto?.randomUUID) {
+      return win.crypto.randomUUID();
+    }
+    return `mk_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  function resolveDeviceType() {
+    const width = win.innerWidth || doc.documentElement.clientWidth || 0;
+    if (width && width < 768) return "mobile";
+    if (width && width < 1100) return "tablet";
+    return "desktop";
+  }
+
+  function getOrCreateValue(area, key) {
+    const existing = readStorage(area, key);
+    if (existing) return existing;
+    const next = createId();
+    writeStorage(area, key, next);
+    return next;
+  }
+
+  function getSessionCount() {
+    const stored = Number(readStorage(storage, sessionCountKey) || 0);
+    const alreadySeen = readStorage(sessionStore, sessionSeenKey);
+    if (alreadySeen) {
+      return stored || 1;
+    }
+    const next = stored + 1;
+    writeStorage(storage, sessionCountKey, String(next));
+    writeStorage(sessionStore, sessionSeenKey, "1");
+    return next;
   }
 
   function padNumber(value) {
@@ -98,11 +181,7 @@
   }
 
   function setCheckoutSkip() {
-    try {
-      storage.setItem(checkoutSkipKey, "1");
-    } catch (error) {
-      // Ignore storage failures.
-    }
+    writeStorage(storage, checkoutSkipKey, "1");
   }
 
   function consumeCheckoutSkip() {
@@ -118,22 +197,11 @@
   }
 
   function readStoredClickParams() {
-    try {
-      const raw = storage.getItem(clickParamsKey);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (error) {
-      return {};
-    }
+    return readJson(storage, clickParamsKey) || {};
   }
 
   function writeStoredClickParams(value) {
-    try {
-      storage.setItem(clickParamsKey, JSON.stringify(value));
-    } catch (error) {
-      // Ignore storage failures.
-    }
+    writeJson(storage, clickParamsKey, value);
   }
 
   function captureClickParams() {
@@ -148,11 +216,12 @@
       updated = true;
     });
 
-    if (!updated) return;
+    if (!updated) return stored;
 
     next.captured_at = Date.now();
-    next.landing_path = `${window.location.pathname}${window.location.search}`;
+    next.landing_path = `${win.location.pathname}${win.location.search}`;
     writeStoredClickParams(next);
+    return next;
   }
 
   function getClickParams() {
@@ -168,8 +237,8 @@
 
   function appendClickParams(url) {
     try {
-      const destination = new URL(url, window.location.origin);
-      if (destination.origin !== window.location.origin) {
+      const destination = new URL(url, win.location.origin);
+      if (destination.origin !== win.location.origin) {
         return url;
       }
 
@@ -186,32 +255,232 @@
     }
   }
 
-  const shouldSkipCheckoutTracking = window.location.pathname.startsWith("/checkout") && consumeCheckoutSkip();
-
-  captureClickParams();
-
-  function trackingReady() {
-    return Boolean(config.tagId) && typeof window.gtag === "function";
+  function readReferrerDomain() {
+    if (!doc.referrer) return "";
+    try {
+      return new URL(doc.referrer).hostname;
+    } catch (error) {
+      return "";
+    }
   }
 
-  function trackEvent(name, payload, callback) {
+  function buildTouchSnapshot() {
+    const clickIds = clickParamNames.reduce((result, key) => {
+      const value = sanitizeTrackingValue(params.get(key) || "");
+      if (value) {
+        result[key] = value;
+      }
+      return result;
+    }, {});
+
+    const referrerDomain = readReferrerDomain();
+    const source = sanitizeTrackingValue(params.get("utm_source") || "") || referrerDomain || "direct";
+    const medium = sanitizeTrackingValue(params.get("utm_medium") || "")
+      || (clickIds.gclid || clickIds.gbraid || clickIds.wbraid ? "paid_search" : referrerDomain ? "referral" : "direct");
+
+    return {
+      source,
+      medium,
+      campaign: sanitizeTrackingValue(params.get("utm_campaign") || "", 120),
+      content: sanitizeTrackingValue(params.get("utm_content") || "", 120),
+      term: sanitizeTrackingValue(params.get("utm_term") || "", 120),
+      referrer_domain: referrerDomain,
+      captured_at: new Date().toISOString(),
+      landing_path: `${win.location.pathname}${win.location.search}`,
+      click_ids: clickIds
+    };
+  }
+
+  function captureAttribution() {
+    const snapshot = buildTouchSnapshot();
+    const existingFirst = readJson(storage, firstTouchKey);
+    const shouldPersistLast = snapshot.source !== "direct"
+      || snapshot.referrer_domain
+      || snapshot.campaign
+      || snapshot.content
+      || snapshot.term
+      || Object.keys(snapshot.click_ids).length > 0;
+
+    if (!existingFirst) {
+      writeJson(storage, firstTouchKey, snapshot);
+    }
+
+    if (shouldPersistLast) {
+      writeJson(storage, lastTouchKey, snapshot);
+    }
+
+    return {
+      first: readJson(storage, firstTouchKey) || snapshot,
+      last: readJson(storage, lastTouchKey) || snapshot
+    };
+  }
+
+  function trackingReady() {
+    return Boolean(config.tagId) && typeof win.gtag === "function";
+  }
+
+  function resolvePageName() {
+    const pathname = win.location.pathname;
+    if (pathname === "/" || pathname === "/index.html") return "home";
+    if (pathname.startsWith("/checkout")) return "checkout";
+    if (pathname.startsWith("/thank-you")) return "thank_you";
+    if (pathname.startsWith("/purpose")) return "purpose";
+    if (pathname.startsWith("/legal")) return "legal";
+    if (pathname.startsWith("/cookie")) return "cookie";
+    if (pathname.startsWith("/product")) return "product";
+    return pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "_") || "page";
+  }
+
+  const shouldSkipCheckoutTracking = win.location.pathname.startsWith("/checkout") && consumeCheckoutSkip();
+  captureClickParams();
+  const attribution = captureAttribution();
+  const visitorId = getOrCreateValue(storage, visitorIdKey);
+  const sessionId = getOrCreateValue(sessionStore, sessionIdKey);
+  const sessionNumber = getSessionCount();
+  const visitorType = sessionNumber > 1 ? "returning" : "new";
+  const pageName = resolvePageName();
+
+  function buildContext() {
+    return {
+      site_name: "mackley.co",
+      visitor_id: visitorId,
+      session_id: sessionId,
+      session_number: sessionNumber,
+      visitor_type: visitorType,
+      page_name: pageName,
+      page_title: doc.title,
+      page_path: win.location.pathname,
+      page_location: win.location.href,
+      first_source: attribution.first?.source || "direct",
+      first_medium: attribution.first?.medium || "direct",
+      first_campaign: attribution.first?.campaign || "",
+      last_source: attribution.last?.source || "direct",
+      last_medium: attribution.last?.medium || "direct",
+      last_campaign: attribution.last?.campaign || "",
+      referrer_domain: readReferrerDomain(),
+      language: sanitizeTrackingValue(win.navigator.language || "", 24),
+      timezone: sanitizeTrackingValue(Intl.DateTimeFormat().resolvedOptions().timeZone || "", 60),
+      device_type: resolveDeviceType(),
+      currency: config.currency,
+      value: config.value,
+      screen_width: win.screen?.width || 0,
+      screen_height: win.screen?.height || 0,
+      viewport_width: win.innerWidth,
+      viewport_height: win.innerHeight
+    };
+  }
+
+  function readQueue() {
+    return readJson(storage, queueKey) || [];
+  }
+
+  function writeQueue(queue) {
+    writeJson(storage, queueKey, queue);
+  }
+
+  function enqueueCollectorEvent(name, payload) {
+    const queue = readQueue();
+    queue.push({
+      event: name,
+      payload
+    });
+    writeQueue(queue);
+  }
+
+  function flushQueueWithBeacon() {
+    const queue = readQueue();
+    if (!queue.length || !navigator.sendBeacon) return;
+
+    const batch = queue.slice(0, 10);
+    const blob = new Blob([JSON.stringify({ events: batch })], {
+      type: "application/json"
+    });
+
+    if (navigator.sendBeacon(collectorUrl, blob)) {
+      writeQueue(queue.slice(batch.length));
+    }
+  }
+
+  async function flushQueue() {
+    if (flushingQueue) return;
+    flushingQueue = true;
+
+    try {
+      while (true) {
+        const queue = readQueue();
+        if (!queue.length) break;
+
+        const batch = queue.slice(0, 10);
+        const response = await fetch(collectorUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ events: batch }),
+          keepalive: true
+        });
+
+        if (!response.ok) {
+          break;
+        }
+
+        writeQueue(queue.slice(batch.length));
+      }
+    } catch (error) {
+      // Preserve the queue for the next flush attempt.
+    } finally {
+      flushingQueue = false;
+    }
+  }
+
+  function buildEventPayload(name, payload) {
+    return {
+      ...buildContext(),
+      ...(payload || {}),
+      event_name: name,
+      event_id: sanitizeTrackingValue(payload?.event_id || "", 140) || createId(),
+      event_time: new Date().toISOString()
+    };
+  }
+
+  function sendCollectorEvent(name, payload, options) {
+    const eventPayload = buildEventPayload(name, payload);
+    enqueueCollectorEvent(name, eventPayload);
+    if (options?.transportType === "beacon") {
+      flushQueueWithBeacon();
+    } else {
+      flushQueue();
+    }
+    return eventPayload;
+  }
+
+  function trackEvent(name, payload, callback, options) {
+    const collectorPayload = sendCollectorEvent(name, payload, options);
+
     if (!trackingReady()) {
       if (typeof callback === "function") {
         callback();
       }
-      return false;
+      return collectorPayload;
     }
 
-    const eventPayload = {
+    const gtagPayload = {
       ...(payload || {})
     };
 
     if (typeof callback === "function") {
-      eventPayload.event_callback = callback;
+      let finished = false;
+      const complete = () => {
+        if (finished) return;
+        finished = true;
+        callback();
+      };
+      gtagPayload.event_callback = complete;
+      win.setTimeout(complete, 180);
     }
 
-    window.gtag("event", name, eventPayload);
-    return true;
+    win.gtag("event", name, gtagPayload);
+    return collectorPayload;
   }
 
   function trackPurchaseConversion(payload, callback) {
@@ -230,10 +499,17 @@
     };
 
     if (typeof callback === "function") {
-      eventPayload.event_callback = callback;
+      let finished = false;
+      const complete = () => {
+        if (finished) return;
+        finished = true;
+        callback();
+      };
+      eventPayload.event_callback = complete;
+      win.setTimeout(complete, 180);
     }
 
-    window.gtag("event", "conversion", eventPayload);
+    win.gtag("event", "conversion", eventPayload);
     return true;
   }
 
@@ -322,7 +598,7 @@
         }
 
         try {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          (win.adsbygoogle = win.adsbygoogle || []).push({});
         } catch (error) {
           slot.classList.remove("ad-slot--live");
           slot.classList.add("ad-slot--placeholder");
@@ -331,6 +607,47 @@
           }
         }
       });
+    });
+  }
+
+  function buildTargetPayload(target) {
+    const href = target.tagName === "A" ? target.getAttribute("href") || "" : "";
+    const label = sanitizeTrackingValue(
+      target.dataset.track
+      || target.getAttribute("aria-label")
+      || target.textContent
+      || target.id
+      || target.className
+      || target.tagName,
+      120
+    );
+    const nearestSection = target.closest("header, footer, main, section, article");
+    const locationLabel = sanitizeTrackingValue(
+      nearestSection?.getAttribute("aria-label")
+      || nearestSection?.className
+      || nearestSection?.tagName
+      || "",
+      80
+    );
+
+    return {
+      target_label: label || "Unknown",
+      target_href: href,
+      interaction_type: target.tagName === "A" ? "link" : "button",
+      target_location: locationLabel
+    };
+  }
+
+  function instrumentGenericClicks() {
+    doc.addEventListener("click", (event) => {
+      const target = event.target.closest("a, button, [role=\"button\"]");
+      if (!target) return;
+      if (target.closest("[data-analytics-ignore]")) return;
+      if (target.matches("[data-track=\"buy-now\"]")) return;
+
+      const payload = buildTargetPayload(target);
+      if (!payload.target_label && !payload.target_href) return;
+      trackEvent("click_target", payload);
     });
   }
 
@@ -349,8 +666,9 @@
         const payload = {
           currency: config.currency,
           value,
-          item_name: link.dataset.item || "Original Copper Neti Pot",
-          page_location: window.location.pathname
+          item_name: link.dataset.item || itemName,
+          click_text: sanitizeTrackingValue(link.textContent || "", 80),
+          target_href: href
         };
 
         let navigated = false;
@@ -358,47 +676,121 @@
           if (navigated) return;
           navigated = true;
           setCheckoutSkip();
-          window.location.assign(appendClickParams(href));
+          win.location.assign(appendClickParams(href));
         };
 
         recordSiteMetric("buy-now");
         trackEvent("begin_checkout", payload, navigate);
-        window.setTimeout(navigate, 150);
+        win.setTimeout(navigate, 180);
       });
     });
   }
 
-  function bindExploreLinks() {
-    const links = Array.from(doc.querySelectorAll("[data-track=\"learn-more\"]"));
-    if (!links.length) return;
+  function bindPageView() {
+    trackEvent("page_view", {
+      is_landing_page: pageName === "home"
+    });
 
-    links.forEach((link) => {
-      link.addEventListener("click", () => {
-        trackEvent("view_item", {
-          item_name: link.dataset.item || "Original Copper Neti Pot",
-          page_location: window.location.pathname
+    if (pageName === "home") {
+      trackEvent("view_item", {
+        item_name: itemName,
+        currency: config.currency,
+        value: config.value
+      });
+    }
+  }
+
+  function instrumentScrollDepth() {
+    const onScroll = () => {
+      const scrollableHeight = doc.documentElement.scrollHeight - win.innerHeight;
+      if (scrollableHeight <= 0) return;
+      const currentPercent = Math.round((win.scrollY / scrollableHeight) * 100);
+      maxScrollPercent = Math.max(maxScrollPercent, currentPercent);
+
+      scrollMilestones.forEach((milestone) => {
+        if (currentPercent >= milestone && !firedScrollMilestones.has(milestone)) {
+          firedScrollMilestones.add(milestone);
+          trackEvent("scroll_depth", {
+            percent_scrolled: milestone
+          });
+        }
+      });
+    };
+
+    win.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  function instrumentEngagementMilestones() {
+    [10, 30, 60].forEach((seconds) => {
+      win.setTimeout(() => {
+        if (firedEngagementMilestones.has(seconds)) return;
+        firedEngagementMilestones.add(seconds);
+        trackEvent("engagement_milestone", {
+          milestone_seconds: seconds,
+          max_scroll_percent: maxScrollPercent
+        });
+      }, seconds * 1000);
+    });
+  }
+
+  function instrumentPageExit() {
+    const trackExit = () => {
+      if (pageExitTracked) return;
+      pageExitTracked = true;
+      trackEvent("page_exit", {
+        engaged_time_seconds: Math.round((Date.now() - pageStartedAt) / 1000),
+        max_scroll_percent: maxScrollPercent
+      }, null, {
+        transportType: "beacon"
+      });
+    };
+
+    doc.addEventListener("visibilitychange", () => {
+      if (doc.visibilityState !== "hidden") return;
+      trackExit();
+    });
+
+    win.addEventListener("pagehide", trackExit);
+  }
+
+  function instrumentCtaImpressions() {
+    const ctas = Array.from(doc.querySelectorAll("[data-track=\"buy-now\"]"));
+    if (!ctas.length || !("IntersectionObserver" in win)) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.65) return;
+        observer.unobserve(entry.target);
+        const payload = buildTargetPayload(entry.target);
+        trackEvent("cta_impression", {
+          target_label: payload.target_label,
+          target_href: payload.target_href,
+          target_location: payload.target_location
         });
       });
-    });
+    }, { threshold: [0.65] });
+
+    ctas.forEach((cta) => observer.observe(cta));
   }
 
   function redirectTo(url, options) {
     if (shouldSkipCheckoutTracking) {
-      window.location.replace(appendClickParams(url));
+      win.location.replace(appendClickParams(url));
       return;
     }
 
     const payload = {
       currency: config.currency,
       value: Number(options?.value || config.value),
-      page_location: window.location.pathname
+      target_href: url
     };
 
     let redirected = false;
     const finish = () => {
       if (redirected) return;
       redirected = true;
-      window.location.replace(appendClickParams(url));
+      win.location.replace(appendClickParams(url));
     };
 
     if (!options?.event) {
@@ -407,31 +799,50 @@
     }
 
     trackEvent(options.event, payload, finish);
-    window.setTimeout(finish, 150);
+    win.setTimeout(finish, 180);
   }
 
-  if (window.location.pathname.startsWith("/checkout") && !shouldSkipCheckoutTracking) {
-    recordSiteMetric("checkout-start");
-    trackEvent("begin_checkout", {
-      currency: config.currency,
-      value: config.value,
-      page_location: window.location.pathname
-    });
-  }
-
-  const ready = () => {
+  function ready() {
     captureClickParams();
+    bindPageView();
     hydrateAdSlots();
     interceptBuyNowLinks();
-    bindExploreLinks();
-  };
+    instrumentGenericClicks();
+    instrumentScrollDepth();
+    instrumentEngagementMilestones();
+    instrumentPageExit();
+    instrumentCtaImpressions();
+    flushQueue();
 
-  window.MACKLEYAds = {
+    if (win.location.pathname.startsWith("/checkout") && !shouldSkipCheckoutTracking) {
+      recordSiteMetric("checkout-start");
+      trackEvent("begin_checkout", {
+        currency: config.currency,
+        value: config.value,
+        entry_method: "page_load"
+      });
+    }
+  }
+
+  win.addEventListener("online", flushQueue);
+  win.addEventListener("beforeunload", flushQueueWithBeacon);
+
+  win.MACKLEYAds = {
+    appendClickParams,
     getClickParams,
     recordSiteMetric,
     redirectTo,
     trackEvent,
-    trackPurchaseConversion
+    trackPurchaseConversion,
+    flushAnalytics: flushQueue
+  };
+
+  win.MACKLEYAnalytics = {
+    context: buildContext,
+    flush: flushQueue,
+    track(name, payload, options) {
+      return trackEvent(name, payload, null, options);
+    }
   };
 
   if (doc.readyState === "loading") {
