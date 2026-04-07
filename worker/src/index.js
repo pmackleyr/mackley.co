@@ -21,7 +21,7 @@ const CHECKOUT_SUCCESS_URL = "https://mackley.co/thank-you?session_id={CHECKOUT_
 const CHECKOUT_CANCEL_URL = "https://mackley.co/checkout";
 const PRODUCT_NAME = "Original Copper Neti Pot™";
 const PRODUCT_SKU = "DB-01";
-const PRODUCT_UNIT_AMOUNT = 4000;
+const PRODUCT_UNIT_AMOUNT = 4200;
 
 function originFromHeader(value) {
   if (!value) return null;
