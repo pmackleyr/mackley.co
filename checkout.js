@@ -1,4 +1,4 @@
-const UNIT_PRICE = 50;
+const UNIT_PRICE = 40;
 const DISCOUNT_PER_EXTRA = 5;
 const STORAGE_KEY = "mackley_checkout_qty";
 const STRIPE_LINK_ONLY = true;
