@@ -1,5 +1,5 @@
 (() => {
-  const SEEN_KEY = "mackley_growth_hook_seen_v1";
+  const SEEN_KEY = "mackley_growth_hook_seen_v2";
   const FORCED = new URLSearchParams(window.location.search).get("growth_hook") === "1";
 
   if (!FORCED) {
