@@ -14,7 +14,6 @@
     step: 1,
     goal: "",
     email: "",
-    phone: "",
     remainingMs: 108000
   };
 
@@ -167,6 +166,8 @@
       const value = input.value.trim();
       if (!value) return;
       state.email = value;
+      stopTimer();
+      timer.hidden = true;
       state.step = 3;
       sendEvent("growth_hook_email_submitted", {
         goal: state.goal,
@@ -181,56 +182,6 @@
   }
 
   function stepThree() {
-    const section = document.createElement("section");
-    section.className = "growth-hook-step";
-
-    const title = document.createElement("h2");
-    title.className = "growth-hook-title-slim";
-    title.textContent = "Finish Signing Up";
-
-    const subtitle = document.createElement("p");
-    subtitle.className = "growth-hook-subtitle";
-    subtitle.textContent = "for texts to activate your offer";
-
-    const legal = document.createElement("p");
-    legal.className = "growth-hook-legal";
-    legal.textContent = "By providing your number and clicking the button, you agree to receive recurring auto-dialed marketing SMS. Consent is not required to purchase. Msg and data rates may apply.";
-
-    const form = document.createElement("form");
-    form.className = "growth-hook-form";
-
-    const input = document.createElement("input");
-    input.type = "tel";
-    input.className = "growth-hook-input";
-    input.placeholder = "(720) 472-8888";
-    input.required = true;
-    input.autocomplete = "tel";
-    input.value = state.phone;
-
-    const btn = document.createElement("button");
-    btn.type = "submit";
-    btn.className = "growth-hook-btn";
-    btn.textContent = "ACTIVATE OFFER";
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const value = input.value.trim();
-      if (!value) return;
-      state.phone = value;
-      state.step = 4;
-      sendEvent("growth_hook_phone_submitted", {
-        goal: state.goal,
-        domain: state.email.split("@")[1] || ""
-      });
-      render();
-    });
-
-    form.append(input, btn);
-    section.append(title, subtitle, legal, form);
-    return section;
-  }
-
-  function stepFour() {
     const section = document.createElement("section");
     section.className = "growth-hook-step";
 
@@ -262,7 +213,6 @@
     if (state.step === 1) body.append(stepOne());
     if (state.step === 2) body.append(stepTwo());
     if (state.step === 3) body.append(stepThree());
-    if (state.step === 4) body.append(stepFour());
   }
 
   close.addEventListener("click", hide);
