@@ -38,6 +38,7 @@
   let buyNowPreviewIndex = 0;
   let buyNowPreviewTimer = null;
   let activeBuyNowPreviewLink = null;
+  let hoverCarouselTimer = null;
   let flushingQueue = false;
   let maxScrollPercent = 0;
   let pageExitTracked = false;
@@ -278,6 +279,38 @@
     buyNowPreviewTimer = null;
   }
 
+  function clearHoverCarouselTimer() {
+    if (!hoverCarouselTimer) return;
+    win.clearInterval(hoverCarouselTimer);
+    hoverCarouselTimer = null;
+  }
+
+  function getProductCarouselElements() {
+    const carousel = doc.querySelector(".carousel");
+    if (!carousel) return null;
+    const dots = Array.from(carousel.querySelectorAll(".carousel-dots button"));
+    const next = carousel.querySelector(".carousel-button--next");
+    return { dots, next };
+  }
+
+  function startHoverCarouselPlayback() {
+    if (win.location.pathname !== "/product/" && win.location.pathname !== "/product") return;
+    const controls = getProductCarouselElements();
+    if (!controls?.next) return;
+
+    clearHoverCarouselTimer();
+    if (controls.dots[0]) {
+      controls.dots[0].click();
+    }
+    hoverCarouselTimer = win.setInterval(() => {
+      controls.next.click();
+    }, 3200);
+  }
+
+  function stopHoverCarouselPlayback() {
+    clearHoverCarouselTimer();
+  }
+
   function renderBuyNowPreview(index) {
     if (!buyNowPreview || !buyNowPreviewImage) return;
     buyNowPreviewImage.src = buyNowPreviewImages[index];
@@ -348,11 +381,13 @@
       buyNowPreviewIndex = (buyNowPreviewIndex + 1) % buyNowPreviewImages.length;
       renderBuyNowPreview(buyNowPreviewIndex);
     }, 2600);
+    startHoverCarouselPlayback();
   }
 
   function hideBuyNowPreview() {
     activeBuyNowPreviewLink = null;
     clearBuyNowPreviewTimer();
+    stopHoverCarouselPlayback();
     if (buyNowPreview) {
       buyNowPreview.classList.remove("is-visible");
     }
