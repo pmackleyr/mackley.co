@@ -49,6 +49,19 @@ function corsOriginForSocialProof(origin) {
   return origin;
 }
 
+function normalizeDashboardSecret(value) {
+  const next = String(value || "").trim();
+  return next || "BreatheDeeper";
+}
+
+function readDashboardAuthorization(request) {
+  const header = request.headers.get("authorization") || request.headers.get("x-dashboard-secret") || "";
+  if (header.toLowerCase().startsWith("bearer ")) {
+    return header.slice(7).trim();
+  }
+  return header.trim();
+}
+
 function jsonResponse(status, data, origin) {
   const headers = {
     "Content-Type": "application/json"
@@ -348,6 +361,35 @@ export default {
       return new Response(payload, {
         status: response.status,
         headers
+      });
+    }
+
+    if (url.pathname === "/analytics/dashboard") {
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin || null);
+      }
+
+      const providedSecret = readDashboardAuthorization(request);
+      const expectedSecret = normalizeDashboardSecret(env.DASHBOARD_SHARED_SECRET);
+      if (!providedSecret || providedSecret !== expectedSecret) {
+        return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin || null);
+      }
+
+      const payload = await request.json().catch(() => ({}));
+      const id = env.ANALYTICS_STORE.idFromName("analytics");
+      const stub = env.ANALYTICS_STORE.get(id);
+      const response = await stub.fetch("https://analytics/dashboard", {
+        method: "POST",
+        body: JSON.stringify(payload || {})
+      });
+
+      const body = await response.text();
+      return new Response(body, {
+        status: response.status,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store"
+        }
       });
     }
 

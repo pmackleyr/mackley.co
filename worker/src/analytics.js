@@ -57,6 +57,100 @@ function normalizeDeviceType(value) {
   return "unknown";
 }
 
+function capitalize(value) {
+  const text = normalizeString(value, 80);
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function inferBrowser(userAgent) {
+  const ua = String(userAgent || "");
+  if (/edg\//i.test(ua)) return "Edge";
+  if (/chrome\//i.test(ua) && !/edg\//i.test(ua)) return "Chrome";
+  if (/safari\//i.test(ua) && !/chrome\//i.test(ua)) return "Safari";
+  if (/firefox\//i.test(ua)) return "Firefox";
+  if (/msie|trident/i.test(ua)) return "Internet Explorer";
+  return "";
+}
+
+function inferOs(userAgent) {
+  const ua = String(userAgent || "");
+  if (/windows nt/i.test(ua)) return "Windows";
+  if (/android/i.test(ua)) return "Android";
+  if (/iphone|ipad|ipod/i.test(ua)) return "iOS";
+  if (/mac os x/i.test(ua)) return "macOS";
+  if (/linux/i.test(ua)) return "Linux";
+  return "";
+}
+
+function buildDeviceSummary(device) {
+  const parts = [];
+  const deviceType = capitalize(device?.deviceType || "");
+  if (deviceType && deviceType !== "Unknown") {
+    parts.push(deviceType);
+  }
+  if (device?.browser) parts.push(device.browser);
+  if (device?.os) parts.push(device.os);
+  return parts.length ? parts.join(" · ") : "Unknown device";
+}
+
+function normalizeLocationFromPayload(payload) {
+  const city = normalizeString(payload.city || payload.geo_city || payload.$city || "", 80);
+  const region = normalizeString(payload.region || payload.geo_region || payload.$region || "", 80);
+  const country = normalizeString(payload.country || payload.geo_country || payload.$country_name || "", 80);
+  const countryCode = normalizeString(payload.country_code || payload.geo_country_code || payload.$country_code || "", 8);
+  const timezone = normalizeString(payload.timezone || payload.browser_timezone || payload.$timezone || "", 60);
+  const ip = normalizeString(payload.ip || payload.request_ip || payload.client_ip || "", 80);
+
+  let summary = "Unknown location";
+  if (city && region) summary = `${city}, ${region}`;
+  else if (city && country) summary = `${city}, ${country}`;
+  else if (region && country) summary = `${region}, ${country}`;
+  else if (country) summary = country;
+  else if (countryCode) summary = countryCode;
+
+  return {
+    city,
+    region,
+    country,
+    countryCode,
+    timezone,
+    ip,
+    summary
+  };
+}
+
+function normalizeDeviceFromPayload(payload) {
+  const userAgent = normalizeString(payload.user_agent || payload.$user_agent || "", 240);
+  const deviceType = normalizeDeviceType(payload.device_type || payload.$device_type);
+  const browser = normalizeString(payload.browser || payload.$browser || inferBrowser(userAgent), 40);
+  const os = normalizeString(payload.os || payload.$os || inferOs(userAgent), 40);
+  const viewportWidth = normalizeNumber(payload.viewport_width);
+  const viewportHeight = normalizeNumber(payload.viewport_height);
+  const screenWidth = normalizeNumber(payload.screen_width || viewportWidth);
+  const screenHeight = normalizeNumber(payload.screen_height || viewportHeight);
+  const language = normalizeString(payload.language || payload.locale || payload.$language || "", 24);
+  const timezone = normalizeString(payload.timezone || payload.browser_timezone || payload.$timezone || "", 60);
+  const touchPoints = normalizeNumber(payload.touch_points);
+  const devicePixelRatio = normalizeNumber(payload.device_pixel_ratio, 1);
+
+  return {
+    browser,
+    os,
+    deviceType,
+    viewportWidth,
+    viewportHeight,
+    screenWidth,
+    screenHeight,
+    language,
+    timezone,
+    touchPoints,
+    devicePixelRatio,
+    userAgent,
+    summary: buildDeviceSummary({ browser, os, deviceType })
+  };
+}
+
 function sourceSummaryFromPayload(payload) {
   const source = normalizeString(payload.last_source || payload.first_source || "direct", 80) || "direct";
   const medium = normalizeString(payload.last_medium || payload.first_medium || "direct", 80) || "direct";
@@ -105,13 +199,17 @@ function pageStorageKey(day, pageKey) {
 function createEmptySession(sessionId, payload, timestamp) {
   const source = sourceSummaryFromPayload(payload);
   const initialPath = normalizeString(payload.page_path || payload.page_location || "/", 140) || "/";
+  const device = normalizeDeviceFromPayload(payload);
+  const location = normalizeLocationFromPayload(payload);
 
   return {
     sessionId,
     visitorId: normalizeString(payload.visitor_id || payload.distinct_id || sessionId, 120),
     visitorType: normalizeString(payload.visitor_type || "unknown", 30) || "unknown",
-    deviceType: normalizeDeviceType(payload.device_type),
+    deviceType: device.deviceType,
     language: normalizeString(payload.language || "", 24),
+    device,
+    location,
     startedAt: timestamp,
     lastEventAt: timestamp,
     firstPath: initialPath,
@@ -533,21 +631,41 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
       sessionId: session.sessionId,
       source: session.sourceKey,
       status: summarizeStatus(session),
+      summary: `${session.firstPath || "/"} -> ${session.lastPath || session.firstPath || "/"}`,
       visitorType: session.visitorType,
       deviceType: session.deviceType,
+      device: session.device || {
+        deviceType: session.deviceType,
+        summary: capitalize(session.deviceType || "unknown")
+      },
+      location: session.location || {
+        summary: "Unknown location"
+      },
       startedAt: session.startedAt,
       lastEventAt: session.lastEventAt,
       firstPath: session.firstPath,
       lastPath: session.lastPath,
+      pagePaths: session.pagePaths || [],
+      referrerDomain: session.referrerDomain || "",
       maxScrollPercent: session.maxScrollPercent,
       engagedTimeSeconds: session.engagedTimeSeconds,
       clickCount: session.clickCount,
+      pageViews: session.pageViews,
+      eventsCount: session.eventsCount,
       blockedReason: session.blockedReason,
       transactionId: session.transactionId,
       clickedTargets: session.clickedTargets || [],
       journey: session.recentJourney || [],
       eventTimeline: session.eventTimeline || [],
-      checkoutSteps: Object.keys(session.checkoutStepMap || {})
+      checkoutSteps: Object.keys(session.checkoutStepMap || {}),
+      screenCount: (session.pagePaths || []).length,
+      viewCount: session.pageViews,
+      eventCount: session.eventsCount,
+      pathFlow: session.pagePaths || [],
+      entry: {
+        landingPath: session.firstPath,
+        referrerDomain: session.referrerDomain || ""
+      }
     }));
 
   return {
@@ -681,6 +799,24 @@ export class AnalyticsStore {
     session.referrerDomain = normalizeString(payload.referrer_domain || session.referrerDomain, 120) || session.referrerDomain;
     session.deviceType = normalizeDeviceType(payload.device_type || session.deviceType);
     session.language = normalizeString(payload.language || session.language, 24) || session.language;
+    session.device = {
+      ...(session.device || {}),
+      ...normalizeDeviceFromPayload({
+        ...(session.device || {}),
+        ...payload,
+        device_type: payload.device_type || session.deviceType,
+        language: payload.language || session.language,
+        timezone: payload.timezone || session.device?.timezone || "",
+        browser_timezone: payload.browser_timezone || session.device?.timezone || ""
+      })
+    };
+    session.location = {
+      ...(session.location || {}),
+      ...normalizeLocationFromPayload({
+        ...(session.location || {}),
+        ...payload
+      })
+    };
     session.pagePaths = pushUniqueLimited(session.pagePaths, session.lastPath, MAX_UNIQUE_ITEMS);
     session.eventTimeline = appendTimeline(
       session.eventTimeline,
@@ -925,9 +1061,28 @@ export async function handleAnalyticsCollect(request, env) {
   const id = env.ANALYTICS_STORE.idFromName("analytics");
   const stub = env.ANALYTICS_STORE.get(id);
   const payload = await request.json().catch(() => null);
+  const cf = request.cf || {};
+  const userAgent = request.headers.get("user-agent") || "";
+  const origin = request.headers.get("origin") || "";
+  const referer = request.headers.get("referer") || "";
+  const enrichedPayload = {
+    ...(payload && typeof payload === "object" ? payload : {}),
+    user_agent: (payload && payload.user_agent) || userAgent,
+    request_origin: origin,
+    request_referrer: referer,
+    ip: (payload && payload.ip) || request.headers.get("cf-connecting-ip") || "",
+    city: (payload && payload.city) || cf.city || "",
+    region: (payload && payload.region) || cf.region || "",
+    country: (payload && payload.country) || cf.country || "",
+    country_code: (payload && payload.country_code) || cf.countryCode || "",
+    timezone: (payload && payload.timezone) || cf.timezone || "",
+    browser_timezone: (payload && payload.timezone) || cf.timezone || "",
+    browser: (payload && payload.browser) || "",
+    os: (payload && payload.os) || ""
+  };
   return stub.fetch("https://analytics/collect", {
     method: "POST",
-    body: JSON.stringify(payload || {})
+    body: JSON.stringify(enrichedPayload)
   });
 }
 

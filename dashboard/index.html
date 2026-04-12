@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="color-scheme" content="light" />
+  <title>MACKLEY Dashboard</title>
+  <link rel="stylesheet" href="/dashboard/dashboard.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="auth-card" id="auth-card">
+      <div class="eyebrow">Private dashboard</div>
+      <h1>Open the session dashboard</h1>
+      <p class="lede">
+        Review clicks, views, scroll depth, sources, devices, locations, and every tracked link on the site.
+      </p>
+      <form class="login-form" id="login-form">
+        <label class="field">
+          <span>Password</span>
+          <input name="password" type="password" placeholder="Enter password" autocomplete="current-password" />
+        </label>
+        <button class="primary-button" type="submit">Unlock dashboard</button>
+      </form>
+      <p class="status" id="login-status" aria-live="polite"></p>
+    </section>
+
+    <section class="dashboard-app" id="dashboard-app" hidden>
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">MACKLEY / dashboard</div>
+          <h1>Session analytics</h1>
+          <p class="lede" id="generated-at">Loading recent activity...</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-button" id="refresh-dashboard" type="button">Refresh</button>
+          <button class="ghost-button" id="logout-dashboard" type="button">Log out</button>
+        </div>
+      </header>
+
+      <div class="control-bar">
+        <div class="segmented" role="tablist" aria-label="Date range">
+          <button class="segmented-button active" data-range="7" type="button">7d</button>
+          <button class="segmented-button" data-range="14" type="button">14d</button>
+          <button class="segmented-button" data-range="30" type="button">30d</button>
+          <button class="segmented-button" data-range="60" type="button">60d</button>
+          <button class="segmented-button" data-range="90" type="button">90d</button>
+        </div>
+        <label class="search">
+          <span>Filter</span>
+          <input id="session-filter" type="search" placeholder="source, device, location, link, screen..." />
+        </label>
+      </div>
+
+      <section class="overview-grid" id="overview-grid"></section>
+      <div class="overview-note" id="overview-note"></div>
+
+      <div class="panels">
+        <section class="panel panel--wide">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Traffic</div>
+              <h2>Sources, pages, and links</h2>
+            </div>
+          </div>
+          <div class="table-stack">
+            <div>
+              <h3>Top sources</h3>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>Sessions</th>
+                      <th>Checkout</th>
+                      <th>Purchases</th>
+                    </tr>
+                  </thead>
+                  <tbody id="source-table"></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h3>Top links</h3>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Link</th>
+                      <th>Clicks</th>
+                      <th>Page</th>
+                    </tr>
+                  </thead>
+                  <tbody id="link-table"></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h3>Pages</h3>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Page</th>
+                      <th>Views</th>
+                      <th>Checkout</th>
+                      <th>Purchases</th>
+                    </tr>
+                  </thead>
+                  <tbody id="page-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Sessions</div>
+              <h2>Recent visits</h2>
+            </div>
+          </div>
+          <div class="session-list" id="session-list"></div>
+        </section>
+
+        <section class="panel panel--detail" id="session-detail">
+          <div class="empty-state">
+            <strong>No session selected.</strong>
+            <p>Pick a visit to inspect the screen flow, clicks, scrolls, and links.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="/dashboard/dashboard.js"></script>
+</body>
+</html>
