@@ -18,7 +18,7 @@
     remainingMs: 108000
   };
 
-  const goals = ["BOOST ENERGY", "RECLAIM FOCUS", "QUIT NICOTINE"];
+  const goals = ["Breathe Better", "Clear Mind", "Sleep Deeper"];
 
   const overlay = document.createElement("div");
   overlay.className = "growth-hook-overlay";
