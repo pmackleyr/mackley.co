@@ -36,9 +36,12 @@ class Carousel {
     this.startY = 0;
     this.startTranslate = 0;
     this.dragAxis = null;
+    this.autoRotateTimer = null;
+    this.autoRotateDelayMs = 3200;
     this.preloadImages();
     this.setupDots();
     this.bindEvents();
+    this.bindBuyNowHover();
     this.measure();
     this.goTo(0, false);
   }
@@ -99,6 +102,28 @@ class Carousel {
     });
   }
 
+  bindBuyNowHover() {
+    const buyNowLinks = Array.from(document.querySelectorAll('[data-track="buy-now"]'));
+    if (!buyNowLinks.length) return;
+
+    const onEnter = () => {
+      this.goTo(0, true, { source: "buy_now_hover" });
+      this.startAutoRotate();
+    };
+
+    const onLeave = () => {
+      this.stopAutoRotate();
+    };
+
+    buyNowLinks.forEach((link) => {
+      link.addEventListener("pointerenter", onEnter);
+      link.addEventListener("focus", onEnter);
+      link.addEventListener("pointerleave", onLeave);
+      link.addEventListener("blur", onLeave);
+      link.addEventListener("pointerdown", onLeave);
+    });
+  }
+
   measure() {
     if (!this.slides[0]) return;
     const slideRect = this.slides[0].getBoundingClientRect();
@@ -149,7 +174,22 @@ class Carousel {
     }
   }
 
+  startAutoRotate() {
+    this.stopAutoRotate();
+    this.autoRotateTimer = window.setInterval(() => {
+      const nextIndex = (this.currentIndex + 1) % this.slides.length;
+      this.goTo(nextIndex, true, { source: "auto_rotate" });
+    }, this.autoRotateDelayMs);
+  }
+
+  stopAutoRotate() {
+    if (!this.autoRotateTimer) return;
+    window.clearInterval(this.autoRotateTimer);
+    this.autoRotateTimer = null;
+  }
+
   onPointerDown(event) {
+    this.stopAutoRotate();
     this.isPointerDown = true;
     this.isDragging = false;
     this.startX = event.clientX;
