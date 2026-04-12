@@ -18,8 +18,8 @@
   const collectorUrl = "https://api.mackley.co/analytics/collect";
   const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid", "fbclid", "msclkid"];
   const buyNowPreviewImages = [
-    "/public/product/carousel-01.png",
-    "/public/product/carousel-02.png",
+    "/public/product/ad1.gif",
+    "/public/product/ad2.gif",
     "/public/product/carousel-03.png",
     "/public/product/carousel-04.png"
   ];
@@ -347,7 +347,7 @@
     buyNowPreviewTimer = win.setInterval(() => {
       buyNowPreviewIndex = (buyNowPreviewIndex + 1) % buyNowPreviewImages.length;
       renderBuyNowPreview(buyNowPreviewIndex);
-    }, 1400);
+    }, 2600);
   }
 
   function hideBuyNowPreview() {
