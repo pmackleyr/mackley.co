@@ -1,140 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="color-scheme" content="light" />
-  <title>MACKLEY Dashboard</title>
-  <link rel="stylesheet" href="/dashboard/dashboard.css" />
-</head>
-<body>
-  <main class="shell">
-    <section class="auth-card" id="auth-card">
-      <div class="eyebrow">Private dashboard</div>
-      <h1>Open the session dashboard</h1>
-      <p class="lede">
-        Review clicks, views, scroll depth, sources, devices, locations, and every tracked link on the site.
-      </p>
-      <form class="login-form" id="login-form">
-        <label class="field">
-          <span>Password</span>
-          <input name="password" type="password" placeholder="Enter password" autocomplete="current-password" />
-        </label>
-        <button class="primary-button" type="submit">Unlock dashboard</button>
-      </form>
-      <p class="status" id="login-status" aria-live="polite"></p>
-    </section>
-
-    <section class="dashboard-app" id="dashboard-app" hidden>
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">MACKLEY / dashboard</div>
-          <h1>Session analytics</h1>
-          <p class="lede" id="generated-at">Loading recent activity...</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MACKLEY Session Chart</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="stylesheet" href="/dashboard/dashboard.css" />
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <header class="dashboard-header" id="dashboard-header" hidden>
+        <div class="hero-copy">
+          <p class="eyebrow">Protected analytics</p>
+          <h1>Session chart</h1>
+          <p class="lede">
+            One row per visit. See who came in, what pages they saw, what they clicked, how long each page held them,
+            and where the session came from.
+          </p>
         </div>
-        <div class="topbar-actions">
-          <button class="ghost-button" id="refresh-dashboard" type="button">Refresh</button>
-          <button class="ghost-button" id="logout-dashboard" type="button">Log out</button>
+
+        <div class="header-actions" id="app-actions" hidden>
+          <div class="range-toggle" role="group" aria-label="Date range">
+            <button type="button" class="range-button active" data-range="7">7d</button>
+            <button type="button" class="range-button" data-range="14">14d</button>
+            <button type="button" class="range-button" data-range="30">30d</button>
+          </div>
+          <button type="button" class="ghost-button" id="refresh-dashboard">Refresh</button>
+          <button type="button" class="ghost-button" id="logout-dashboard">Lock</button>
         </div>
       </header>
 
-      <div class="control-bar">
-        <div class="segmented" role="tablist" aria-label="Date range">
-          <button class="segmented-button active" data-range="7" type="button">7d</button>
-          <button class="segmented-button" data-range="14" type="button">14d</button>
-          <button class="segmented-button" data-range="30" type="button">30d</button>
-          <button class="segmented-button" data-range="60" type="button">60d</button>
-          <button class="segmented-button" data-range="90" type="button">90d</button>
-        </div>
-        <label class="search">
-          <span>Filter</span>
-          <input id="session-filter" type="search" placeholder="source, device, location, link, screen..." />
-        </label>
-      </div>
-
-      <section class="overview-grid" id="overview-grid"></section>
-      <div class="overview-note" id="overview-note"></div>
-
-      <div class="panels">
-        <section class="panel panel--wide">
-          <div class="panel-head">
-            <div>
-              <div class="eyebrow">Traffic</div>
-              <h2>Sources, pages, and links</h2>
+      <main class="dashboard-main">
+        <section class="auth-screen" id="auth-card">
+          <div class="auth-chrome" aria-hidden="true">
+            <div class="chrome-dots">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
+            <div class="chrome-address">parkermackley.com</div>
           </div>
-          <div class="table-stack">
-            <div>
-              <h3>Top sources</h3>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Source</th>
-                      <th>Sessions</th>
-                      <th>Checkout</th>
-                      <th>Purchases</th>
-                    </tr>
-                  </thead>
-                  <tbody id="source-table"></tbody>
-                </table>
+
+          <div class="auth-panel">
+            <div class="auth-icon" aria-hidden="true"></div>
+            <p class="auth-domain">parkermackley.com says:</p>
+            <h2>Enter dashboard password</h2>
+
+            <form id="login-form" class="auth-form">
+              <label class="field">
+                <span>Password</span>
+                <input type="password" name="password" autocomplete="current-password" required />
+              </label>
+              <div class="auth-actions">
+                <button type="submit" class="primary-button">OK</button>
+                <button type="button" class="secondary-button" id="auth-cancel">Cancel</button>
               </div>
-            </div>
-            <div>
-              <h3>Top links</h3>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Link</th>
-                      <th>Clicks</th>
-                      <th>Page</th>
-                    </tr>
-                  </thead>
-                  <tbody id="link-table"></tbody>
-                </table>
-              </div>
-            </div>
-            <div>
-              <h3>Pages</h3>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Page</th>
-                      <th>Views</th>
-                      <th>Checkout</th>
-                      <th>Purchases</th>
-                    </tr>
-                  </thead>
-                  <tbody id="page-table"></tbody>
-                </table>
-              </div>
-            </div>
+              <label class="remember-row">
+                <input type="checkbox" checked disabled />
+                <span>Don't ask again</span>
+              </label>
+              <p class="form-status" id="login-status" aria-live="polite"></p>
+            </form>
           </div>
         </section>
 
-        <section class="panel">
-          <div class="panel-head">
+        <section class="card setup-card" id="setup-card" hidden>
+          <div class="setup-copy">
+            <p class="eyebrow">Setup</p>
+            <h2>Mixpanel is not connected yet</h2>
+            <p>
+              The dashboard shell is live, but the analytics export cannot be queried until the service account is
+              configured.
+            </p>
+          </div>
+          <ul class="setup-list" id="setup-list"></ul>
+        </section>
+
+        <section class="card chart-card" id="chart-card" hidden>
+          <div class="chart-head">
             <div>
-              <div class="eyebrow">Sessions</div>
-              <h2>Recent visits</h2>
+              <p class="eyebrow">Session chart</p>
+              <h2>Who, what, how long, and from where</h2>
+              <p class="panel-copy">
+                Each row keeps the session readable at a glance: visitor, pages, clicks, page dwell time, and source.
+              </p>
             </div>
           </div>
-          <div class="session-list" id="session-list"></div>
-        </section>
 
-        <section class="panel panel--detail" id="session-detail">
-          <div class="empty-state">
-            <strong>No session selected.</strong>
-            <p>Pick a visit to inspect the screen flow, clicks, scrolls, and links.</p>
+          <div class="chart-columns" aria-hidden="true">
+            <span>Visitor</span>
+            <span>Pages and time</span>
+            <span>Clicked</span>
+            <span>From</span>
           </div>
+          <div class="chart-rows" id="chart-rows"></div>
         </section>
-      </div>
-    </section>
-  </main>
+      </main>
+    </div>
 
-  <script src="/dashboard/dashboard.js"></script>
-</body>
+    <script src="/dashboard/dashboard.js" defer></script>
+  </body>
 </html>
