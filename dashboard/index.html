@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MACKLEY Session Chart</title>
+    <title>MACKLEY Simple Analytics Dashboard</title>
     <meta name="robots" content="noindex,nofollow" />
     <link rel="stylesheet" href="/dashboard/dashboard.css" />
   </head>
@@ -12,19 +12,11 @@
       <header class="dashboard-header" id="dashboard-header" hidden>
         <div class="hero-copy">
           <p class="eyebrow">Protected analytics</p>
-          <h1>Session chart</h1>
-          <p class="lede">
-            One row per visit. See who came in, what pages they saw, what they clicked, how long each page held them,
-            and where the session came from.
-          </p>
+          <h1>Simple Analytics Dashboard</h1>
+          <p class="lede">One table. Pages, clicks, time, source, device, and location.</p>
         </div>
 
         <div class="header-actions" id="app-actions" hidden>
-          <div class="range-toggle" role="group" aria-label="Date range">
-            <button type="button" class="range-button active" data-range="7">7d</button>
-            <button type="button" class="range-button" data-range="14">14d</button>
-            <button type="button" class="range-button" data-range="30">30d</button>
-          </div>
           <button type="button" class="ghost-button" id="refresh-dashboard">Refresh</button>
           <button type="button" class="ghost-button" id="logout-dashboard">Lock</button>
         </div>
@@ -67,11 +59,8 @@
         <section class="card setup-card" id="setup-card" hidden>
           <div class="setup-copy">
             <p class="eyebrow">Setup</p>
-            <h2>Mixpanel is not connected yet</h2>
-            <p>
-              The dashboard shell is live, but the analytics export cannot be queried until the service account is
-              configured.
-            </p>
+            <h2>Analytics not connected yet</h2>
+            <p>The dashboard shell is live, but the analytics export cannot be queried until the service account is configured.</p>
           </div>
           <ul class="setup-list" id="setup-list"></ul>
         </section>
@@ -79,21 +68,29 @@
         <section class="card chart-card" id="chart-card" hidden>
           <div class="chart-head">
             <div>
-              <p class="eyebrow">Session chart</p>
-              <h2>Who, what, how long, and from where</h2>
-              <p class="panel-copy">
-                Each row keeps the session readable at a glance: visitor, pages, clicks, page dwell time, and source.
-              </p>
+              <p class="eyebrow">Session table</p>
+              <h2>Who visited what, clicked what, and where they came from</h2>
+              <p class="panel-copy">Each session stays in one row so the whole visit reads left to right.</p>
             </div>
+            <p class="chart-meta" id="dashboard-meta"></p>
           </div>
 
-          <div class="chart-columns" aria-hidden="true">
-            <span>Visitor</span>
-            <span>Pages and time</span>
-            <span>Clicked</span>
-            <span>From</span>
+          <div class="table-wrap">
+            <table class="session-table">
+              <thead>
+                <tr>
+                  <th scope="col">Session</th>
+                  <th scope="col">Pages</th>
+                  <th scope="col">Clicked</th>
+                  <th scope="col">From</th>
+                  <th scope="col">Device</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Time</th>
+                </tr>
+              </thead>
+              <tbody id="chart-rows"></tbody>
+            </table>
           </div>
-          <div class="chart-rows" id="chart-rows"></div>
         </section>
       </main>
     </div>
