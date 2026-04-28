@@ -9,7 +9,7 @@
   <meta name="store-value" content="30" />
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Purpose | MACKLEY</title>
-  <link rel="stylesheet" href="/styles.css?v=20260401-vision" />
+  <link rel="stylesheet" href="/styles.css?v=20260428-home-product" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
   <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
@@ -59,17 +59,40 @@
     <div class="paragraph">
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
-    <section class="paragraph purpose-copy" aria-label="Purpose statement">
-      <div class="prose">
-        <p>MACKLEY exists to close the gap between who you are inside, and what you do outside, between your walk and your talk. There&rsquo;s Greatness inside of you, call it God, Ohm, human potential. Faith is learning to breathe deeper and let go.</p>
-        <p>We all breathe. And while you can go months without food, days without water, you can go just minutes without air. Most people focus on diets, supplements, brushing and flossing, but nobody cleans their nasal passage.</p>
-        <p>Each day dust, pollen, pollution build up in your nasal passage. Try to breathe in through your nose right now, feel that pull? That resistance is air winding back through your face, getting purified, and literally pressurizes your lungs. But if you&rsquo;re like most people, then your nasal passage is tighter and more congested than it should be.</p>
-        <p>In yoga there&rsquo;s a concept called &ldquo;kriyas&rdquo; which are really just the most important habits to clear your mind and body for prayer or meditation. Clearing your nose, &ldquo;jala neti,&rdquo; is the very first kriya. That&rsquo;s no coincidence.</p>
-        <p>You enter this world on a breath, and you leave when breathing stops. The shape of your life is the shape of your breath. So when you breathe shallow, life feels rushed and anxious. When you breathe deeply, life is calm and harmonious.</p>
-        <p>It&rsquo;s difficult to find a good neti pot, which is the ideal vessel for clearing your nose. Most are ceramic or plastic, which breaks, degrades and you don&rsquo;t want any of that in your nasal passage. Copper is a healing metal, so people will actually keep water in it so it positively charges with ions. It&rsquo;s also antibacterial and doesn&rsquo;t break. Perfect for daily nasal hygiene.</p>
-        <p>Breath is not belief. It&rsquo;s biology. Your breath is your potential. And clearing your nose is the most important hygienic habit.</p>
-        <p><a class="underline" href="/product/">MACKLEY&rsquo;s Original Copper Neti Pot</a> is the best possible tool to do so.</p>
-        <p class="purpose-copy__closing">Breathe deeper.</p>
+    <section class="paragraph home-product" id="product" aria-label="Original Copper Neti Pot">
+      <div class="home-product__statement">
+        <p>Close the gap.</p>
+      </div>
+      <div class="home-product__gallery" aria-label="Product gallery">
+        <section class="carousel" aria-label="Product images">
+          <div class="carousel-viewport" tabindex="0">
+            <div class="carousel-track">
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/ad1.gif" alt="Woman using the Original Copper Neti Pot™" decoding="async" fetchpriority="high" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/ad2.gif" alt="Salt being added to the Original Copper Neti Pot™" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/carousel-03.png" alt="Two Original Copper Neti Pot™ vessels standing side by side" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/carousel-04.png" alt="Two Original Copper Neti Pot™ vessels shown from the spout side" loading="lazy" decoding="async" />
+              </div>
+            </div>
+          </div>
+          <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
+          <button class="carousel-button carousel-button--next" type="button" aria-label="Next slide">›</button>
+          <div class="carousel-dots" aria-label="Carousel slides"></div>
+        </section>
+      </div>
+      <div class="home-product__copy">
+        <h1 class="home-product__title"><a href="/product/">Original Copper Neti Pot™</a></h1>
+        <p class="home-product__subtext">Breathe deeper.</p>
+        <div class="home-product__actions">
+          <a class="home-product__button" href="/product/">Learn more</a>
+          <a class="home-product__button" href="/checkout/" data-track="buy-now" data-item="Original Copper Neti Pot™" data-value="30">Buy now</a>
+        </div>
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
@@ -204,6 +227,7 @@
     let activeParagraphEl = null;
 
     function setActiveParagraph(paragraphEl) {
+      document.body.classList.toggle("is-product-active", paragraphEl?.classList.contains("home-product"));
       if (activeParagraphEl === paragraphEl) return;
       activeParagraphEl = paragraphEl;
 
@@ -325,6 +349,6 @@
 
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
-  <script src="/entry-hook-v3.js?v=20260412d" defer></script>
+  <script type="module" src="/carousel.js?v=20260412-hovercarousel3"></script>
 </body>
 </html>
