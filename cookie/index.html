@@ -8,7 +8,7 @@
   <meta name="store-currency" content="USD" />
   <meta name="store-value" content="30" />
   <title>Cookie Policy | MACKLEY</title>
-  <link rel="stylesheet" href="/styles.css?v=20260401-vision" />
+  <link rel="stylesheet" href="/styles.css?v=20260610-survey-buttons" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
   <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
@@ -99,9 +99,6 @@
       <a class="site-footer__link" href="/">Purpose</a>
       <a class="site-footer__link" href="/product/">Product</a>
     </div>
-    <div class="site-footer__center">
-      <a class="cta cta--primary" href="/checkout/" data-track="buy-now" data-item="Original Copper Neti Pot™" data-value="30">Buy now</a>
-    </div>
     <div class="site-footer__group site-footer__group--end site-footer__legal">
       <a class="site-footer__link" href="/legal/">Privacy Policy</a>
       <a class="site-footer__link" href="/cookie/">Cookie Policy</a>
@@ -109,67 +106,6 @@
     </div>
   </footer>
 
-  <div class="modal" id="waitlist-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="waitlist-title">
-    <div class="modal__scrim" data-modal-close></div>
-    <div class="modal__panel" role="document">
-      <button class="modal__close" type="button" aria-label="Close" data-modal-close>×</button>
-      <div class="modal__content">
-        <h3 class="modal__title" id="waitlist-title">Get 20% off the Original Copper Neti Pot&trade;.</h3>
-        <p class="modal__body">Join the waitlist and get 20% off the Original Copper Neti Pot&trade;.</p>
-        <p class="modal__note">(No spam. Unsubscribe anytime.)</p>
-        <form class="modal__form" id="waitlist-form" data-endpoint="https://formspree.io/f/xqearkqj">
-          <label class="sr-only" for="waitlist-name">Your First Name</label>
-          <input class="modal__input" id="waitlist-name" name="firstName" type="text" placeholder="Your First Name" autocomplete="given-name" />
-          <label class="sr-only" for="waitlist-email">Your Email Address</label>
-          <input class="modal__input" id="waitlist-email" name="email" type="email" placeholder="Your Email Address*" autocomplete="email" required />
-          <button class="modal__button" type="submit">Get 20% off</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="share-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="share-title">
-    <div class="modal__scrim" data-modal-close></div>
-    <div class="modal__panel" role="document">
-      <button class="modal__close" type="button" aria-label="Close" data-modal-close>×</button>
-      <div class="modal__content">
-        <h3 class="modal__title" id="share-title">Know someone who'd benefit?</h3>
-        <p class="modal__body">Send them your link for another 20% off.</p>
-        <p class="modal__note">(Every referral bumps you higher on the waitlist.)</p>
-        <div class="share-row">
-          <input class="modal__input share-input" id="referral-link" type="text" readonly />
-          <button class="share-copy" type="button" data-copy aria-label="Copy referral link">
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M16 1H6C4.9 1 4 1.9 4 3V15H6V3H16V1ZM19 5H10C8.9 5 8 5.9 8 7V21C8 22.1 8.9 23 10 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H10V7H19V21Z"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="share-actions" aria-label="Share with friends">
-          <a class="share-icon" href="#" target="_blank" rel="noreferrer" data-share="facebook" aria-label="Share on Facebook">
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M13.5 9H16V6H13.5C11 6 9.5 7.5 9.5 10V12H7V15H9.5V22H12.5V15H15.2L16 12H12.5V10C12.5 9.4 12.9 9 13.5 9Z"></path>
-            </svg>
-          </a>
-          <a class="share-icon" href="#" target="_blank" rel="noreferrer" data-share="x" aria-label="Share on X">
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M18.9 2H22L14.9 10.2L23 22H16.6L11.6 14.8L5.9 22H2.8L10.4 13.2L2 2H8.6L13.1 8.5L18.9 2ZM17.8 20.1H19.5L7.7 3.8H5.9L17.8 20.1Z"></path>
-            </svg>
-          </a>
-          <a class="share-icon" href="#" target="_blank" rel="noreferrer" data-share="linkedin" aria-label="Share on LinkedIn">
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M6.5 9H3.5V22H6.5V9ZM5 3.5C4 3.5 3.2 4.3 3.2 5.3C3.2 6.3 4 7.1 5 7.1C6 7.1 6.8 6.3 6.8 5.3C6.8 4.3 6 3.5 5 3.5ZM20.5 14.5C20.5 11.9 19.1 10.2 16.7 10.2C15.4 10.2 14.5 10.9 14.2 11.6H14.1V9H11.3V22H14.3V15.3C14.3 13.6 14.6 12 16.7 12C18.8 12 18.8 14 18.8 15.4V22H21.5V14.5H20.5Z"></path>
-            </svg>
-          </a>
-          <a class="share-icon" href="#" target="_blank" rel="noreferrer" data-share="email" aria-label="Share by email">
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="/ads.js?v=20260412-hovergif2"></script>
+  <script src="/ads.js?v=20260610-get-started"></script>
 </body>
 </html>

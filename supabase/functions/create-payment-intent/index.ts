@@ -149,8 +149,9 @@ serve(async (request) => {
   if (isValidEmail(payload.email)) {
     params.set("receipt_email", String(payload.email));
   }
-  params.set("metadata[product]", "Original Copper Neti Pot™");
-  params.set("metadata[sku]", "DB-01");
+  params.set("metadata[product]", "Intranasal Neuropeptide Formula");
+  params.set("metadata[product_id]", "prod_UgF2SFTaA6cCVy");
+  params.set("metadata[sku]", "INF-01");
   params.set("metadata[quantity]", String(payload.quantity));
   if (isNonEmpty(payload.email)) {
     params.set("metadata[email]", String(payload.email));

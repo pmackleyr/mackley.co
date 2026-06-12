@@ -1,7 +1,5 @@
 (function () {
-  const apiBase = "https://api.mackley.co";
-  const stripePaymentLink = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content
-    || "https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00";
+  const intakeLink = "/spray-intake/?next=payment";
   let redirectInFlight = false;
 
   function track(name, payload, options) {
@@ -18,10 +16,11 @@
     }
   }
 
-  function setFallbackLink() {
+  function setFallbackLink(href, label) {
     const fallbackLink = document.getElementById("checkout-fallback-link");
     if (fallbackLink) {
-      fallbackLink.href = stripePaymentLink;
+      fallbackLink.href = href;
+      if (label) fallbackLink.textContent = label;
     }
   }
 
@@ -37,68 +36,21 @@
     window.location.replace(url);
   }
 
-  async function createCheckoutSession() {
+  function start() {
+    setFallbackLink(intakeLink, "continue to provider survey");
+    recordMetric("checkout-redirect");
+    setStatus("A licensed provider survey is required before checkout.");
     track("checkout_step_completed", {
       step: "checkout_page_loaded"
     });
 
-    const tracking = window.MACKLEYAds && typeof window.MACKLEYAds.getClickParams === "function"
-      ? window.MACKLEYAds.getClickParams()
-      : {};
-
-    const response = await fetch(`${apiBase}/create-checkout-session`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        quantity: 1,
-        tracking
-      })
-    });
-
-    if (!response.ok) {
-      track("checkout_blocked", {
-        reason: "checkout_session_request_failed"
-      });
-      throw new Error("Unable to create checkout session.");
-    }
-
-    const data = await response.json();
-    if (!data || typeof data.url !== "string" || !data.url) {
-      track("checkout_blocked", {
-        reason: "checkout_session_url_missing"
-      });
-      throw new Error("Missing checkout URL.");
-    }
-
     track("checkout_redirect", {
-      target_href: data.url,
-      checkout_session_id: data.id || "",
-      destination: "stripe_checkout"
+      target_href: intakeLink,
+      destination: "licensed_provider_survey"
     });
-
-    return data.url;
-  }
-
-  function start() {
-    setFallbackLink();
-    recordMetric("checkout-redirect");
-    setStatus("Taking you to secure checkout now.");
-
-    createCheckoutSession()
-      .then((url) => {
-        recordMetric("checkout-session-created");
-        redirectTo(url);
-      })
-      .catch(() => {
-        recordMetric("checkout-session-failed");
-        recordMetric("checkout-link-fallback");
-        setStatus("Continuing via secure Stripe checkout.");
-        window.setTimeout(() => {
-          redirectTo(stripePaymentLink);
-        }, 60);
-      });
+    window.setTimeout(() => {
+      redirectTo(intakeLink);
+    }, 60);
   }
 
   if (document.readyState === "loading") {

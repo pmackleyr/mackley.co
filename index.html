@@ -9,7 +9,7 @@
   <meta name="store-value" content="30" />
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Purpose | MACKLEY</title>
-  <link rel="stylesheet" href="/styles.css?v=20260428-home-product" />
+  <link rel="stylesheet" href="/styles.css?v=20260610-survey-buttons" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
   <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
@@ -59,25 +59,22 @@
     <div class="paragraph">
       <p class="line">to what you do <span class="outside-hover" tabindex="0">outside</span>.</p>
     </div>
-    <section class="paragraph home-product" id="product" aria-label="Original Copper Neti Pot">
+    <section class="paragraph home-product" id="product" aria-label="Intranasal Neuropeptide Formula" data-product-aria>
       <div class="home-product__statement">
-        <p>Close the gap.</p>
+        <p>Jump the gap →</p>
       </div>
       <div class="home-product__gallery" aria-label="Product gallery">
-        <section class="carousel" aria-label="Product images">
+        <section class="carousel" aria-label="Product images" data-product-carousel>
           <div class="carousel-viewport" tabindex="0">
             <div class="carousel-track">
               <div class="carousel-slide">
-                <img class="carousel-image" src="/public/product/ad1.gif" alt="Woman using the Original Copper Neti Pot™" decoding="async" fetchpriority="high" />
+                <img class="carousel-image" src="/public/product/inf-product-01.png" alt="INF intranasal formula bottle with copper cap" decoding="async" fetchpriority="high" />
               </div>
               <div class="carousel-slide">
-                <img class="carousel-image" src="/public/product/ad2.gif" alt="Salt being added to the Original Copper Neti Pot™" loading="lazy" decoding="async" />
+                <img class="carousel-image" src="/public/product/inf-product-02.png" alt="INF intranasal formula bottle with MACKLEY copper neti pot and travel bag" loading="lazy" decoding="async" />
               </div>
               <div class="carousel-slide">
-                <img class="carousel-image" src="/public/product/carousel-03.png" alt="Two Original Copper Neti Pot™ vessels standing side by side" loading="lazy" decoding="async" />
-              </div>
-              <div class="carousel-slide">
-                <img class="carousel-image" src="/public/product/carousel-04.png" alt="Two Original Copper Neti Pot™ vessels shown from the spout side" loading="lazy" decoding="async" />
+                <img class="carousel-image" src="/public/product/inf-product-03.png" alt="INF intranasal formula kit packed in a black travel bag" loading="lazy" decoding="async" />
               </div>
             </div>
           </div>
@@ -87,11 +84,17 @@
         </section>
       </div>
       <div class="home-product__copy">
-        <h1 class="home-product__title"><a href="/product/">Original Copper Neti Pot™</a></h1>
-        <p class="home-product__subtext">Breathe deeper.</p>
+        <h1 class="home-product__title">
+          <a href="/product/" data-product-full-name><span class="home-product__code">INF&trade;</span> Intranasal Neuropeptide Formula</a>
+        </h1>
+        <p class="home-product__subtext">
+          <span class="home-product__audience" data-product-audience>For adults (18+)</span>
+          <span class="home-product__formula" data-product-formula>with Semax + Selank + Oxytocin</span>
+          <span data-product-purpose>for plasticity, clarity and confidence</span>
+        </p>
         <div class="home-product__actions">
           <a class="home-product__button" href="/product/">Learn more</a>
-          <a class="home-product__button" href="/checkout/" data-track="buy-now" data-item="Original Copper Neti Pot™" data-value="30">Buy now</a>
+          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="30">Get Started</a>
         </div>
       </div>
     </section>
@@ -103,9 +106,6 @@
       <a class="site-footer__link" href="/">Purpose</a>
       <a class="site-footer__link" href="/product/">Product</a>
     </div>
-    <div class="site-footer__center">
-      <a class="cta cta--primary" href="/checkout/" data-track="buy-now" data-item="Original Copper Neti Pot™" data-value="30">Buy now</a>
-    </div>
     <div class="site-footer__group site-footer__group--end site-footer__legal">
       <a class="site-footer__link" href="/legal/">Privacy Policy</a>
       <a class="site-footer__link" href="/cookie/">Cookie Policy</a>
@@ -113,7 +113,9 @@
     </div>
   </footer>
 
-  <script src="/ads.js?v=20260412-hovergif2"></script>
+  <script src="/product-data.js?v=20260610-product-story"></script>
+  <script src="/product-render.js?v=20260610-product-story"></script>
+  <script src="/ads.js?v=20260610-get-started"></script>
   <script>
     const narrative = document.getElementById("narrative");
     const header = document.querySelector(".site-header");
@@ -292,15 +294,14 @@
       setActiveParagraph(closest);
     }
 
-    function fitLineToContainer(line) {
+    function measureLineFit(line, maxFontSize, minFontSize) {
       const container = line.parentElement;
-      if (!container) return;
+      if (!container) return maxFontSize;
       const styles = window.getComputedStyle(container);
       const paddingLeft = parseFloat(styles.paddingLeft) || 0;
       const paddingRight = parseFloat(styles.paddingRight) || 0;
-      const maxFontSize = 72;
-      const minFontSize = 18;
-      const availableWidth = Math.max(0, container.clientWidth - paddingLeft - paddingRight);
+      const gutter = Math.max(24, window.innerWidth * 0.035);
+      const availableWidth = Math.max(0, container.clientWidth - paddingLeft - paddingRight - gutter);
 
       let size = maxFontSize;
       line.style.fontSize = `${size}px`;
@@ -309,10 +310,24 @@
         size -= 1;
         line.style.fontSize = `${size}px`;
       }
+
+      return size;
+    }
+
+    function fitLineToContainer(line, size) {
+      line.style.fontSize = `${size}px`;
     }
 
     function fitAllLines() {
-      document.querySelectorAll(".line").forEach(fitLineToContainer);
+      const lines = Array.from(document.querySelectorAll(".line"));
+      const maxFontSize = Math.min(104, Math.max(60, window.innerWidth * 0.07));
+      const minFontSize = Math.max(28, Math.min(60, window.innerWidth * 0.042));
+      const fittedSize = lines.reduce((smallest, line) => {
+        return Math.min(smallest, measureLineFit(line, maxFontSize, minFontSize));
+      }, maxFontSize);
+
+      document.documentElement.style.setProperty("--fitted-title-text", `${fittedSize}px`);
+      lines.forEach((line) => fitLineToContainer(line, fittedSize));
     }
 
     function centerFirstParagraph() {
@@ -333,6 +348,9 @@
     }
 
     fitAllLines();
+    if (document.fonts) {
+      document.fonts.ready.then(fitAllLines);
+    }
     updateInsets();
     measureParagraphs();
     centerFirstParagraph();
@@ -349,6 +367,6 @@
 
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
-  <script type="module" src="/carousel.js?v=20260412-hovercarousel3"></script>
+  <script type="module" src="/carousel.js?v=20260610-get-started"></script>
 </body>
 </html>

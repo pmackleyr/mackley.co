@@ -7,12 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="store-currency" content="USD" />
   <meta name="store-value" content="30" />
-  <title>Checkout | MACKLEY</title>
-  <meta name="stripe-pk" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
-  <meta name="stripe-payment-link" content="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00" />
-  <script src="/ads.js?v=20260412-hovergif2"></script>
-  <script src="/checkout-redirect.js?v=20260401-vision"></script>
-  <link rel="stylesheet" href="/styles.css?v=20260401-vision" />
+  <title>Provider Survey | MACKLEY</title>
+  <script src="/ads.js?v=20260610-get-started"></script>
+  <script src="/checkout-redirect.js?v=20260610-provider-gate"></script>
+  <link rel="stylesheet" href="/styles.css?v=20260610-survey-buttons" />
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
   <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
@@ -36,13 +34,13 @@
   <div id="bg-layer" aria-hidden="true"></div>
 
   <main class="checkout checkout-embed" aria-label="Checkout">
-    <section class="checkout-card checkout-embed-card" aria-label="Stripe checkout">
-      <h1 class="page-title">Redirecting to secure checkout…</h1>
+    <section class="checkout-card checkout-embed-card" aria-label="Provider survey redirect">
+      <h1 class="page-title">Redirecting to provider survey…</h1>
       <p class="checkout-muted" id="checkout-status">
-        We are taking you to Stripe now.
+        A licensed provider survey is required before checkout.
       </p>
       <p class="checkout-muted">
-        If you are not redirected automatically, <a class="text-link" id="checkout-fallback-link" href="https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00">continue to secure checkout</a>.
+        If you are not redirected automatically, <a class="text-link" id="checkout-fallback-link" href="/spray-intake/?next=payment">continue to provider survey</a>.
       </p>
     </section>
   </main>

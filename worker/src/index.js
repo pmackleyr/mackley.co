@@ -19,8 +19,9 @@ const ALLOWED_HOSTS = new Set([
 const CLICK_TRACKING_KEYS = ["gclid", "gclsrc", "wbraid", "gbraid"];
 const CHECKOUT_SUCCESS_URL = "https://mackley.co/thank-you?session_id={CHECKOUT_SESSION_ID}";
 const CHECKOUT_CANCEL_URL = "https://mackley.co/checkout";
-const PRODUCT_NAME = "Original Copper Neti Pot™";
-const PRODUCT_SKU = "DB-01";
+const PRODUCT_NAME = "Intranasal Neuropeptide Formula";
+const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
+const PRODUCT_SKU = "INF-01";
 const PRODUCT_UNIT_AMOUNT = 3000;
 
 function originFromHeader(value) {
@@ -222,6 +223,7 @@ function buildPaymentIntentParams(payload) {
     params.set("receipt_email", payload.email);
   }
   params.set("metadata[product]", PRODUCT_NAME);
+  params.set("metadata[product_id]", PRODUCT_ID);
   params.set("metadata[sku]", PRODUCT_SKU);
   params.set("metadata[quantity]", String(quantity));
   if (isNonEmpty(payload.email)) {
@@ -255,16 +257,17 @@ function buildCheckoutSessionParams(payload) {
   params.set("success_url", CHECKOUT_SUCCESS_URL);
   params.set("cancel_url", CHECKOUT_CANCEL_URL);
   params.set("line_items[0][price_data][currency]", "usd");
-  params.set("line_items[0][price_data][product_data][name]", PRODUCT_NAME);
-  params.set("line_items[0][price_data][product_data][metadata][sku]", PRODUCT_SKU);
+  params.set("line_items[0][price_data][product]", PRODUCT_ID);
   params.set("line_items[0][price_data][unit_amount]", String(PRODUCT_UNIT_AMOUNT));
   params.set("line_items[0][quantity]", String(quantity));
   params.set("billing_address_collection", "auto");
   params.set("shipping_address_collection[allowed_countries][0]", "US");
   params.set("metadata[product]", PRODUCT_NAME);
+  params.set("metadata[product_id]", PRODUCT_ID);
   params.set("metadata[sku]", PRODUCT_SKU);
   params.set("metadata[quantity]", String(quantity));
   params.set("payment_intent_data[metadata][product]", PRODUCT_NAME);
+  params.set("payment_intent_data[metadata][product_id]", PRODUCT_ID);
   params.set("payment_intent_data[metadata][sku]", PRODUCT_SKU);
   params.set("payment_intent_data[metadata][quantity]", String(quantity));
 

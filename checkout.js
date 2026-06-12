@@ -1,14 +1,13 @@
 const UNIT_PRICE = 30;
 const DISCOUNT_PER_EXTRA = 5;
 const STORAGE_KEY = "mackley_checkout_qty";
-const STRIPE_LINK_ONLY = true;
+const PROVIDER_SURVEY_ONLY = true;
 const PAYMENT_API_BASES = [
   "https://ffudhrbpontjqugimvup.supabase.co/functions/v1",
   "https://api.mackley.co"
 ];
 const SOCIAL_PROOF_ENDPOINT = "https://api.mackley.co/social-proof";
-const STRIPE_PAYMENT_LINK = document.querySelector("meta[name=\"stripe-payment-link\"]")?.content
-  || "https://buy.stripe.com/5kQ4gzeDn2oq0qg2Yadwc00";
+const PROVIDER_SURVEY_LINK = "/spray-intake/?next=payment";
 const emailStorageKey = "mackley_checkout_email";
 const purchaseRecordKey = "mackley_purchase_recorded";
 const ORDER_METADATA = {
@@ -38,7 +37,7 @@ const paymentElementContainer = document.getElementById("payment-element");
 const paymentFallback = document.querySelector(".payment-fallback");
 const paymentFallbackText = document.getElementById("payment-fallback-text");
 const paymentRetryButton = document.getElementById("payment-retry");
-const paymentLinkAnchor = document.getElementById("stripe-payment-link");
+const providerSurveyLinkAnchor = document.getElementById("provider-survey-link");
 const addressElementContainer = document.getElementById("shipping-address-element");
 const shippingFields = document.querySelector(".shipping-fields");
 
@@ -202,10 +201,10 @@ function updateCTAState() {
   placeOrderButton.disabled = !(contactValid && shippingValid && stripeReady);
 }
 
-function redirectToStripe() {
+function redirectToProviderSurvey() {
   if (redirectInFlight) return;
   redirectInFlight = true;
-  window.location.replace(STRIPE_PAYMENT_LINK);
+  window.location.replace(PROVIDER_SURVEY_LINK);
 }
 
 function showPaymentFallback(message) {
@@ -219,22 +218,22 @@ function showPaymentFallback(message) {
   updateCTAState();
 }
 
-function enableStripeLinkMode() {
+function enableProviderSurveyMode() {
   stripeReady = true;
   if (paymentElementContainer) {
     paymentElementContainer.innerHTML = "";
   }
   if (paymentFallbackText) {
-    paymentFallbackText.textContent = "Checkout continues in Stripe.";
+    paymentFallbackText.textContent = "A licensed provider survey is required before payment can open.";
   }
   if (paymentRetryButton) {
-    paymentRetryButton.textContent = "Continue to Stripe";
+    paymentRetryButton.textContent = "Continue to provider survey";
   }
-  if (paymentLinkAnchor) {
-    paymentLinkAnchor.href = STRIPE_PAYMENT_LINK;
+  if (providerSurveyLinkAnchor) {
+    providerSurveyLinkAnchor.href = PROVIDER_SURVEY_LINK;
   }
   if (placeOrderButton) {
-    placeOrderButton.textContent = "Continue to Stripe";
+    placeOrderButton.textContent = "Continue to provider survey";
   }
   if (paymentFallback) {
     paymentFallback.hidden = false;
@@ -261,7 +260,7 @@ function clearRetryTimer() {
 function schedulePaymentRetry(message) {
   showPaymentFallback(message || "Payment temporarily unavailable. Retrying...");
   if (retryAttempt >= retryDelays.length) {
-    redirectToStripe();
+    redirectToProviderSurvey();
     return;
   }
   const delay = retryDelays[retryAttempt];
@@ -453,7 +452,7 @@ async function createPaymentIntent() {
 }
 
 function debounceCreateIntent() {
-  if (STRIPE_LINK_ONLY) return;
+  if (PROVIDER_SURVEY_ONLY) return;
   if (!stripe || !elements) return;
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
@@ -491,7 +490,7 @@ async function requestPaymentIntent(payload) {
 }
 
 async function setupStripe() {
-  if (STRIPE_LINK_ONLY) return;
+  if (PROVIDER_SURVEY_ONLY) return;
   if (setupInFlight) return;
   setupInFlight = true;
   clearRetryTimer();
@@ -499,7 +498,7 @@ async function setupStripe() {
   const key = window.STRIPE_PUBLISHABLE_KEY || metaKey;
   if (!key || !window.Stripe) {
     setupInFlight = false;
-    redirectToStripe();
+    redirectToProviderSurvey();
     return;
   }
 
@@ -579,11 +578,11 @@ async function handleSubmit(event) {
     return;
   }
 
-  if (STRIPE_LINK_ONLY) {
+  if (PROVIDER_SURVEY_ONLY) {
     const { email } = getCustomerData();
     localStorage.setItem(emailStorageKey, email);
     localStorage.setItem(STORAGE_KEY, String(getQuantity()));
-    redirectToStripe();
+    redirectToProviderSurvey();
     return;
   }
 
@@ -618,7 +617,7 @@ async function handleSubmit(event) {
     if (result.error.type === "validation_error") {
       return;
     }
-    redirectToStripe();
+    redirectToProviderSurvey();
     return;
   }
 
@@ -686,7 +685,7 @@ function initQuantity() {
 }
 
 async function gateCheckout() {
-  if (STRIPE_LINK_ONLY) return true;
+  if (PROVIDER_SURVEY_ONLY) return true;
   if (successMode) return true;
   try {
     const data = await Promise.race([
@@ -704,7 +703,7 @@ async function gateCheckout() {
     prefetchedClientSecret = data.clientSecret;
     return true;
   } catch (error) {
-    redirectToStripe();
+    redirectToProviderSurvey();
     return false;
   }
 }
@@ -714,8 +713,8 @@ window.addEventListener("resize", updateInsets);
 
 if (paymentRetryButton) {
   paymentRetryButton.addEventListener("click", () => {
-    if (STRIPE_LINK_ONLY) {
-      redirectToStripe();
+    if (PROVIDER_SURVEY_ONLY) {
+      redirectToProviderSurvey();
       return;
     }
     retryAttempt = 0;
@@ -743,8 +742,8 @@ if (successMode) {
   initFields();
   initQuantity();
   form.addEventListener("submit", handleSubmit);
-  if (STRIPE_LINK_ONLY) {
-    enableStripeLinkMode();
+  if (PROVIDER_SURVEY_ONLY) {
+    enableProviderSurveyMode();
     document.documentElement.classList.remove("checkout-loading");
   } else {
     gateCheckout().then((ok) => {

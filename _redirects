@@ -1,2 +1,7 @@
 /purpose /
 /purpose/ /
+/deeper /product/
+/deeper/ /product/
+/checkout /spray-intake/?next=payment
+/checkout/ /spray-intake/?next=payment
+/checkout.html /spray-intake/?next=payment

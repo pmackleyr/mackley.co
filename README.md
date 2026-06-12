@@ -24,12 +24,12 @@ After deploy, confirm `https://api.mackley.co/create-payment-intent` responds.
 Query first-party hourly counters from the live social proof store:
 
 ```sh
-node scripts/social-proof-count.mjs buy-now 72
+node scripts/social-proof-count.mjs get-started 72
 ```
 
 Common metrics:
 
-- `buy-now`
+- `get-started`
 - `checkout-start`
 - `checkout-redirect`
 - `checkout-session-created`

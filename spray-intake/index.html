@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18048135651"></script>
+  <script src="/google-tag.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="store-currency" content="USD" />
+  <meta name="store-value" content="30" />
+  <title>Provider Survey | MACKLEY</title>
+  <link rel="canonical" href="https://mackley.co/spray-intake/" />
+  <link rel="stylesheet" href="/styles.css?v=20260611-solid-sticky-cta" />
+  <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
+  <link rel="icon" href="/public/assets/logo_dark_180.png" type="image/png" sizes="180x180" />
+  <link rel="icon" href="/public/assets/logo_dark_192.png" type="image/png" sizes="192x192" />
+  <link rel="icon" href="/public/assets/logo_dark_512.png" type="image/png" sizes="512x512" />
+</head>
+<body class="intake-page">
+  <header class="site-header" aria-label="Site">
+    <a class="site-title" href="/"><span class="brand">MACKLEY</span></a>
+  </header>
+
+  <main class="intake" aria-label="Provider survey">
+    <form class="intake-form" id="spray-intake-form" novalidate>
+      <p class="intake-referral-note" id="referral-note" hidden>20% referral offer applied.</p>
+      <section class="intake-step is-active" data-step="conditions" aria-label="Medical conditions">
+        <p class="intake-kicker">Step 1 of 3</p>
+        <h1>Have you been diagnosed with any of the following conditions? <span aria-hidden="true">*</span></h1>
+        <p class="intake-subhead">Select all of the medical conditions that you are currently working to mitigate, treat, or cure.</p>
+        <div class="intake-options intake-options--list" data-required-group="conditions">
+          <label><input type="checkbox" name="conditions" value="Anxiety" /> <span>Anxiety (Generalized Anxiety Disorder)</span></label>
+          <label><input type="checkbox" name="conditions" value="Arthritis" /> <span>Arthritis</span></label>
+          <label><input type="checkbox" name="conditions" value="Autism" /> <span>Autism</span></label>
+          <label><input type="checkbox" name="conditions" value="Chronic Kidney Disease" /> <span>Chronic Kidney Disease</span></label>
+          <label><input type="checkbox" name="conditions" value="COPD" /> <span>Chronic Obstructive Pulmonary Disease (COPD)</span></label>
+          <label><input type="checkbox" name="conditions" value="Congestive Heart Failure" /> <span>Congestive Heart Failure</span></label>
+          <label><input type="checkbox" name="conditions" value="Coronary Artery Disease" /> <span>Coronary Artery Disease</span></label>
+          <label><input type="checkbox" name="conditions" value="Depression" /> <span>Depression</span></label>
+          <label><input type="checkbox" name="conditions" value="Hypertension" /> <span>Hypertension (High Blood Pressure)</span></label>
+          <label><input type="checkbox" name="conditions" value="Insomnia" /> <span>Insomnia</span></label>
+          <label><input type="checkbox" name="conditions" value="Low Blood Pressure" /> <span>Low Blood Pressure</span></label>
+          <label><input type="checkbox" name="conditions" value="Metabolic Syndrome" /> <span>Metabolic Syndrome</span></label>
+          <label><input type="checkbox" name="conditions" value="Overweight" /> <span>Overweight</span></label>
+          <label><input type="checkbox" name="conditions" value="Type 1 Diabetes" /> <span>Type 1 Diabetes</span></label>
+          <label><input type="checkbox" name="conditions" value="Type 2 Diabetes" /> <span>Type 2 Diabetes</span></label>
+          <label><input type="checkbox" name="conditions" value="None" data-exclusive="conditions" /> <span>None</span></label>
+        </div>
+        <p class="intake-error" data-error-for="conditions"></p>
+        <button class="ui-button intake-button" type="button" data-next>Continue</button>
+      </section>
+
+      <section class="intake-step" data-step="profile" aria-label="Patient profile">
+        <p class="intake-kicker">Step 2 of 3</p>
+        <label class="intake-field">
+          <span>What's your email address? <strong>*</strong></span>
+          <small>Enter the email you would like us to use for important updates, including review status.</small>
+          <input type="email" name="email" autocomplete="email" placeholder="Email Address" required />
+        </label>
+        <label class="intake-field">
+          <span>What's your first and last name? <strong>*</strong></span>
+          <small>Please note: you may not answer for someone else, including dependents.</small>
+          <input type="text" name="fullName" autocomplete="name" required />
+        </label>
+        <label class="intake-field">
+          <span>How old are you? <strong>*</strong></span>
+          <input type="number" name="age" min="18" max="120" placeholder="Age in years (e.g. 30)" required />
+        </label>
+        <fieldset class="intake-field intake-radio-group" data-required-group="sex">
+          <legend>What is your sex assigned at birth? <strong>*</strong></legend>
+          <label><input type="radio" name="sex" value="Female" required /> <span>Female</span></label>
+          <label><input type="radio" name="sex" value="Male" /> <span>Male</span></label>
+          <label><input type="radio" name="sex" value="Other" /> <span>Other</span></label>
+        </fieldset>
+        <label class="intake-field">
+          <span>What state do you live in? <strong>*</strong></span>
+          <small>Your survey must be reviewed by a licensed provider in your state.</small>
+          <select name="state" required>
+            <option value="">Select state</option>
+            <option>Colorado</option>
+            <option>California</option>
+            <option>Florida</option>
+            <option>New York</option>
+            <option>Texas</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <p class="intake-note">A licensed provider will review your answers to determine eligibility before payment can be collected.</p>
+        <p class="intake-error" data-error-for="profile"></p>
+        <button class="ui-button intake-button" type="button" data-next>Continue</button>
+      </section>
+
+      <section class="intake-step" data-step="attestation" aria-label="Attestation">
+        <p class="intake-kicker">Step 3 of 3</p>
+        <fieldset class="intake-field intake-radio-group intake-radio-group--inline" data-required-group="surgeries">
+          <legend>Have you ever had any surgeries? <strong>*</strong></legend>
+          <label><input type="radio" name="surgeries" value="Yes" required /> <span>Yes</span></label>
+          <label><input type="radio" name="surgeries" value="No" /> <span>No</span></label>
+        </fieldset>
+        <label class="intake-field">
+          <span>Tell us about any risk factors or why you want to prevent these conditions (optional)</span>
+          <small>Risk factors are things that could increase your chances of these conditions, like family history or lifestyle.</small>
+          <textarea name="riskFactors" rows="4" placeholder="Example: I work nights and want help with focus and recovery."></textarea>
+        </label>
+        <section class="intake-attestation" aria-label="Attestation text">
+          <h2>Attestation</h2>
+          <p>I attest that this request is for my own use and understand the intranasal formula requires licensed provider review. Payment will only open after provider approval, and any completed purchase remains pending final approval and fulfillment review.</p>
+        </section>
+        <p class="intake-error" data-error-for="attestation"></p>
+        <button class="ui-button intake-button" type="submit">Submit for review</button>
+      </section>
+
+      <section class="intake-step intake-confirm" data-step="complete" aria-label="Submitted for review">
+        <p class="intake-kicker">Submitted</p>
+        <h1>Your provider survey has been submitted.</h1>
+        <p class="intake-subhead">We will email you a payment link once a licensed physician has reviewed and approved your profile. Your purchase will not occur unless the survey is reviewed and accepted.</p>
+        <p class="intake-note" id="intake-status">Status: pending provider approval.</p>
+        <button class="ui-button intake-button" type="button" data-share-referral>Share with a friend for 20% off</button>
+        <p class="intake-note intake-share-status" id="share-status" aria-live="polite"></p>
+        <a class="intake-share-link" id="share-link" href="#" target="_blank" rel="noreferrer" hidden>Open referral link</a>
+      </section>
+    </form>
+  </main>
+
+  <script src="/product-data.js?v=20260610-product-story"></script>
+  <script src="/ads.js?v=20260610-get-started"></script>
+  <script src="/spray-intake.js?v=20260611-referral-loop"></script>
+</body>
+</html>

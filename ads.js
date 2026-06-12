@@ -17,13 +17,8 @@
   const socialProofEndpoint = "https://api.mackley.co/social-proof";
   const collectorUrl = "https://api.mackley.co/analytics/collect";
   const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid", "fbclid", "msclkid"];
-  const buyNowPreviewImages = [
-    "/public/product/ad1.gif",
-    "/public/product/ad2.gif",
-    "/public/product/carousel-03.png",
-    "/public/product/carousel-04.png"
-  ];
-  const itemName = "Original Copper Neti Pot";
+  const productConfig = win.MACKLEYProduct || {};
+  const itemName = productConfig.name || "Intranasal Neuropeptide Formula";
   const scrollMilestones = [25, 50, 75, 90];
   const slotDefaults = {
     banner: "6300978111",
@@ -32,13 +27,6 @@
   };
 
   let adsLoaded = false;
-  let buyNowPreview = null;
-  let buyNowPreviewImage = null;
-  let buyNowPreviewDots = [];
-  let buyNowPreviewIndex = 0;
-  let buyNowPreviewTimer = null;
-  let activeBuyNowPreviewLink = null;
-  let hoverCarouselTimer = null;
   let flushingQueue = false;
   let maxScrollPercent = 0;
   let pageExitTracked = false;
@@ -265,131 +253,6 @@
       return `${destination.pathname}${destination.search}${destination.hash}`;
     } catch (error) {
       return url;
-    }
-  }
-
-  function supportsHoverPreview() {
-    if (typeof win.matchMedia !== "function") return true;
-    return win.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  }
-
-  function clearBuyNowPreviewTimer() {
-    if (!buyNowPreviewTimer) return;
-    win.clearInterval(buyNowPreviewTimer);
-    buyNowPreviewTimer = null;
-  }
-
-  function clearHoverCarouselTimer() {
-    if (!hoverCarouselTimer) return;
-    win.clearInterval(hoverCarouselTimer);
-    hoverCarouselTimer = null;
-  }
-
-  function getProductCarouselElements() {
-    const carousel = doc.querySelector(".carousel");
-    if (!carousel) return null;
-    const dots = Array.from(carousel.querySelectorAll(".carousel-dots button"));
-    const next = carousel.querySelector(".carousel-button--next");
-    return { dots, next };
-  }
-
-  function startHoverCarouselPlayback() {
-    if (win.location.pathname !== "/product/" && win.location.pathname !== "/product") return;
-    const controls = getProductCarouselElements();
-    if (!controls?.next) return;
-
-    clearHoverCarouselTimer();
-    if (controls.dots[0]) {
-      controls.dots[0].click();
-    }
-    hoverCarouselTimer = win.setInterval(() => {
-      controls.next.click();
-    }, 3200);
-  }
-
-  function stopHoverCarouselPlayback() {
-    clearHoverCarouselTimer();
-  }
-
-  function renderBuyNowPreview(index) {
-    if (!buyNowPreview || !buyNowPreviewImage) return;
-    buyNowPreviewImage.src = buyNowPreviewImages[index];
-    buyNowPreviewDots.forEach((dot, dotIndex) => {
-      dot.classList.toggle("is-active", dotIndex === index);
-    });
-  }
-
-  function ensureBuyNowPreview() {
-    if (buyNowPreview || !doc.body) return;
-
-    const preview = doc.createElement("div");
-    preview.className = "buy-now-preview";
-    preview.setAttribute("aria-hidden", "true");
-    preview.innerHTML = `
-      <div class="buy-now-preview__media">
-        <img class="buy-now-preview__image" src="${buyNowPreviewImages[0]}" alt="Original Copper Neti Pot preview" />
-      </div>
-      <div class="buy-now-preview__meta">
-        <span class="buy-now-preview__title">Original Copper Neti Pot</span>
-        <div class="buy-now-preview__dots" aria-hidden="true">
-          ${buyNowPreviewImages.map(() => "<span class=\"buy-now-preview__dot\"></span>").join("")}
-        </div>
-      </div>
-      <div class="buy-now-preview__arrow" aria-hidden="true"></div>
-    `;
-
-    doc.body.appendChild(preview);
-    buyNowPreview = preview;
-    buyNowPreviewImage = preview.querySelector(".buy-now-preview__image");
-    buyNowPreviewDots = Array.from(preview.querySelectorAll(".buy-now-preview__dot"));
-    renderBuyNowPreview(0);
-
-    buyNowPreviewImages.forEach((src) => {
-      const image = new win.Image();
-      image.src = src;
-    });
-  }
-
-  function positionBuyNowPreview(link) {
-    if (!buyNowPreview) return;
-    const rect = link.getBoundingClientRect();
-    const margin = 16;
-    const maxWidth = 240;
-    const width = Math.min(maxWidth, win.innerWidth - margin * 2);
-    const left = Math.min(
-      win.innerWidth - width - margin,
-      Math.max(margin, rect.left + rect.width / 2 - width / 2)
-    );
-
-    buyNowPreview.style.width = `${width}px`;
-    buyNowPreview.style.left = `${left}px`;
-    buyNowPreview.style.bottom = `${win.innerHeight - rect.top + 18}px`;
-  }
-
-  function showBuyNowPreview(link) {
-    if (!supportsHoverPreview()) return;
-    ensureBuyNowPreview();
-    if (!buyNowPreview) return;
-
-    activeBuyNowPreviewLink = link;
-    buyNowPreviewIndex = 0;
-    renderBuyNowPreview(buyNowPreviewIndex);
-    positionBuyNowPreview(link);
-    buyNowPreview.classList.add("is-visible");
-    clearBuyNowPreviewTimer();
-    buyNowPreviewTimer = win.setInterval(() => {
-      buyNowPreviewIndex = (buyNowPreviewIndex + 1) % buyNowPreviewImages.length;
-      renderBuyNowPreview(buyNowPreviewIndex);
-    }, 2600);
-    startHoverCarouselPlayback();
-  }
-
-  function hideBuyNowPreview() {
-    activeBuyNowPreviewLink = null;
-    clearBuyNowPreviewTimer();
-    stopHoverCarouselPlayback();
-    if (buyNowPreview) {
-      buyNowPreview.classList.remove("is-visible");
     }
   }
 
@@ -781,7 +644,7 @@
       const target = event.target.closest("a, button, [role=\"button\"]");
       if (!target) return;
       if (target.closest("[data-analytics-ignore]")) return;
-      if (target.matches("[data-track=\"buy-now\"]")) return;
+      if (target.matches("[data-track=\"get-started\"]")) return;
 
       const payload = buildTargetPayload(target);
       if (!payload.target_label && !payload.target_href) return;
@@ -789,46 +652,16 @@
     });
   }
 
-  function interceptBuyNowLinks() {
-    const links = Array.from(doc.querySelectorAll("[data-track=\"buy-now\"]"));
+  function interceptGetStartedLinks() {
+    const links = Array.from(doc.querySelectorAll("[data-track=\"get-started\"]"));
     if (!links.length) return;
 
-    if (supportsHoverPreview()) {
-      ensureBuyNowPreview();
-    }
-
     links.forEach((link) => {
-      if (supportsHoverPreview()) {
-        link.addEventListener("pointerenter", () => {
-          showBuyNowPreview(link);
-        });
-
-        link.addEventListener("pointerleave", () => {
-          if (activeBuyNowPreviewLink === link) {
-            hideBuyNowPreview();
-          }
-        });
-
-        link.addEventListener("focus", () => {
-          showBuyNowPreview(link);
-        });
-
-        link.addEventListener("blur", () => {
-          if (activeBuyNowPreviewLink === link) {
-            hideBuyNowPreview();
-          }
-        });
-
-        link.addEventListener("pointerdown", hideBuyNowPreview);
-      }
-
       link.addEventListener("click", (event) => {
         const href = link.getAttribute("href");
         if (!href || href.startsWith("#")) return;
 
         event.preventDefault();
-        hideBuyNowPreview();
-
         const value = Number(link.dataset.value || config.value);
         const payload = {
           currency: config.currency,
@@ -846,7 +679,7 @@
           win.location.assign(appendClickParams(href));
         };
 
-        recordSiteMetric("buy-now");
+        recordSiteMetric("get-started");
         trackEvent("begin_checkout", payload, navigate);
         win.setTimeout(navigate, 180);
       });
@@ -922,7 +755,7 @@
   }
 
   function instrumentCtaImpressions() {
-    const ctas = Array.from(doc.querySelectorAll("[data-track=\"buy-now\"]"));
+    const ctas = Array.from(doc.querySelectorAll("[data-track=\"get-started\"]"));
     if (!ctas.length || !("IntersectionObserver" in win)) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -973,27 +806,13 @@
     captureClickParams();
     bindPageView();
     hydrateAdSlots();
-    interceptBuyNowLinks();
+    interceptGetStartedLinks();
     instrumentGenericClicks();
     instrumentScrollDepth();
     instrumentEngagementMilestones();
     instrumentPageExit();
     instrumentCtaImpressions();
     flushQueue();
-
-    if (supportsHoverPreview()) {
-      win.addEventListener("resize", () => {
-        if (activeBuyNowPreviewLink) {
-          positionBuyNowPreview(activeBuyNowPreviewLink);
-        }
-      });
-
-      win.addEventListener("scroll", () => {
-        if (activeBuyNowPreviewLink) {
-          positionBuyNowPreview(activeBuyNowPreviewLink);
-        }
-      }, { passive: true });
-    }
 
     if (win.location.pathname.startsWith("/checkout") && !shouldSkipCheckoutTracking) {
       recordSiteMetric("checkout-start");

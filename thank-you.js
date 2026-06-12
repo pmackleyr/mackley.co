@@ -41,7 +41,7 @@
     }
 
     if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
-      window.MACKLEYAnalytics.track("purchase_verified", {
+      window.MACKLEYAnalytics.track("purchase_pending_approval", {
         event_id: `purchase:${order.transactionId}`,
         transaction_id: order.transactionId,
         value: order.value,
@@ -110,7 +110,7 @@
       detailsOrder.textContent = transactionId;
     }
 
-    setStatus("Thank you. Your order is confirmed.", "Your payment was verified with Stripe and your receipt should be on the way.");
+    setStatus("Payment received. Your purchase is pending approval.", "Stripe verified the payment. A licensed provider must complete final approval before this order is fulfilled.");
 
     firePurchaseConversion({
       currency,
@@ -120,6 +120,6 @@
   }
 
   verifySession().catch(() => {
-    setStatus("We could not verify the purchase yet", "Please refresh this page in a moment. We do not fire the Google Ads conversion until Stripe confirms payment.");
+    setStatus("We could not verify the payment yet", "Please refresh this page in a moment. We do not mark the purchase pending approval until Stripe confirms payment.");
   });
 })();

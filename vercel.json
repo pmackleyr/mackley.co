@@ -9,9 +9,43 @@
       "source": "/purpose/",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/deeper",
+      "destination": "/product/",
+      "permanent": true
+    },
+    {
+      "source": "/deeper/",
+      "destination": "/product/",
+      "permanent": true
+    },
+    {
+      "source": "/checkout",
+      "destination": "/spray-intake/?next=payment",
+      "permanent": false
+    },
+    {
+      "source": "/checkout/",
+      "destination": "/spray-intake/?next=payment",
+      "permanent": false
+    },
+    {
+      "source": "/checkout.html",
+      "destination": "/spray-intake/?next=payment",
+      "permanent": false
     }
   ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
     {
       "source": "/dashboard",
       "headers": [

@@ -41,7 +41,6 @@ class Carousel {
     this.preloadImages();
     this.setupDots();
     this.bindEvents();
-    this.bindBuyNowHover();
     this.measure();
     this.goTo(0, false);
   }
@@ -99,28 +98,6 @@ class Carousel {
     window.addEventListener("resize", () => {
       this.measure();
       this.goTo(this.currentIndex, false);
-    });
-  }
-
-  bindBuyNowHover() {
-    const buyNowLinks = Array.from(document.querySelectorAll('[data-track="buy-now"]'));
-    if (!buyNowLinks.length) return;
-
-    const onEnter = () => {
-      this.goTo(0, true, { source: "buy_now_hover" });
-      this.startAutoRotate();
-    };
-
-    const onLeave = () => {
-      this.stopAutoRotate();
-    };
-
-    buyNowLinks.forEach((link) => {
-      link.addEventListener("pointerenter", onEnter);
-      link.addEventListener("focus", onEnter);
-      link.addEventListener("pointerleave", onLeave);
-      link.addEventListener("blur", onLeave);
-      link.addEventListener("pointerdown", onLeave);
     });
   }
 
