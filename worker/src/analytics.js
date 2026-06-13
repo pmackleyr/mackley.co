@@ -2,6 +2,7 @@ const RETENTION_DAYS = 90;
 const RECENT_SESSION_LIMIT = 40;
 const MAX_TIMELINE_EVENTS = 24;
 const MAX_UNIQUE_ITEMS = 8;
+const MAX_ACCESS_ENTRIES = 250;
 const VALID_DAY_WINDOWS = [7, 14, 30, 60, RETENTION_DAYS];
 
 function jsonResponse(status, data) {
@@ -194,6 +195,10 @@ function clickStorageKey(day, clickKey) {
 
 function pageStorageKey(day, pageKey) {
   return `page:${day}:${hashKey(pageKey)}`;
+}
+
+function accessEntryKey(timestamp, eventId) {
+  return `access:${timestamp}:${hashKey(eventId)}`;
 }
 
 function createEmptySession(sessionId, payload, timestamp) {
@@ -708,7 +713,64 @@ export class AnalyticsStore {
       return this.dashboard(payload);
     }
 
+    if (request.method === "POST" && url.pathname.endsWith("/access-entry")) {
+      const payload = await request.json().catch(() => null);
+      return this.recordAccessEntry(payload || {});
+    }
+
+    if (request.method === "POST" && url.pathname.endsWith("/access-entries")) {
+      const payload = await request.json().catch(() => ({}));
+      return this.accessEntries(payload || {});
+    }
+
     return jsonResponse(405, { ok: false, error: "method_not_allowed" });
+  }
+
+  async recordAccessEntry(input) {
+    if (!input || typeof input !== "object") {
+      return jsonResponse(400, { ok: false, error: "invalid_payload" });
+    }
+
+    const timestamp = asTimestamp(input.unlocked_at || input.time);
+    const eventId = normalizeString(input.event_id || `${input.email || "access"}:${timestamp}`, 160);
+    const entry = {
+      id: eventId,
+      name: normalizeString(input.name, 120),
+      email: normalizeString(input.email, 160).toLowerCase(),
+      pagePath: normalizeString(input.page_path || "/", 180),
+      pageUrl: normalizeString(input.page_url || "", 260),
+      referrer: normalizeString(input.referrer || "", 260),
+      timezone: normalizeString(input.timezone || "", 80),
+      language: normalizeString(input.language || "", 40),
+      userAgent: normalizeString(input.user_agent || "", 240),
+      ip: normalizeString(input.ip || "", 80),
+      city: normalizeString(input.city || "", 80),
+      region: normalizeString(input.region || "", 80),
+      country: normalizeString(input.country || "", 80),
+      countryCode: normalizeString(input.country_code || "", 8),
+      createdAt: timestamp
+    };
+
+    if (!entry.name || !entry.email || !entry.email.includes("@")) {
+      return jsonResponse(400, { ok: false, error: "invalid_access_entry" });
+    }
+
+    await this.state.storage.put(accessEntryKey(timestamp, eventId), entry);
+    return jsonResponse(202, { ok: true });
+  }
+
+  async accessEntries(input) {
+    const limit = Math.max(1, Math.min(Number(input.limit) || 100, MAX_ACCESS_ENTRIES));
+    const entries = await this.state.storage.list({
+      prefix: "access:",
+      reverse: true,
+      limit
+    });
+
+    return jsonResponse(200, {
+      ok: true,
+      entries: Array.from(entries.values())
+    });
   }
 
   async collect(input) {
@@ -1086,11 +1148,43 @@ export async function handleAnalyticsCollect(request, env) {
   });
 }
 
+export async function handleAccessEntry(request, env) {
+  const id = env.ANALYTICS_STORE.idFromName("analytics");
+  const stub = env.ANALYTICS_STORE.get(id);
+  const payload = await request.json().catch(() => null);
+  const cf = request.cf || {};
+  const enrichedPayload = {
+    ...(payload && typeof payload === "object" ? payload : {}),
+    user_agent: (payload && payload.user_agent) || request.headers.get("user-agent") || "",
+    ip: (payload && payload.ip) || request.headers.get("cf-connecting-ip") || "",
+    city: (payload && payload.city) || cf.city || "",
+    region: (payload && payload.region) || cf.region || "",
+    country: (payload && payload.country) || cf.country || "",
+    country_code: (payload && payload.country_code) || cf.countryCode || "",
+    timezone: (payload && payload.timezone) || cf.timezone || ""
+  };
+
+  return stub.fetch("https://analytics/access-entry", {
+    method: "POST",
+    body: JSON.stringify(enrichedPayload)
+  });
+}
+
+export async function handleAccessEntries(request, env) {
+  const id = env.ANALYTICS_STORE.idFromName("analytics");
+  const stub = env.ANALYTICS_STORE.get(id);
+  const payload = await request.json().catch(() => ({}));
+  return stub.fetch("https://analytics/access-entries", {
+    method: "POST",
+    body: JSON.stringify(payload || {})
+  });
+}
+
 export function analyticsCorsHeaders(headers, origin) {
   if (!origin) return headers;
   headers.set("Access-Control-Allow-Origin", origin);
   headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Dashboard-Secret");
   headers.set("Vary", "Origin");
   return headers;
 }

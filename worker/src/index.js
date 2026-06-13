@@ -1,6 +1,8 @@
 import {
   AnalyticsStore,
   analyticsCorsHeaders,
+  handleAccessEntries,
+  handleAccessEntry,
   handleAnalyticsCollect
 } from "./analytics.js";
 
@@ -156,6 +158,11 @@ function validateCheckoutSessionBody(body) {
   }
 
   return null;
+}
+
+function normalizeAccessPassword(value) {
+  const next = String(value || "").trim();
+  return next || "jumpthegap";
 }
 
 function sanitizeTrackingValue(value) {
@@ -368,6 +375,13 @@ export default {
     }
 
     if (url.pathname === "/analytics/dashboard") {
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin || originFromHeader(origin))
+        });
+      }
+
       if (request.method !== "POST") {
         return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin || null);
       }
@@ -393,6 +407,66 @@ export default {
           "Content-Type": "application/json",
           "Cache-Control": "no-store"
         }
+      });
+    }
+
+    if (url.pathname === "/access-entry") {
+      if (!effectiveOrigin) {
+        return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
+      }
+
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin)
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+      }
+
+      const payload = await request.clone().json().catch(() => ({}));
+      if (payload?.password !== normalizeAccessPassword(env.SITE_ACCESS_PASSWORD)) {
+        return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin);
+      }
+
+      const response = await handleAccessEntry(request, env);
+      const body = await response.text();
+      const headers = analyticsCorsHeaders(new Headers(response.headers), effectiveOrigin);
+      headers.set("Content-Type", "application/json");
+      return new Response(body, {
+        status: response.status,
+        headers
+      });
+    }
+
+    if (url.pathname === "/access-entries") {
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin || originFromHeader(origin))
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin || null);
+      }
+
+      const providedSecret = readDashboardAuthorization(request);
+      const expectedSecret = normalizeDashboardSecret(env.DASHBOARD_SHARED_SECRET);
+      if (!providedSecret || providedSecret !== expectedSecret) {
+        return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin || null);
+      }
+
+      const response = await handleAccessEntries(request, env);
+      const body = await response.text();
+      const headers = analyticsCorsHeaders(new Headers(response.headers), effectiveOrigin || originFromHeader(origin));
+      headers.set("Content-Type", "application/json");
+      headers.set("Cache-Control", "no-store");
+      return new Response(body, {
+        status: response.status,
+        headers
       });
     }
 

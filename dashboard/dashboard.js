@@ -1,13 +1,21 @@
 (() => {
+  const API_BASE = "https://api.mackley.co";
+  const PASSWORD_STORAGE_KEY = "mackley_dashboard_password_v1";
+
   const state = {
     days: 14,
     dashboard: null,
+    accessEntries: [],
+    dashboardPassword: "",
     authLocked: true,
   };
 
   const dashboardHeader = document.getElementById("dashboard-header");
   const authCard = document.getElementById("auth-card");
   const setupCard = document.getElementById("setup-card");
+  const accessCard = document.getElementById("access-card");
+  const accessRows = document.getElementById("access-rows");
+  const accessMeta = document.getElementById("access-meta");
   const chartCard = document.getElementById("chart-card");
   const chartRows = document.getElementById("chart-rows");
   const dashboardMeta = document.getElementById("dashboard-meta");
@@ -22,10 +30,8 @@
   });
 
   document.getElementById("logout-dashboard").addEventListener("click", async () => {
-    await fetch("/api/data/logout", {
-      method: "POST",
-      credentials: "same-origin",
-    }).catch(() => {});
+    window.sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
+    state.dashboardPassword = "";
     showAuth();
   });
 
@@ -39,68 +45,69 @@
 
     const formData = new FormData(loginForm);
     const password = String(formData.get("password") || "");
+    state.dashboardPassword = password;
     loginStatus.textContent = "Unlocking dashboard...";
-
-    const response = await fetch("/api/data/login", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ password }),
-    }).catch(() => null);
-
-    if (!response) {
-      loginStatus.textContent = "Dashboard login failed.";
-      return;
-    }
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      loginStatus.textContent =
-        payload.error === "dashboard_password_not_configured"
-          ? "Set DATA_DASHBOARD_PASSWORD first."
-          : "Password did not match.";
-      return;
-    }
-
-    loginStatus.textContent = "";
-    loginForm.reset();
-    loadDashboard();
+    await loadDashboard({ password, fromLogin: true });
   });
 
   loadDashboard();
 
-  async function loadDashboard() {
+  async function loadDashboard(options = {}) {
     state.authLocked = false;
-    const response = await fetch(`/api/data/dashboard?days=${state.days}`, {
-      credentials: "same-origin",
+    const password = options.password || state.dashboardPassword || window.sessionStorage.getItem(PASSWORD_STORAGE_KEY) || "";
+    if (!password) {
+      showAuth();
+      return;
+    }
+
+    const accessResponse = await fetch(`${API_BASE}/access-entries`, {
+      method: "POST",
       cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${password}`,
+      },
+      body: JSON.stringify({ limit: 200 }),
     }).catch(() => null);
 
-    if (!response) {
+    if (!accessResponse) {
+      loginStatus.textContent = options.fromLogin ? "Dashboard login failed." : "";
       showAuth();
       return;
     }
 
-    if (response.status === 401) {
+    const accessPayload = await accessResponse.json().catch(() => ({}));
+    if (!accessResponse.ok) {
+      window.sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
+      loginStatus.textContent = options.fromLogin ? "Password did not match." : "";
       showAuth();
       return;
     }
 
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      showAuth();
-      return;
+    state.dashboardPassword = password;
+    window.sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
+    loginStatus.textContent = "";
+    loginForm.reset();
+
+    const dashboardResponse = await fetch(`${API_BASE}/analytics/dashboard`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${password}`,
+      },
+      body: JSON.stringify({ days: state.days }),
+    }).catch(() => null);
+
+    let dashboard = null;
+    if (dashboardResponse && dashboardResponse.ok) {
+      const dashboardPayload = await dashboardResponse.json().catch(() => ({}));
+      dashboard = dashboardPayload.dashboard || null;
     }
 
-    if (!payload.configured) {
-      showSetup(payload.checklist || []);
-      return;
-    }
-
-    state.dashboard = payload.dashboard;
-    renderDashboard(payload.dashboard);
+    state.accessEntries = accessPayload.entries || [];
+    state.dashboard = dashboard;
+    renderAccessDashboard(state.accessEntries, dashboard);
   }
 
   function showAuth() {
@@ -110,8 +117,11 @@
     dashboardHeader.hidden = true;
     authCard.hidden = false;
     setupCard.hidden = true;
+    accessCard.hidden = true;
     chartCard.hidden = true;
     appActions.hidden = true;
+    accessMeta.textContent = "";
+    accessRows.innerHTML = "";
     dashboardMeta.textContent = "";
     chartRows.innerHTML = "";
     syncRuntimeBridge();
@@ -123,10 +133,42 @@
     dashboardHeader.hidden = false;
     authCard.hidden = true;
     setupCard.hidden = false;
+    accessCard.hidden = true;
     chartCard.hidden = true;
     appActions.hidden = true;
     setupList.innerHTML = checklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
     dashboardMeta.textContent = "Setup required";
+    syncRuntimeBridge();
+  }
+
+  function renderAccessDashboard(entries, dashboard) {
+    document.body.classList.add("dashboard-unlocked");
+    dashboardHeader.hidden = false;
+    authCard.hidden = true;
+    setupCard.hidden = true;
+    accessCard.hidden = false;
+    chartCard.hidden = !dashboard;
+    appActions.hidden = false;
+
+    accessMeta.textContent = `${formatInteger(entries.length)} access entries`;
+    accessRows.innerHTML = entries.length
+      ? entries.map(renderAccessRow).join("")
+      : `
+        <tr class="empty-row">
+          <td colspan="4">
+            <strong>No access entries yet.</strong>
+            <p class="panel-copy">Successful lockscreen completions will appear here.</p>
+          </td>
+        </tr>
+      `;
+
+    if (dashboard) {
+      renderDashboard(dashboard);
+    } else {
+      dashboardMeta.textContent = "";
+      chartRows.innerHTML = "";
+    }
+
     syncRuntimeBridge();
   }
 
@@ -135,6 +177,7 @@
     dashboardHeader.hidden = false;
     authCard.hidden = true;
     setupCard.hidden = true;
+    accessCard.hidden = false;
     chartCard.hidden = false;
     appActions.hidden = false;
     dashboardMeta.textContent = `${formatInteger((dashboard.sessions || []).length)} sessions · ${formatInteger(dashboard.totals?.views || 0)} views · ${formatInteger(dashboard.totals?.clicks || 0)} clicks · ${formatDuration(
@@ -153,6 +196,46 @@
       `;
 
     syncRuntimeBridge();
+  }
+
+  function renderAccessRow(entry) {
+    const location = formatAccessLocation(entry);
+    return `
+      <tr>
+        <td>
+          <div class="stack-cell">
+            <strong>${escapeHtml(entry.name || "Unknown")}</strong>
+            <span class="muted-code">${escapeHtml(entry.id || "")}</span>
+          </div>
+        </td>
+        <td>
+          <div class="stack-cell">
+            <strong>${escapeHtml(entry.email || "Unknown email")}</strong>
+            <span>${escapeHtml(entry.language || "")}</span>
+          </div>
+        </td>
+        <td>
+          <div class="stack-cell">
+            <strong>${escapeHtml(location || "Unknown location")}</strong>
+            <span>${escapeHtml(entry.pagePath || "/")}</span>
+            <span class="muted-code">${escapeHtml(entry.referrer || "Direct")}</span>
+          </div>
+        </td>
+        <td>
+          <div class="stack-cell">
+            <strong>${escapeHtml(formatTimestamp(entry.createdAt))}</strong>
+            <span>${escapeHtml(entry.timezone || "")}</span>
+            <span class="muted-code">${escapeHtml(entry.ip || "No IP")}</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  function formatAccessLocation(entry) {
+    const parts = [entry.city, entry.region].filter(Boolean);
+    if (parts.length) return parts.join(", ");
+    return entry.country || entry.countryCode || "";
   }
 
   function renderSessionRow(session) {
@@ -310,9 +393,11 @@
     const dashboard = state.dashboard;
     if (!dashboard) return "";
 
+    const accessEntries = state.accessEntries || [];
     const sessions = dashboard.sessions || [];
     return [
       "Simple Analytics Dashboard",
+      ...accessEntries.map((entry) => `${entry.name || "Unknown"} :: ${entry.email || ""} :: ${entry.pagePath || "/"} :: ${formatTimestamp(entry.createdAt)}`),
       ...sessions.map((session) => {
         const pages = (session.pages || session.screens || [])
           .map((page) => `${page.label || page.path || "Page"} ${formatDuration(page.durationSeconds)}`)
@@ -333,6 +418,7 @@
       authLocked: state.authLocked,
       days: state.days,
       dashboard: state.dashboard,
+      accessEntries: state.accessEntries,
       latestEvents: state.dashboard?.sessions?.flatMap((session) => session.topEvents || []).slice(0, 25) || [],
     };
     window.render_app_to_text = buildAppText;

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MACKLEY Simple Analytics Dashboard</title>
     <meta name="robots" content="noindex,nofollow" />
-    <link rel="stylesheet" href="/dashboard/dashboard.css" />
+    <link rel="stylesheet" href="/dashboard/dashboard.css?v=20260613-access-entries" />
   </head>
   <body>
     <div class="dashboard-shell">
@@ -13,7 +13,7 @@
         <div class="hero-copy">
           <p class="eyebrow">Protected analytics</p>
           <h1>Simple Analytics Dashboard</h1>
-          <p class="lede">One table. Pages, clicks, time, source, device, and location.</p>
+          <p class="lede">Access list, pages, clicks, time, source, device, and location.</p>
         </div>
 
         <div class="header-actions" id="app-actions" hidden>
@@ -65,6 +65,31 @@
           <ul class="setup-list" id="setup-list"></ul>
         </section>
 
+        <section class="card access-card" id="access-card" hidden>
+          <div class="chart-head">
+            <div>
+              <p class="eyebrow">Site access</p>
+              <h2>Who entered the site</h2>
+              <p class="panel-copy">Name, email, where they entered from, and when the lockscreen was completed.</p>
+            </div>
+            <p class="chart-meta" id="access-meta"></p>
+          </div>
+
+          <div class="table-wrap">
+            <table class="access-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Where</th>
+                  <th scope="col">When</th>
+                </tr>
+              </thead>
+              <tbody id="access-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="card chart-card" id="chart-card" hidden>
           <div class="chart-head">
             <div>
@@ -95,6 +120,6 @@
       </main>
     </div>
 
-    <script src="/dashboard/dashboard.js" defer></script>
+    <script src="/dashboard/dashboard.js?v=20260613-access-entries" defer></script>
   </body>
 </html>

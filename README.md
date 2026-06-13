@@ -4,6 +4,12 @@ MACKLEY is a static site with a single `index.html` and `styles.css`.
 
 Open `index.html` directly in a browser or serve the folder with any static file server.
 
+## Production Deploys
+
+`https://mackley.co` is served by GitHub Pages from `origin/main` with the repository `CNAME`.
+To publish live site changes, commit and push to `main`, then confirm the Pages deployment and live domain.
+Do not use `mackley.vercel.app` or Vercel as the production target for this site.
+
 ## Payments Worker (Cloudflare)
 
 Deploy the Stripe PaymentIntent worker:

@@ -374,6 +374,15 @@ body {
   table-layout: fixed;
 }
 
+.access-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.access-table th,
+.access-table td,
 .session-table th,
 .session-table td {
   padding: 12px 14px;
@@ -384,11 +393,14 @@ body {
   overflow-wrap: anywhere;
 }
 
+.access-table th:last-child,
+.access-table td:last-child,
 .session-table th:last-child,
 .session-table td:last-child {
   border-right: 0;
 }
 
+.access-table thead th,
 .session-table thead th {
   background: rgba(0, 0, 0, 0.025);
   color: var(--soft);
@@ -401,14 +413,17 @@ body {
   z-index: 1;
 }
 
+.access-table tbody tr:nth-child(even),
 .session-table tbody tr:nth-child(even) {
   background: rgba(0, 0, 0, 0.016);
 }
 
+.access-table tbody tr:hover,
 .session-table tbody tr:hover {
   background: rgba(76, 139, 245, 0.05);
 }
 
+.access-table td,
 .session-table td {
   color: var(--text);
   font-size: 0.95rem;
