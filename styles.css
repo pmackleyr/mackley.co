@@ -33,6 +33,199 @@ a {
   text-decoration: none;
 }
 
+html.access-lock-open,
+body.access-lock-open {
+  overflow: hidden;
+}
+
+.access-lock {
+  --access-primary: #000000;
+  --access-secondary: #ffffff;
+  --access-tertiary: #9c9c9c;
+  --access-error: #ff3366;
+  --access-tint: #0099ff;
+  --access-sheet: #141414;
+  --access-border: #222222;
+  --access-button-bg: #1f1f1f;
+  --access-button-hover: #242424;
+  --access-button-active: #292929;
+  --access-input-bg: #111111;
+  --access-input-color: #eeeeee;
+  --access-complete-color: #ffffff;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 15px;
+  background: var(--access-primary);
+  color: var(--access-secondary);
+  font-family: "Inter", "Inter Placeholder", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.access-lock__card {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+  border: 1px solid var(--access-border);
+  border-radius: 25px;
+  background: var(--access-sheet);
+  box-shadow: rgba(0, 0, 0, 0.07) 0 0.602187px 0.602187px -1.25px,
+    rgba(0, 0, 0, 0.063) 0 2.28853px 2.28853px -2.5px,
+    rgba(0, 0, 0, 0.024) 0 10px 10px -3.75px;
+}
+
+.access-lock__logo {
+  margin-bottom: 15px;
+  color: var(--access-tertiary);
+  transition: color 0.2s ease;
+}
+
+.access-lock__logo svg {
+  display: block;
+}
+
+.access-lock__form,
+.access-lock__fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.access-lock__form {
+  align-items: center;
+}
+
+.access-lock__description {
+  margin-bottom: 30px;
+  color: var(--access-tertiary);
+  line-height: 1.4;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.access-lock__fields {
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.access-lock__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px 1px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--access-input-bg);
+  color: var(--access-tertiary);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.access-lock__input--password {
+  letter-spacing: 2px;
+}
+
+.access-lock__input::placeholder {
+  color: var(--access-tertiary);
+  letter-spacing: 0;
+}
+
+.access-lock__input:focus {
+  border-color: var(--access-tint);
+  outline: none;
+}
+
+.access-lock__input:-webkit-autofill,
+.access-lock__input:-webkit-autofill:hover,
+.access-lock__input:-webkit-autofill:focus,
+.access-lock__input:-webkit-autofill:active {
+  box-shadow: 0 0 0 50px var(--access-input-bg) inset;
+  -webkit-text-fill-color: var(--access-input-color);
+}
+
+.access-lock__form.has-error .access-lock__input {
+  border-color: var(--access-error);
+}
+
+.access-lock__error {
+  display: none;
+  color: var(--access-error);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.access-lock__form.has-error .access-lock__error {
+  display: block;
+}
+
+.access-lock__button {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  padding: 0 10px 1px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: var(--access-button-bg);
+  color: var(--access-tertiary);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.access-lock__button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.access-lock__button::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  content: "";
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.access-lock__button:not(:disabled):hover::before {
+  background: var(--access-button-hover);
+  opacity: 1;
+}
+
+.access-lock__button:not(:disabled):active::before {
+  background: var(--access-button-active);
+  opacity: 1;
+}
+
+.access-lock.is-complete .access-lock__logo,
+.access-lock__form.is-complete .access-lock__description,
+.access-lock__form.is-complete .access-lock__input,
+.access-lock__form.is-complete .access-lock__button {
+  color: var(--access-complete-color);
+}
+
+.access-lock__form.is-complete .access-lock__input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 #bg-layer {
   position: fixed;
   inset: 0;
