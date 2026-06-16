@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const ALLOWED_HOSTS = new Set([
+  "whoismackley.com",
+  "whoismackley.com:443",
+  "www.whoismackley.com",
+  "www.whoismackley.com:443",
   "mackley.co",
   "mackley.co:443",
   "www.mackley.co",

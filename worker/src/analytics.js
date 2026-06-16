@@ -4,6 +4,11 @@ const MAX_TIMELINE_EVENTS = 24;
 const MAX_UNIQUE_ITEMS = 8;
 const MAX_ACCESS_ENTRIES = 250;
 const VALID_DAY_WINDOWS = [7, 14, 30, 60, RETENTION_DAYS];
+const LANDING_VARIANT_LABELS = {
+  a: "A current flow",
+  b: "B white product hero",
+  unknown: "Unknown variant"
+};
 
 function jsonResponse(status, data) {
   return new Response(JSON.stringify(data), {
@@ -17,6 +22,12 @@ function jsonResponse(status, data) {
 function normalizeString(value, max = 160) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, max);
+}
+
+function normalizeLandingVariant(value) {
+  const next = normalizeString(value, 24).toLowerCase();
+  if (next === "a" || next === "b") return next;
+  return "";
 }
 
 function normalizeNumber(value, fallback = 0) {
@@ -197,6 +208,10 @@ function pageStorageKey(day, pageKey) {
   return `page:${day}:${hashKey(pageKey)}`;
 }
 
+function variantStorageKey(day, variant) {
+  return `variant:${day}:${hashKey(variant || "unknown")}`;
+}
+
 function accessEntryKey(timestamp, eventId) {
   return `access:${timestamp}:${hashKey(eventId)}`;
 }
@@ -223,11 +238,14 @@ function createEmptySession(sessionId, payload, timestamp) {
     medium: source.medium,
     campaign: source.campaign,
     sourceKey: source.key,
+    experimentName: normalizeString(payload.experiment_name || "", 80),
+    landingVariant: normalizeLandingVariant(payload.landing_variant),
     referrerDomain: normalizeString(payload.referrer_domain || "", 120),
     pageViews: 0,
     eventsCount: 0,
     ctaImpression: false,
     beginCheckout: false,
+    providerSurveySubmitted: false,
     checkoutRedirect: false,
     purchaseVerified: false,
     checkoutBlocked: false,
@@ -295,6 +313,7 @@ function createEmptyDaily(day) {
     pageViews: 0,
     ctaImpressionSessions: 0,
     beginCheckoutSessions: 0,
+    providerSurveySessions: 0,
     checkoutRedirectSessions: 0,
     purchaseSessions: 0,
     blockedSessions: 0,
@@ -315,6 +334,7 @@ function createEmptySource(day, label, source, medium, campaign) {
     campaign,
     sessions: 0,
     beginCheckout: 0,
+    providerSurveySubmissions: 0,
     purchases: 0,
     blocked: 0
   };
@@ -336,7 +356,26 @@ function createEmptyPage(day, pagePath) {
     pagePath,
     pageViews: 0,
     beginCheckout: 0,
+    providerSurveySubmissions: 0,
     purchases: 0
+  };
+}
+
+function createEmptyVariant(day, variant) {
+  return {
+    day,
+    variant: variant || "unknown",
+    label: LANDING_VARIANT_LABELS[variant] || LANDING_VARIANT_LABELS.unknown,
+    sessions: 0,
+    pageViews: 0,
+    ctaImpressionSessions: 0,
+    beginCheckoutSessions: 0,
+    providerSurveySubmissions: 0,
+    purchaseSessions: 0,
+    blockedSessions: 0,
+    deepScrollSessions: 0,
+    engagedSessions: 0,
+    carouselSessions: 0
   };
 }
 
@@ -394,7 +433,109 @@ function eventTimelineEntry(event, timestamp, payload, path) {
   return entry;
 }
 
-function buildRecommendations(metrics, sources, clicks) {
+function variantBottleneck(variant) {
+  if (!variant.sessions) return "No traffic";
+  if (variant.sessions < 20) return "Collecting sample";
+  if (variant.ctaVisibilityRate < 70) return "CTA visibility";
+  if (variant.clickRate < 10) return "Offer click intent";
+  if (variant.beginCheckoutSessions >= 10 && variant.formCompletionRateFromClick < 45) return "Intake form completion";
+  if (variant.beginCheckoutSessions >= 10 && variant.purchaseRateFromClick < 35) return "Intake/payment handoff";
+  if (variant.blockedSessions > 0) return "Checkout reliability";
+  return "Scale and keep testing";
+}
+
+function buildExperimentSummary(variantRows) {
+  const grouped = variantRows.reduce((acc, row) => {
+    const variant = normalizeLandingVariant(row.variant) || "unknown";
+    if (!acc.has(variant)) {
+      acc.set(variant, createEmptyVariant("all", variant));
+    }
+    const entry = acc.get(variant);
+    entry.sessions += normalizeNumber(row.sessions);
+    entry.pageViews += normalizeNumber(row.pageViews);
+    entry.ctaImpressionSessions += normalizeNumber(row.ctaImpressionSessions);
+    entry.beginCheckoutSessions += normalizeNumber(row.beginCheckoutSessions);
+    entry.providerSurveySubmissions += normalizeNumber(row.providerSurveySubmissions);
+    entry.purchaseSessions += normalizeNumber(row.purchaseSessions);
+    entry.blockedSessions += normalizeNumber(row.blockedSessions);
+    entry.deepScrollSessions += normalizeNumber(row.deepScrollSessions);
+    entry.engagedSessions += normalizeNumber(row.engagedSessions);
+    entry.carouselSessions += normalizeNumber(row.carouselSessions);
+    return acc;
+  }, new Map());
+
+  ["a", "b"].forEach((variant) => {
+    if (!grouped.has(variant)) {
+      grouped.set(variant, createEmptyVariant("all", variant));
+    }
+  });
+
+  const totalSessions = Array.from(grouped.values()).reduce((sum, row) => sum + row.sessions, 0);
+  const variants = Array.from(grouped.values())
+    .filter((row) => row.variant === "a" || row.variant === "b" || row.sessions > 0)
+    .map((row) => {
+      const variant = normalizeLandingVariant(row.variant) || "unknown";
+      const summary = {
+        variant,
+        label: LANDING_VARIANT_LABELS[variant] || LANDING_VARIANT_LABELS.unknown,
+        sessions: row.sessions,
+        trafficShare: formatPercent(row.sessions, totalSessions),
+        pageViews: row.pageViews,
+        ctaImpressionSessions: row.ctaImpressionSessions,
+        beginCheckoutSessions: row.beginCheckoutSessions,
+        providerSurveySubmissions: row.providerSurveySubmissions,
+        purchaseSessions: row.purchaseSessions,
+        blockedSessions: row.blockedSessions,
+        deepScrollSessions: row.deepScrollSessions,
+        engagedSessions: row.engagedSessions,
+        carouselSessions: row.carouselSessions,
+        ctaVisibilityRate: formatPercentCapped(row.ctaImpressionSessions, row.sessions),
+        clickRate: formatPercentCapped(row.beginCheckoutSessions, row.sessions),
+        clickRateFromCta: formatPercentCapped(row.beginCheckoutSessions, row.ctaImpressionSessions),
+        formSubmissionRate: formatPercentCapped(row.providerSurveySubmissions, row.sessions),
+        formCompletionRateFromClick: formatPercentCapped(row.providerSurveySubmissions, row.beginCheckoutSessions),
+        purchaseRate: formatPercentCapped(row.purchaseSessions, row.sessions),
+        purchaseRateFromClick: formatPercentCapped(row.purchaseSessions, row.beginCheckoutSessions),
+        blockedRate: formatPercentCapped(row.blockedSessions, row.sessions)
+      };
+      summary.bottleneck = variantBottleneck(summary);
+      summary.status = summary.sessions < 20 ? "collecting" : "ready";
+      return summary;
+    })
+    .sort((left, right) => {
+      if (left.variant === "a") return -1;
+      if (right.variant === "a") return 1;
+      if (left.variant === "b") return -1;
+      if (right.variant === "b") return 1;
+      return right.sessions - left.sessions;
+    });
+
+  const comparable = variants.filter((variant) => variant.sessions >= 20);
+  const leader = comparable.length
+    ? [...comparable].sort((left, right) => right.clickRate - left.clickRate || right.beginCheckoutSessions - left.beginCheckoutSessions)[0]
+    : null;
+
+  variants.forEach((variant) => {
+    if (!leader || variant.sessions < 20) return;
+    variant.status = variant.variant === leader.variant ? "leading" : "lagging";
+    variant.liftVsLeader = Number((variant.clickRate - leader.clickRate).toFixed(1));
+  });
+
+  const insight = leader
+    ? `${leader.label} is leading on clicks/form starts at ${leader.clickRate}%.`
+    : "Collect at least 20 sessions per variant before calling a winner.";
+
+  return {
+    name: "home_landing_hero",
+    goal: "Clicks / form starts",
+    totalSessions,
+    leaderVariant: leader?.variant || "",
+    insight,
+    variants
+  };
+}
+
+function buildRecommendations(metrics, sources, clicks, experiment) {
   const recommendations = [];
 
   if (metrics.blockedSessions > 0) {
@@ -403,6 +544,17 @@ function buildRecommendations(metrics, sources, clicks) {
       title: "Checkout is leaking revenue",
       detail: `${metrics.blockedSessions} session(s) hit a blocked checkout or redirect state in this range.`,
       action: "Fix the broken handoff to Stripe before increasing paid traffic."
+    });
+  }
+
+  const leadingVariant = experiment?.variants?.find((variant) => variant.status === "leading");
+  const laggingVariant = experiment?.variants?.find((variant) => variant.status === "lagging");
+  if (leadingVariant && laggingVariant && leadingVariant.clickRate - laggingVariant.clickRate >= 2) {
+    recommendations.push({
+      priority: "high",
+      title: `${leadingVariant.label} is the current click-rate leader`,
+      detail: `${leadingVariant.label} starts ${leadingVariant.clickRate}% of sessions versus ${laggingVariant.clickRate}% for ${laggingVariant.label}.`,
+      action: `Inspect the lagging bottleneck (${laggingVariant.bottleneck}) before shifting more traffic.`
     });
   }
 
@@ -421,6 +573,15 @@ function buildRecommendations(metrics, sources, clicks) {
       title: "The page is generating interest but not enough intent",
       detail: `Only ${metrics.checkoutRateFromCta}% of CTA viewers start checkout.`,
       action: "Test clearer promise, stronger trust proof, and tighter price framing."
+    });
+  }
+
+  if (metrics.beginCheckoutSessions >= 10 && metrics.providerSurveyRateFromCheckout < 45) {
+    recommendations.push({
+      priority: "high",
+      title: "Form starts are not becoming submissions",
+      detail: `Only ${metrics.providerSurveyRateFromCheckout}% of Get Started clicks complete the provider survey.`,
+      action: "Shorten the intake, clarify required fields, or save progress earlier in the flow."
     });
   }
 
@@ -474,7 +635,7 @@ function buildRecommendations(metrics, sources, clicks) {
   return recommendations.slice(0, 4);
 }
 
-function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, recentSessions) {
+function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, variantRows, recentSessions) {
   const totals = dailyRows.reduce((acc, row) => {
     acc.sessions += row.sessions;
     acc.landingSessions += row.landingSessions;
@@ -484,6 +645,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     acc.pageViews += row.pageViews;
     acc.ctaImpressionSessions += row.ctaImpressionSessions;
     acc.beginCheckoutSessions += row.beginCheckoutSessions;
+    acc.providerSurveySessions += row.providerSurveySessions || 0;
     acc.checkoutRedirectSessions += row.checkoutRedirectSessions;
     acc.purchaseSessions += row.purchaseSessions;
     acc.blockedSessions += row.blockedSessions;
@@ -502,6 +664,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     pageViews: 0,
     ctaImpressionSessions: 0,
     beginCheckoutSessions: 0,
+    providerSurveySessions: 0,
     checkoutRedirectSessions: 0,
     purchaseSessions: 0,
     blockedSessions: 0,
@@ -523,6 +686,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     pageViews: totals.pageViews,
     ctaImpressionSessions: totals.ctaImpressionSessions,
     beginCheckoutSessions: totals.beginCheckoutSessions,
+    providerSurveySessions: totals.providerSurveySessions,
     checkoutRedirectSessions: totals.checkoutRedirectSessions,
     purchaseSessions: totals.purchaseSessions,
     blockedSessions: totals.blockedSessions,
@@ -532,6 +696,8 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     ctaVisibilityRate: formatPercent(totals.ctaImpressionSessions, totals.landingSessions || totals.sessions),
     checkoutRate: formatPercent(totals.beginCheckoutSessions, totals.landingSessions || totals.sessions),
     checkoutRateFromCta: formatPercentCapped(totals.beginCheckoutSessions, totals.ctaImpressionSessions),
+    providerSurveyRate: formatPercent(totals.providerSurveySessions, totals.landingSessions || totals.sessions),
+    providerSurveyRateFromCheckout: formatPercentCapped(totals.providerSurveySessions, totals.beginCheckoutSessions),
     purchaseRate: formatPercent(totals.purchaseSessions, totals.landingSessions || totals.sessions),
     purchaseRateFromCheckout: formatPercentCapped(totals.purchaseSessions, totals.beginCheckoutSessions),
     deepScrollRate: formatPercent(totals.deepScrollSessions, totals.landingSessions || totals.sessions),
@@ -548,6 +714,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
         campaign: row.campaign,
         sessions: 0,
         beginCheckout: 0,
+        providerSurveySubmissions: 0,
         purchases: 0,
         blocked: 0
       });
@@ -555,6 +722,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     const entry = acc.get(row.label);
     entry.sessions += row.sessions;
     entry.beginCheckout += row.beginCheckout;
+    entry.providerSurveySubmissions += row.providerSurveySubmissions || 0;
     entry.purchases += row.purchases;
     entry.blocked += row.blocked;
     return acc;
@@ -564,6 +732,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     .map((entry) => ({
       ...entry,
       checkoutRate: formatPercentCapped(entry.beginCheckout, entry.sessions),
+      providerSurveyRate: formatPercentCapped(entry.providerSurveySubmissions, entry.sessions),
       purchaseRate: formatPercentCapped(entry.purchases, entry.sessions),
       blockedRate: formatPercentCapped(entry.blocked, entry.sessions)
     }))
@@ -595,12 +764,14 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
         pagePath: row.pagePath,
         pageViews: 0,
         beginCheckout: 0,
+        providerSurveySubmissions: 0,
         purchases: 0
       });
     }
     const entry = acc.get(row.pagePath);
     entry.pageViews += row.pageViews;
     entry.beginCheckout += row.beginCheckout;
+    entry.providerSurveySubmissions += row.providerSurveySubmissions || 0;
     entry.purchases += row.purchases;
     return acc;
   }, new Map());
@@ -609,6 +780,7 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     .map((entry) => ({
       ...entry,
       checkoutRate: formatPercentCapped(entry.beginCheckout, entry.pageViews),
+      providerSurveyRate: formatPercentCapped(entry.providerSurveySubmissions, entry.pageViews),
       purchaseRate: formatPercentCapped(entry.purchases, entry.pageViews)
     }))
     .sort((left, right) => right.pageViews - left.pageViews)
@@ -618,8 +790,11 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     { label: "Landing sessions", value: metrics.landingSessions || metrics.sessions, rate: 100 },
     { label: "CTA seen", value: metrics.ctaImpressionSessions, rate: metrics.ctaVisibilityRate },
     { label: "Checkout started", value: metrics.beginCheckoutSessions, rate: metrics.checkoutRate },
+    { label: "Survey submitted", value: metrics.providerSurveySessions, rate: metrics.providerSurveyRate },
     { label: "Purchase verified", value: metrics.purchaseSessions, rate: metrics.purchaseRate }
   ];
+
+  const experiment = buildExperimentSummary(variantRows);
 
   const timeline = dailyRows.map((row) => ({
     date: row.day,
@@ -636,6 +811,9 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
       sessionId: session.sessionId,
       source: session.sourceKey,
       status: summarizeStatus(session),
+      experimentName: session.experimentName || "home_landing_hero",
+      landingVariant: session.landingVariant || "",
+      variantLabel: LANDING_VARIANT_LABELS[session.landingVariant] || "",
       summary: `${session.firstPath || "/"} -> ${session.lastPath || session.firstPath || "/"}`,
       visitorType: session.visitorType,
       deviceType: session.deviceType,
@@ -678,12 +856,13 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
     days,
     metrics,
     funnel,
+    experiment,
     timeline,
     sources: sourceList,
     topClicks,
     pages: pageList,
     recentSessions: recent,
-    recommendations: buildRecommendations(metrics, sourceList, topClicks)
+    recommendations: buildRecommendations(metrics, sourceList, topClicks, experiment)
   };
 }
 
@@ -850,6 +1029,11 @@ export class AnalyticsStore {
         key: session.sourceKey
       };
     const currentPath = normalizeString(payload.page_path || payload.page_location || session.lastPath || "/", 140) || "/";
+    const payloadVariant = normalizeLandingVariant(payload.landing_variant);
+    if (payloadVariant) {
+      session.landingVariant = payloadVariant;
+    }
+    session.experimentName = normalizeString(payload.experiment_name || session.experimentName || "", 80);
 
     session.eventsCount += 1;
     session.lastEventAt = timestamp;
@@ -907,6 +1091,14 @@ export class AnalyticsStore {
         };
         session.recentJourney = appendJourney(session.recentJourney, "checkout started", 12);
         break;
+      case "provider_survey_submitted":
+        session.providerSurveySubmitted = true;
+        session.checkoutStepMap = {
+          ...(session.checkoutStepMap || {}),
+          provider_survey_submitted: true
+        };
+        session.recentJourney = appendJourney(session.recentJourney, "provider survey submitted", 12);
+        break;
       case "checkout_redirect":
         session.checkoutRedirect = true;
         session.checkoutStepMap = {
@@ -915,6 +1107,7 @@ export class AnalyticsStore {
         };
         session.recentJourney = appendJourney(session.recentJourney, "redirected to stripe", 12);
         break;
+      case "purchase_pending_approval":
       case "purchase_verified":
         session.purchaseVerified = true;
         session.purchaseValue = normalizeNumber(payload.value, session.purchaseValue);
@@ -997,15 +1190,23 @@ export class AnalyticsStore {
       pageStorageKey(day, pagePathForCounts),
       () => createEmptyPage(day, pagePathForCounts)
     );
+    const variantForCounts = session.landingVariant || "unknown";
+    const variantRow = await loadOr(
+      this.state,
+      variantStorageKey(day, variantForCounts),
+      () => createEmptyVariant(day, variantForCounts)
+    );
 
     daily.totalEvents += 1;
 
     if (event === "page_view") {
       daily.pageViews += 1;
       pageRow.pageViews += 1;
+      variantRow.pageViews += 1;
       if (previous.pageViews === 0) {
         daily.sessions += 1;
         sourceRow.sessions += 1;
+        variantRow.sessions += 1;
         if (session.visitorType === "returning") {
           daily.returningSessions += 1;
         } else {
@@ -1019,11 +1220,19 @@ export class AnalyticsStore {
 
     if (session.ctaImpression && !previous.ctaImpression) {
       daily.ctaImpressionSessions += 1;
+      variantRow.ctaImpressionSessions += 1;
     }
     if (session.beginCheckout && !previous.beginCheckout) {
       daily.beginCheckoutSessions += 1;
       sourceRow.beginCheckout += 1;
       pageRow.beginCheckout += 1;
+      variantRow.beginCheckoutSessions += 1;
+    }
+    if (session.providerSurveySubmitted && !previous.providerSurveySubmitted) {
+      daily.providerSurveySessions = normalizeNumber(daily.providerSurveySessions) + 1;
+      sourceRow.providerSurveySubmissions = normalizeNumber(sourceRow.providerSurveySubmissions) + 1;
+      pageRow.providerSurveySubmissions = normalizeNumber(pageRow.providerSurveySubmissions) + 1;
+      variantRow.providerSurveySubmissions = normalizeNumber(variantRow.providerSurveySubmissions) + 1;
     }
     if (session.checkoutRedirect && !previous.checkoutRedirect) {
       daily.checkoutRedirectSessions += 1;
@@ -1032,19 +1241,24 @@ export class AnalyticsStore {
       daily.purchaseSessions += 1;
       sourceRow.purchases += 1;
       pageRow.purchases += 1;
+      variantRow.purchaseSessions += 1;
     }
     if (session.checkoutBlocked && !previous.checkoutBlocked) {
       daily.blockedSessions += 1;
       sourceRow.blocked += 1;
+      variantRow.blockedSessions += 1;
     }
     if (session.deepScroll && !previous.deepScroll) {
       daily.deepScrollSessions += 1;
+      variantRow.deepScrollSessions += 1;
     }
     if (session.engaged30 && !previous.engaged30) {
       daily.engagedSessions += 1;
+      variantRow.engagedSessions += 1;
     }
     if (session.carouselInteractions > 0 && previous.carouselInteractions === 0) {
       daily.carouselSessions += 1;
+      variantRow.carouselSessions += 1;
     }
     if (event === "page_exit") {
       daily.totalEngagedSeconds += normalizeNumber(payload.engaged_time_seconds);
@@ -1069,6 +1283,7 @@ export class AnalyticsStore {
     await this.state.storage.put(dailyStorageKey(day), daily);
     await this.state.storage.put(sourceStorageKey(day, session.sourceKey), sourceRow);
     await this.state.storage.put(pageStorageKey(day, pagePathForCounts), pageRow);
+    await this.state.storage.put(variantStorageKey(day, variantForCounts), variantRow);
     await updateRecentSessions(this.state, session);
 
     return { status: "accepted" };
@@ -1087,6 +1302,7 @@ export class AnalyticsStore {
     const sourceRows = [];
     const clickRows = [];
     const pageRows = [];
+    const variantRows = [];
 
     for (const day of dayKeys) {
       const daily = await loadOr(this.state, dailyStorageKey(day), () => createEmptyDaily(day));
@@ -1100,6 +1316,9 @@ export class AnalyticsStore {
 
       const pages = await this.state.storage.list({ prefix: `page:${day}:` });
       pageRows.push(...Array.from(pages.values()));
+
+      const variants = await this.state.storage.list({ prefix: `variant:${day}:` });
+      variantRows.push(...Array.from(variants.values()));
     }
 
     const recentIds = (await this.state.storage.get("recent_sessions")) || [];
@@ -1114,7 +1333,7 @@ export class AnalyticsStore {
 
     return jsonResponse(200, {
       ok: true,
-      dashboard: buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, recentSessions)
+      dashboard: buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows, variantRows, recentSessions)
     });
   }
 }

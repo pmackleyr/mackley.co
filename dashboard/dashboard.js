@@ -16,6 +16,10 @@
   const accessCard = document.getElementById("access-card");
   const accessRows = document.getElementById("access-rows");
   const accessMeta = document.getElementById("access-meta");
+  const experimentCard = document.getElementById("experiment-card");
+  const experimentGrid = document.getElementById("experiment-grid");
+  const experimentMeta = document.getElementById("experiment-meta");
+  const insightList = document.getElementById("insight-list");
   const chartCard = document.getElementById("chart-card");
   const chartRows = document.getElementById("chart-rows");
   const dashboardMeta = document.getElementById("dashboard-meta");
@@ -118,9 +122,13 @@
     authCard.hidden = false;
     setupCard.hidden = true;
     accessCard.hidden = true;
+    experimentCard.hidden = true;
     chartCard.hidden = true;
     appActions.hidden = true;
     accessMeta.textContent = "";
+    experimentMeta.textContent = "";
+    experimentGrid.innerHTML = "";
+    insightList.innerHTML = "";
     accessRows.innerHTML = "";
     dashboardMeta.textContent = "";
     chartRows.innerHTML = "";
@@ -134,9 +142,13 @@
     authCard.hidden = true;
     setupCard.hidden = false;
     accessCard.hidden = true;
+    experimentCard.hidden = true;
     chartCard.hidden = true;
     appActions.hidden = true;
     setupList.innerHTML = checklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    experimentMeta.textContent = "";
+    experimentGrid.innerHTML = "";
+    insightList.innerHTML = "";
     dashboardMeta.textContent = "Setup required";
     syncRuntimeBridge();
   }
@@ -147,6 +159,7 @@
     authCard.hidden = true;
     setupCard.hidden = true;
     accessCard.hidden = false;
+    experimentCard.hidden = !dashboard;
     chartCard.hidden = !dashboard;
     appActions.hidden = false;
 
@@ -166,6 +179,9 @@
       renderDashboard(dashboard);
     } else {
       dashboardMeta.textContent = "";
+      experimentMeta.textContent = "";
+      experimentGrid.innerHTML = "";
+      insightList.innerHTML = "";
       chartRows.innerHTML = "";
     }
 
@@ -178,14 +194,19 @@
     authCard.hidden = true;
     setupCard.hidden = true;
     accessCard.hidden = false;
+    experimentCard.hidden = false;
     chartCard.hidden = false;
     appActions.hidden = false;
-    dashboardMeta.textContent = `${formatInteger((dashboard.sessions || []).length)} sessions · ${formatInteger(dashboard.totals?.views || 0)} views · ${formatInteger(dashboard.totals?.clicks || 0)} clicks · ${formatDuration(
-      dashboard.totals?.timeSpentSeconds || 0
-    )} time`;
+    const sessions = getDashboardSessions(dashboard);
+    const metrics = dashboard.metrics || {};
+    dashboardMeta.textContent = `${formatInteger(metrics.sessions || sessions.length)} sessions · ${formatInteger(metrics.pageViews || dashboard.totals?.views || 0)} views · ${formatInteger(
+      metrics.beginCheckoutSessions || dashboard.totals?.clicks || 0
+    )} clicks/form starts · ${formatInteger(metrics.providerSurveySessions || 0)} forms · ${formatDuration(metrics.averageEngagedSeconds || dashboard.totals?.timeSpentSeconds || 0)} avg engaged`;
 
-    chartRows.innerHTML = (dashboard.sessions || []).length
-      ? dashboard.sessions.map(renderSessionRow).join("")
+    renderExperimentDashboard(dashboard);
+
+    chartRows.innerHTML = sessions.length
+      ? sessions.map(renderSessionRow).join("")
       : `
         <tr class="empty-row">
           <td colspan="7">
@@ -239,9 +260,10 @@
   }
 
   function renderSessionRow(session) {
-    const pages = session.pages || session.screens || [];
-    const clicks = session.clicks || [];
+    const pages = getSessionPages(session);
+    const clicks = getSessionClicks(session);
     const links = session.links || [];
+    const variantLabel = session.variantLabel || formatVariantLabel(session.landingVariant);
     const visitorLabel = [
       session.visitorType ? `${capitalize(session.visitorType)} visitor` : "Visitor",
       session.device?.deviceType || "",
@@ -258,7 +280,8 @@
           <div class="stack-cell">
             <strong>${escapeHtml(visitorLabel || "Visitor")}</strong>
             <span>${escapeHtml(session.sessionId || "unknown session")}</span>
-            <span>${escapeHtml(formatTimestamp(session.firstSeenAt))}</span>
+            <span>${escapeHtml(formatTimestamp(session.firstSeenAt || session.startedAt || session.lastEventAt))}</span>
+            ${variantLabel ? `<span class="experiment-pill">${escapeHtml(variantLabel)}</span>` : ""}
             <span class="muted-code">${formatInteger(session.viewCount || pages.length || 0)} views · ${formatInteger(
       session.clickCount || clicks.length || 0
     )} clicks</span>
@@ -340,6 +363,112 @@
     `;
   }
 
+  function renderExperimentDashboard(dashboard) {
+    const experiment = dashboard.experiment || {};
+    const variants = experiment.variants || [];
+    const recommendations = dashboard.recommendations || [];
+
+    experimentMeta.textContent = `${formatInteger(experiment.totalSessions || 0)} assigned sessions · goal: ${experiment.goal || "Clicks / form starts"}`;
+    experimentGrid.innerHTML = variants.length
+      ? variants.map(renderVariantCard).join("")
+      : `
+        <div class="empty-experiment">
+          <strong>No experiment data yet.</strong>
+          <p class="panel-copy">Assigned landing sessions will appear after the next home-page visits.</p>
+        </div>
+      `;
+
+    const insight = experiment.insight ? [{
+      priority: "goal",
+      title: "Experiment readout",
+      detail: experiment.insight,
+      action: "Optimize for clicks/form starts, then verify purchase continuation."
+    }] : [];
+    insightList.innerHTML = [...insight, ...recommendations].slice(0, 5).map(renderInsight).join("");
+  }
+
+  function renderVariantCard(variant) {
+    const status = variant.status || "collecting";
+    return `
+      <article class="experiment-variant experiment-variant--${escapeHtml(status)}">
+        <div class="variant-head">
+          <div>
+            <p class="variant-kicker">Variant ${escapeHtml((variant.variant || "").toUpperCase() || "?")}</p>
+            <h3>${escapeHtml(variant.label || formatVariantLabel(variant.variant) || "Variant")}</h3>
+          </div>
+          <span class="variant-status">${escapeHtml(status)}</span>
+        </div>
+        <dl class="variant-metrics">
+          <div>
+            <dt>Traffic</dt>
+            <dd>${formatInteger(variant.sessions)} <span>${formatPercentLabel(variant.trafficShare)}</span></dd>
+          </div>
+          <div>
+            <dt>CTA seen</dt>
+            <dd>${formatPercentLabel(variant.ctaVisibilityRate)}</dd>
+          </div>
+          <div>
+            <dt>Clicks</dt>
+            <dd>${formatPercentLabel(variant.clickRate)} <span>${formatInteger(variant.beginCheckoutSessions)}</span></dd>
+          </div>
+          <div>
+            <dt>Forms</dt>
+            <dd>${formatPercentLabel(variant.formSubmissionRate)} <span>${formatInteger(variant.providerSurveySubmissions)}</span></dd>
+          </div>
+          <div>
+            <dt>Purchase</dt>
+            <dd>${formatPercentLabel(variant.purchaseRate)}</dd>
+          </div>
+        </dl>
+        <p class="variant-bottleneck"><span>Bottleneck</span>${escapeHtml(variant.bottleneck || "Collecting sample")}</p>
+      </article>
+    `;
+  }
+
+  function renderInsight(item) {
+    return `
+      <article class="insight insight--${escapeHtml(item.priority || "watch")}">
+        <strong>${escapeHtml(item.title || "Insight")}</strong>
+        <span>${escapeHtml(item.detail || "")}</span>
+        <em>${escapeHtml(item.action || "")}</em>
+      </article>
+    `;
+  }
+
+  function getDashboardSessions(dashboard) {
+    return dashboard.sessions || dashboard.recentSessions || [];
+  }
+
+  function getSessionPages(session) {
+    const direct = session.pages || session.screens || [];
+    if (direct.length) return direct;
+    const paths = session.pagePaths || session.pathFlow || [];
+    return paths.map((path) => ({
+      label: path,
+      path,
+      durationSeconds: 0,
+      scrollMax: session.maxScrollPercent || 0
+    }));
+  }
+
+  function getSessionClicks(session) {
+    const direct = session.clicks || [];
+    if (direct.length) return direct;
+    const timelineClicks = (session.eventTimeline || [])
+      .filter((event) => ["click_target", "begin_checkout", "checkout_redirect", "checkout_blocked"].includes(event.event))
+      .map((event) => ({
+        linkText: event.label || event.event,
+        detail: event.event,
+        linkHref: event.href || "",
+        pagePath: event.path || ""
+      }));
+    if (timelineClicks.length) return timelineClicks;
+    return (session.clickedTargets || []).map((label) => ({
+      linkText: label,
+      detail: "click"
+    }));
+  }
+
   function formatInteger(value) {
     return new Intl.NumberFormat("en-US").format(Number(value || 0));
   }
@@ -354,6 +483,13 @@
 
   function formatPercentLabel(value) {
     return `${Number(value || 0)}%`;
+  }
+
+  function formatVariantLabel(value) {
+    const variant = String(value || "").toLowerCase();
+    if (variant === "a") return "A current flow";
+    if (variant === "b") return "B white product hero";
+    return "";
   }
 
   function formatTimestamp(value) {
@@ -394,19 +530,22 @@
     if (!dashboard) return "";
 
     const accessEntries = state.accessEntries || [];
-    const sessions = dashboard.sessions || [];
+    const sessions = getDashboardSessions(dashboard);
+    const experiment = dashboard.experiment;
     return [
       "Simple Analytics Dashboard",
+      experiment ? `${experiment.goal || "Experiment"} :: ${experiment.insight || ""}` : "",
+      ...(experiment?.variants || []).map((variant) => `${variant.label} :: ${formatInteger(variant.sessions)} sessions :: ${formatPercentLabel(variant.clickRate)} clicks :: ${formatPercentLabel(variant.formSubmissionRate)} forms :: ${variant.bottleneck}`),
       ...accessEntries.map((entry) => `${entry.name || "Unknown"} :: ${entry.email || ""} :: ${entry.pagePath || "/"} :: ${formatTimestamp(entry.createdAt)}`),
       ...sessions.map((session) => {
-        const pages = (session.pages || session.screens || [])
+        const pages = getSessionPages(session)
           .map((page) => `${page.label || page.path || "Page"} ${formatDuration(page.durationSeconds)}`)
           .join(" | ");
-        const clicks = (session.clicks || [])
+        const clicks = getSessionClicks(session)
           .slice(0, 6)
           .map((event) => event.linkText || event.detail || event.label || "Click")
           .join(" | ");
-        return `${session.sessionId || session.key || "session"} :: ${pages} :: ${clicks} :: ${session.source?.key || "direct / direct"}`;
+        return `${session.sessionId || session.key || "session"} :: ${formatVariantLabel(session.landingVariant)} :: ${pages} :: ${clicks} :: ${session.source?.key || session.source || "direct / direct"}`;
       }),
     ]
       .filter(Boolean)
@@ -419,7 +558,7 @@
       days: state.days,
       dashboard: state.dashboard,
       accessEntries: state.accessEntries,
-      latestEvents: state.dashboard?.sessions?.flatMap((session) => session.topEvents || []).slice(0, 25) || [],
+      latestEvents: getDashboardSessions(state.dashboard || {})?.flatMap((session) => session.topEvents || session.eventTimeline || []).slice(0, 25) || [],
     };
     window.render_app_to_text = buildAppText;
     window.advanceTime = async (ms = 0) => {

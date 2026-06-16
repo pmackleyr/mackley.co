@@ -94,6 +94,10 @@ function readStoredReferralClaim() {
 
 const activeReferralClaim = applyReferralClaim() || readStoredReferralClaim();
 
+function hasFirstAndLastName(value) {
+  return String(value || "").trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
 function showStep(index) {
   currentStep = index;
   steps.forEach((step, stepIndex) => {
@@ -115,10 +119,31 @@ function checkedValues(name) {
   return Array.from(form.querySelectorAll(`[name="${name}"]:checked`)).map((input) => input.value);
 }
 
+function conditionValues() {
+  const otherValue = String(form.elements.conditionsOther?.value || "").trim();
+  return checkedValues("conditions").map((value) => {
+    if (value === "Other" && otherValue) return `Other: ${otherValue}`;
+    return value;
+  });
+}
+
+function validateRequiredGroup(name) {
+  const group = form.querySelector(`[data-required-group="${name}"]`);
+  const valid = checkedValues(name).length > 0;
+  group?.classList.toggle("has-error", !valid);
+  return valid;
+}
+
 function validateConditions() {
   const values = checkedValues("conditions");
-  setError("conditions", values.length ? "" : "Please select at least one option.");
-  return values.length > 0;
+  const otherSelected = values.includes("Other");
+  const otherField = form.querySelector('[data-conditional-field="conditionsOther"]');
+  const otherValid = !otherSelected || String(form.elements.conditionsOther?.value || "").trim().length > 0;
+  const valid = values.length > 0 && otherValid;
+
+  otherField?.classList.toggle("has-error", otherSelected && !otherValid);
+  setError("conditions", valid ? "" : "Please select at least one option and specify any other condition.");
+  return valid;
 }
 
 function validateProfile() {
@@ -133,19 +158,27 @@ function validateProfile() {
     valid = valid && fieldValid;
   });
 
+  const fullName = form.elements.fullName;
+  const fullNameValid = hasFirstAndLastName(fullName?.value);
+  fullName?.closest(".intake-field")?.classList.toggle("has-error", !fullNameValid);
+  valid = valid && fullNameValid;
+
   const age = Number(form.elements.age?.value || 0);
   if (age && age < 18) {
     valid = false;
     form.elements.age.closest(".intake-field")?.classList.add("has-error");
   }
 
-  setError("profile", valid ? "" : "Please complete every required field. You must be at least 18.");
+  setError("profile", valid ? "" : "Please complete every required field. First and last name are required, and you must be at least 18.");
   return valid;
 }
 
 function validateAttestation() {
-  const valid = checkedValues("surgeries").length > 0;
-  setError("attestation", valid ? "" : "Please answer the surgery question.");
+  const recentSurgeriesValid = validateRequiredGroup("recentSurgeries");
+  const riskDiagnosesValid = validateRequiredGroup("riskDiagnoses");
+  const medicationsValid = validateRequiredGroup("prescriptionMedications");
+  const valid = recentSurgeriesValid && riskDiagnosesValid && medicationsValid;
+  setError("attestation", valid ? "" : "Please complete every required question.");
   return valid;
 }
 
@@ -165,14 +198,19 @@ function collectPayload() {
     stripeProductId: product.stripeProductId || "prod_UgF2SFTaA6cCVy",
     status: "pending_provider_approval",
     paymentStatus: "not_started",
-    conditions: checkedValues("conditions"),
+    conditions: conditionValues(),
     email: form.elements.email.value,
     fullName: form.elements.fullName.value,
     age: form.elements.age.value,
     sex: checkedValues("sex")[0] || "",
     state: form.elements.state.value,
-    surgeries: checkedValues("surgeries")[0] || "",
-    riskFactors: form.elements.riskFactors.value,
+    recentSurgeries: checkedValues("recentSurgeries")[0] || "",
+    recentSurgeriesDetails: form.elements.recentSurgeriesDetails?.value || "",
+    riskDiagnoses: checkedValues("riskDiagnoses"),
+    prescriptionMedications: checkedValues("prescriptionMedications")[0] || "",
+    medicationsList: form.elements.medicationsList?.value || "",
+    goalsSymptoms: form.elements.goalsSymptoms?.value || "",
+    attestation: "I attest that this request is for my personal use. I understand that submission of this form does not guarantee approval. All requests are reviewed by a licensed healthcare provider, who will determine eligibility based on medical history, current medications, symptoms, and treatment goals. Payment and fulfillment remain subject to provider approval.",
     referral,
     submittedAt: new Date().toISOString()
   };
@@ -214,6 +252,21 @@ function showReferralLink(url) {
   link.hidden = false;
   link.href = url;
   link.textContent = url;
+}
+
+function syncConditionalFields() {
+  document.querySelectorAll("[data-conditional-field]").forEach((field) => {
+    const fieldName = field.dataset.conditionalField;
+    const visible = Boolean(form.querySelector(`[data-reveals="${fieldName}"]:checked`));
+
+    field.hidden = !visible;
+    field.querySelectorAll("input, select, textarea").forEach((input) => {
+      input.disabled = !visible;
+      if (!visible) input.value = "";
+    });
+
+    if (!visible) field.classList.remove("has-error");
+  });
 }
 
 async function shareReferral() {
@@ -289,11 +342,15 @@ form.addEventListener("change", (event) => {
     form.querySelectorAll(`[name="${groupName}"]`).forEach((input) => {
       if (input !== target) input.checked = false;
     });
-  } else if (target.name === "conditions" && target.checked) {
+  } else if (target.name && target.checked) {
     const exclusive = form.querySelector(`[data-exclusive="${target.name}"]`);
     if (exclusive && exclusive !== target) exclusive.checked = false;
   }
+
+  syncConditionalFields();
 });
+
+syncConditionalFields();
 
 document.querySelectorAll("[data-next]").forEach((button) => {
   button.addEventListener("click", () => {

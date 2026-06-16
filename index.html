@@ -9,8 +9,50 @@
   <meta name="store-value" content="30" />
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Purpose | MACKLEY</title>
-  <link rel="canonical" href="https://mackley.co/" />
-  <link rel="stylesheet" href="/styles.css?v=20260616-password-request-v3" />
+  <link rel="canonical" href="https://whoismackley.com/" />
+  <script>
+    (function () {
+      const key = "mackley_landing_variant_v1";
+      const params = new URLSearchParams(window.location.search);
+      const raw = (params.get("landing_variant") || params.get("variant") || params.get("ab") || "").trim().toLowerCase();
+      const forced = raw === "a" || raw === "b" ? raw : "";
+      let variant = forced;
+
+      if (!variant) {
+        try {
+          variant = window.localStorage.getItem(key) || "";
+        } catch (error) {
+          variant = "";
+        }
+      }
+
+      if (variant !== "a" && variant !== "b") {
+        if (window.crypto && window.crypto.getRandomValues) {
+          const bucket = new Uint32Array(1);
+          window.crypto.getRandomValues(bucket);
+          variant = bucket[0] % 2 === 0 ? "a" : "b";
+        } else {
+          variant = Math.random() < 0.5 ? "a" : "b";
+        }
+      }
+
+      try {
+        window.localStorage.setItem(key, variant);
+      } catch (error) {
+        // The in-page assignment still works when storage is unavailable.
+      }
+
+      document.documentElement.dataset.landingVariant = variant;
+      window.MACKLEYExperiment = {
+        key,
+        name: "home_landing_hero",
+        variant,
+        forced: Boolean(forced)
+      };
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles.css?v=20260616-ab-hero-v1" />
+  <script src="/domain-redirect.js?v=20260615-whoismackley"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
   <link rel="icon" href="/public/assets/logo_dark_48.png" type="image/png" sizes="48x48" />
@@ -100,6 +142,51 @@
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
+  </main>
+
+  <main class="landing-b" id="landing-b" aria-label="Product landing">
+    <section class="landing-b__hero" aria-label="MACKLEY INF landing page" data-product-aria>
+      <h1 class="landing-b__headline">
+        If you <span>can</span> change <u>how</u> you think,<br />
+        then you <span>can</span> change <u>who</u> you are.
+      </h1>
+
+      <div class="landing-b__gallery" aria-label="Product gallery">
+        <section class="carousel" aria-label="Product images" data-product-carousel>
+          <div class="carousel-viewport" tabindex="0">
+            <div class="carousel-track">
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/inf-product-01.png" alt="INF intranasal formula bottle with copper cap" decoding="async" fetchpriority="high" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/inf-product-02.png" alt="INF intranasal formula bottle with MACKLEY copper neti pot and travel bag" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/inf-product-03.png" alt="INF intranasal formula kit packed in a black travel bag" loading="lazy" decoding="async" />
+              </div>
+            </div>
+          </div>
+          <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
+          <button class="carousel-button carousel-button--next" type="button" aria-label="Next slide">›</button>
+          <div class="carousel-dots" aria-label="Carousel slides"></div>
+        </section>
+      </div>
+
+      <div class="landing-b__copy">
+        <h2 class="landing-b__title">
+          <a href="/product/" data-product-full-name><span class="home-product__code">INF&trade;</span> Intranasal Neuropeptide Formula</a>
+        </h2>
+        <p class="landing-b__audience" data-product-audience>For adults (18+)</p>
+        <p class="landing-b__formula">
+          <span data-product-formula>with Semax + Selank + Oxytocin</span>
+          <span data-product-purpose>for plasticity, clarity and confidence</span>
+        </p>
+        <div class="landing-b__actions home-product__actions">
+          <a class="home-product__button" href="/product/">Learn More</a>
+          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="30">Get Started</a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">

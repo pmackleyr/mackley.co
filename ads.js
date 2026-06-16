@@ -14,6 +14,8 @@
   const sessionSeenKey = "mackley_analytics_session_seen";
   const queueKey = "mackley_analytics_queue_v2";
   const checkoutSkipKey = "mackley_skip_checkout_tracking";
+  const landingVariantKey = "mackley_landing_variant_v1";
+  const landingExperimentName = "home_landing_hero";
   const socialProofEndpoint = "https://api.mackley.co/social-proof";
   const collectorUrl = "https://api.mackley.co/analytics/collect";
   const clickParamNames = ["gclid", "gclsrc", "wbraid", "gbraid", "fbclid", "msclkid"];
@@ -81,6 +83,23 @@
     } catch (error) {
       return false;
     }
+  }
+
+  function normalizeLandingVariant(value) {
+    const next = sanitizeTrackingValue(value, 12).toLowerCase();
+    return next === "a" || next === "b" ? next : "";
+  }
+
+  function resolveLandingExperiment() {
+    const globalVariant = normalizeLandingVariant(win.MACKLEYExperiment?.variant);
+    const storedVariant = normalizeLandingVariant(readStorage(storage, landingVariantKey));
+    const variant = globalVariant || storedVariant;
+
+    return {
+      name: win.MACKLEYExperiment?.name || landingExperimentName,
+      variant,
+      forced: Boolean(win.MACKLEYExperiment?.forced)
+    };
   }
 
   function readJson(area, key) {
@@ -342,8 +361,10 @@
   const pageName = resolvePageName();
 
   function buildContext() {
+    const experiment = resolveLandingExperiment();
+
     return {
-      site_name: "mackley.co",
+      site_name: "whoismackley.com",
       visitor_id: visitorId,
       session_id: sessionId,
       session_number: sessionNumber,
@@ -367,7 +388,10 @@
       screen_width: win.screen?.width || 0,
       screen_height: win.screen?.height || 0,
       viewport_width: win.innerWidth,
-      viewport_height: win.innerHeight
+      viewport_height: win.innerHeight,
+      experiment_name: experiment.name,
+      landing_variant: experiment.variant,
+      landing_variant_forced: experiment.forced
     };
   }
 
@@ -692,6 +716,12 @@
     });
 
     if (pageName === "home") {
+      const experiment = resolveLandingExperiment();
+      trackEvent("landing_experiment_view", {
+        experiment_name: experiment.name,
+        landing_variant: experiment.variant,
+        landing_variant_forced: experiment.forced
+      });
       trackEvent("view_item", {
         item_name: itemName,
         currency: config.currency,
