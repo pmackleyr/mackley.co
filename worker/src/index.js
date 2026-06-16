@@ -15,6 +15,7 @@ const ALLOWED_HOSTS = new Set([
   "mackley.vercel.app",
   "localhost:3000",
   "localhost:5173",
+  "127.0.0.1:8017",
   "127.0.0.1:5500"
 ]);
 
@@ -163,6 +164,88 @@ function validateCheckoutSessionBody(body) {
 function normalizeAccessPassword(value) {
   const next = String(value || "").trim();
   return next || "jumpthegap";
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase().slice(0, 160);
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function sendAccessRequestEmail(profile, requestInfo, env) {
+  const apiKey = String(env.RESEND_API_KEY || "").trim();
+  if (!apiKey) {
+    return { ok: false, error: "email_not_configured" };
+  }
+
+  const from = String(env.ACCESS_EMAIL_FROM || "MACKLEY <access@mackley.co>").trim();
+  const notifyTo = String(env.ACCESS_REQUEST_NOTIFY_TO || "contact@mackley.co").trim();
+  const password = normalizeAccessPassword(env.SITE_ACCESS_PASSWORD);
+  const pageUrl = String(requestInfo.page_url || "").slice(0, 260);
+  const referrer = String(requestInfo.referrer || "").slice(0, 260);
+  const language = String(requestInfo.language || "-").slice(0, 40);
+  const timezone = String(requestInfo.timezone || "-").slice(0, 80);
+  const htmlName = escapeHtml(profile.name);
+  const htmlEmail = escapeHtml(profile.email);
+  const htmlPassword = escapeHtml(password);
+  const htmlPageUrl = escapeHtml(pageUrl || "/");
+  const htmlReferrer = escapeHtml(referrer || "-");
+  const htmlLanguage = escapeHtml(language);
+  const htmlTimezone = escapeHtml(timezone);
+  const text = [
+    "New MACKLEY access request",
+    "",
+    `Name: ${profile.name}`,
+    `Email: ${profile.email}`,
+    `Password to share: ${password}`,
+    `Page: ${pageUrl || "/"}`,
+    `Referrer: ${referrer || "-"}`,
+    `Language: ${language}`,
+    `Timezone: ${timezone}`,
+    "",
+    `Reply to ${profile.email} when you want to share access.`
+  ].join("\n");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to: [notifyTo],
+      reply_to: profile.email,
+      subject: `MACKLEY access request from ${profile.name}`,
+      text,
+      html: `
+        <p>New MACKLEY access request.</p>
+        <ul>
+          <li><strong>Name:</strong> ${htmlName}</li>
+          <li><strong>Email:</strong> ${htmlEmail}</li>
+          <li><strong>Password to share:</strong> ${htmlPassword}</li>
+          <li><strong>Page:</strong> ${htmlPageUrl}</li>
+          <li><strong>Referrer:</strong> ${htmlReferrer}</li>
+          <li><strong>Language:</strong> ${htmlLanguage}</li>
+          <li><strong>Timezone:</strong> ${htmlTimezone}</li>
+        </ul>
+        <p>Reply to ${htmlEmail} when you want to share access.</p>
+      `
+    })
+  });
+
+  if (!response.ok) {
+    return { ok: false, error: "email_send_failed" };
+  }
+
+  return { ok: true };
 }
 
 function sanitizeTrackingValue(value) {
@@ -439,6 +522,37 @@ export default {
         status: response.status,
         headers
       });
+    }
+
+    if (url.pathname === "/access-request") {
+      if (!effectiveOrigin) {
+        return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
+      }
+
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin)
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+      }
+
+      const payload = await request.json().catch(() => ({}));
+      const name = String(payload?.name || "").replace(/[\r\n]+/g, " ").trim().slice(0, 120);
+      const email = normalizeEmail(payload?.email);
+      if (name.length < 2 || !isValidEmail(email)) {
+        return jsonResponse(400, { ok: false, error: "invalid_access_request" }, effectiveOrigin);
+      }
+
+      const emailResult = await sendAccessRequestEmail({ name, email }, payload || {}, env);
+      if (!emailResult.ok) {
+        return jsonResponse(500, { ok: false, error: emailResult.error }, effectiveOrigin);
+      }
+
+      return jsonResponse(202, { ok: true }, effectiveOrigin);
     }
 
     if (url.pathname === "/access-entries") {

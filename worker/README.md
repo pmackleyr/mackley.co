@@ -20,9 +20,16 @@ cd worker
 npm i
 ```
 
-4) Set the Stripe secret key
+4) Set the required secrets
 ```sh
 wrangler secret put STRIPE_SECRET_KEY
+wrangler secret put RESEND_API_KEY
+```
+
+Optional access request email overrides:
+```sh
+wrangler secret put ACCESS_EMAIL_FROM
+wrangler secret put ACCESS_REQUEST_NOTIFY_TO
 ```
 
 5) Deploy

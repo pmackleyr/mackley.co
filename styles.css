@@ -172,6 +172,11 @@ body.access-lock-open {
   display: block;
 }
 
+.access-lock__form.has-notice .access-lock__error {
+  display: block;
+  color: var(--access-tertiary);
+}
+
 .access-lock__button {
   position: relative;
   z-index: 0;
@@ -213,6 +218,35 @@ body.access-lock-open {
 .access-lock__button:not(:disabled):active::before {
   background: var(--access-button-active);
   opacity: 1;
+}
+
+.access-lock__link {
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--access-tertiary);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.4;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.access-lock__link:disabled {
+  cursor: default;
+  opacity: 0.55;
+  text-decoration: none;
+}
+
+.access-lock__link:not(:disabled):hover,
+.access-lock__link:not(:disabled):focus-visible {
+  color: var(--access-secondary);
+}
+
+.access-lock__link:not(:disabled):focus-visible {
+  outline: 1px solid var(--access-tint);
+  outline-offset: 4px;
 }
 
 .access-lock.is-complete .access-lock__logo,

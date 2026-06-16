@@ -1,6 +1,7 @@
 (() => {
   const PASSWORD = "jumpthegap";
   const ACCESS_KEY = "mackley_access_lock_v1";
+  const API_BASE = "https://api.mackley.co";
 
   function hasAccess() {
     try {
@@ -36,7 +37,7 @@
       unlocked_at: new Date().toISOString()
     };
 
-    fetch("https://api.mackley.co/access-entry", {
+    fetch(`${API_BASE}/access-entry`, {
       method: "POST",
       keepalive: true,
       headers: {
@@ -48,6 +49,23 @@
 
   function validEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+  }
+
+  async function postJson(path, payload) {
+    const response = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) {
+      const error = new Error(data.error || "request_failed");
+      error.status = response.status;
+      throw error;
+    }
+    return data;
   }
 
   function unlock() {
@@ -78,17 +96,18 @@
           </svg>
         </div>
         <form class="access-lock__form" id="access-lock-form" novalidate>
-          <label class="access-lock__description" for="access-name">
-            Enter name, email, and password<br />
+          <label class="access-lock__description" id="access-lock-description" for="access-password">
+            Enter password<br />
             to access the site.
           </label>
           <div class="access-lock__fields">
-            <input class="access-lock__input" id="access-name" name="name" type="text" autocomplete="name" placeholder="Name" required />
-            <input class="access-lock__input" id="access-email" name="email" type="email" autocomplete="email" placeholder="Email" required />
             <input class="access-lock__input access-lock__input--password" id="access-password" name="password" type="password" autocomplete="current-password" placeholder="Password" required />
+            <input class="access-lock__input" id="access-name" name="name" type="text" autocomplete="name" placeholder="Name" hidden />
+            <input class="access-lock__input" id="access-email" name="email" type="email" autocomplete="email" placeholder="Email" hidden />
             <span class="access-lock__error" id="access-lock-error" aria-live="polite">Invalid password</span>
           </div>
-          <button class="access-lock__button" type="submit" disabled>Submit</button>
+          <button class="access-lock__button" type="submit" hidden>Request password</button>
+          <button class="access-lock__link" type="button">Request access</button>
         </form>
       </section>
     `;
@@ -96,56 +115,177 @@
     document.body.append(overlay);
 
     const form = overlay.querySelector("#access-lock-form");
+    const description = overlay.querySelector("#access-lock-description");
     const name = overlay.querySelector("#access-name");
     const email = overlay.querySelector("#access-email");
     const password = overlay.querySelector("#access-password");
     const submit = overlay.querySelector(".access-lock__button");
+    const requestAccess = overlay.querySelector(".access-lock__link");
     const error = overlay.querySelector("#access-lock-error");
+    let mode = "password";
+    let isBusy = false;
+    let requestSent = false;
+
+    function hasValidRequestContact() {
+      return name.value.trim().length >= 2 && validEmail(email.value.trim());
+    }
 
     function refresh() {
-      const isComplete = name.value.trim() && validEmail(email.value.trim()) && password.value === PASSWORD;
+      const hasContact = hasValidRequestContact();
+      const isComplete = mode === "request" ? hasContact : password.value;
       const hasStarted = name.value.trim() || email.value.trim() || password.value;
-      submit.toggleAttribute("disabled", !isComplete);
+      if (mode === "request") {
+        submit.toggleAttribute("disabled", !isComplete || requestSent);
+      }
       overlay.classList.toggle("is-complete", Boolean(isComplete));
       form.classList.toggle("is-complete", Boolean(isComplete));
       form.classList.toggle("has-started", Boolean(hasStarted));
-      form.classList.remove("has-error");
-      error.textContent = "Invalid password";
+      if (!isBusy) {
+        form.classList.remove("has-error");
+        form.classList.remove("has-notice");
+        if (mode === "request" && requestSent) {
+          requestSent = false;
+          submit.textContent = "Request password";
+        }
+        if (requestAccess.textContent === "Request sent") {
+          requestAccess.textContent = "Request access";
+        }
+        error.textContent = "Invalid password";
+      }
     }
 
-    form.addEventListener("input", refresh);
+    function setBusy(nextBusy, label, target = submit) {
+      isBusy = nextBusy;
+      submit.disabled = nextBusy;
+      requestAccess.disabled = nextBusy;
+      if (label) target.textContent = label;
+    }
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
+    function showError(message) {
+      error.textContent = message;
+      form.classList.remove("has-notice");
+      form.classList.add("has-error");
+    }
+
+    function showNotice(message) {
+      error.textContent = message;
+      form.classList.remove("has-error");
+      form.classList.add("has-notice");
+    }
+
+    function showPasswordMode() {
+      mode = "password";
+      description.innerHTML = "Enter password<br />to access the site.";
+      password.hidden = false;
+      name.hidden = true;
+      email.hidden = true;
+      submit.hidden = true;
+      requestAccess.hidden = false;
+      requestAccess.textContent = "Request access";
+      password.focus();
+      refresh();
+    }
+
+    function showRequestMode() {
+      mode = "request";
+      description.innerHTML = "Request password";
+      password.hidden = true;
+      name.hidden = false;
+      email.hidden = false;
+      submit.hidden = false;
+      submit.textContent = "Request password";
+      requestAccess.hidden = true;
+      name.focus();
+      refresh();
+    }
+
+    function requestMessage(errorName) {
+      if (errorName === "email_not_configured") return "Email sending is not configured";
+      if (errorName === "email_send_failed") return "Email could not be sent";
+      if (errorName === "invalid_access_request") return "Enter your name and email";
+      return "Try again";
+    }
+
+    async function sendAccessRequest() {
       const profile = {
         name: name.value.trim(),
         email: email.value.trim()
       };
 
-      if (!profile.name || !validEmail(profile.email)) {
-        error.textContent = "Enter your name and email";
-        form.classList.add("has-error");
-        return;
+      if (profile.name.length < 2 || !validEmail(profile.email)) {
+        showError("Enter your name and email");
+        return false;
       }
 
-      if (password.value !== PASSWORD) {
-        error.textContent = "Invalid password";
-        form.classList.add("has-error");
-        password.select();
-        return;
+      let hadError = false;
+      setBusy(true, "Requesting...");
+      try {
+        await postJson("/access-request", {
+          name: profile.name,
+          email: profile.email,
+          page_path: window.location.pathname,
+          page_url: window.location.href,
+          referrer: document.referrer,
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+        });
+        showNotice("Access request sent");
+        requestSent = true;
+        submit.textContent = "Request sent";
+        submit.disabled = true;
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "site_access_requested", {
+            domain: profile.email.split("@")[1] || ""
+          });
+        }
+        return true;
+      } catch (requestError) {
+        hadError = true;
+        showError(requestMessage(requestError.message));
+        submit.textContent = "Request password";
+        submit.disabled = !hasValidRequestContact();
+        return false;
+      } finally {
+        isBusy = false;
+        if (!hadError) submit.disabled = requestSent || !hasValidRequestContact();
       }
+    }
+
+    form.addEventListener("input", refresh);
+
+    password.addEventListener("input", () => {
+      if (mode !== "password" || password.value !== PASSWORD) return;
+
+      const profile = {
+        name: "Password access",
+        email: ""
+      };
 
       saveAccess(profile);
       recordAccess(profile, password.value);
       if (typeof window.gtag === "function") {
         window.gtag("event", "site_access_unlocked", {
-          domain: profile.email.split("@")[1] || ""
+          domain: ""
         });
       }
       unlock();
     });
 
-    window.requestAnimationFrame(() => name.focus());
+    requestAccess.addEventListener("click", () => {
+      if (isBusy) return;
+      if (mode === "request") {
+        showPasswordMode();
+        return;
+      }
+      showRequestMode();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (mode === "request") await sendAccessRequest();
+    });
+
+    window.requestAnimationFrame(() => password.focus());
   }
 
   if (document.readyState === "loading") {

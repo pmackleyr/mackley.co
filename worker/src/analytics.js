@@ -751,7 +751,7 @@ export class AnalyticsStore {
       createdAt: timestamp
     };
 
-    if (!entry.name || !entry.email || !entry.email.includes("@")) {
+    if (!entry.name || (entry.email && !entry.email.includes("@"))) {
       return jsonResponse(400, { ok: false, error: "invalid_access_entry" });
     }
 
