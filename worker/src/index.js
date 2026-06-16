@@ -7,6 +7,10 @@ import {
 } from "./analytics.js";
 
 const ALLOWED_HOSTS = new Set([
+  "whoismackley.com",
+  "whoismackley.com:443",
+  "www.whoismackley.com",
+  "www.whoismackley.com:443",
   "mackley.co",
   "mackley.co:443",
   "www.mackley.co",

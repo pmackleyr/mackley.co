@@ -1,7 +1,7 @@
 (() => {
   const PASSWORD = "jumpthegap";
   const ACCESS_KEY = "mackley_access_lock_v1";
-  const API_BASE = "https://api.mackley.co";
+  const API_BASE = "https://mackley-payments.macrevers.workers.dev";
 
   function hasAccess() {
     try {
