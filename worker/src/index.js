@@ -185,16 +185,14 @@ async function sendAccessRequestEmail(profile, requestInfo, env) {
     return { ok: false, error: "email_not_configured" };
   }
 
-  const from = String(env.ACCESS_EMAIL_FROM || "MACKLEY <access@mackley.co>").trim();
+  const from = String(env.ACCESS_EMAIL_FROM || "MACKLEY <onboarding@resend.dev>").trim();
   const notifyTo = String(env.ACCESS_REQUEST_NOTIFY_TO || "contact@mackley.co").trim();
-  const password = normalizeAccessPassword(env.SITE_ACCESS_PASSWORD);
   const pageUrl = String(requestInfo.page_url || "").slice(0, 260);
   const referrer = String(requestInfo.referrer || "").slice(0, 260);
   const language = String(requestInfo.language || "-").slice(0, 40);
   const timezone = String(requestInfo.timezone || "-").slice(0, 80);
   const htmlName = escapeHtml(profile.name);
   const htmlEmail = escapeHtml(profile.email);
-  const htmlPassword = escapeHtml(password);
   const htmlPageUrl = escapeHtml(pageUrl || "/");
   const htmlReferrer = escapeHtml(referrer || "-");
   const htmlLanguage = escapeHtml(language);
@@ -204,7 +202,6 @@ async function sendAccessRequestEmail(profile, requestInfo, env) {
     "",
     `Name: ${profile.name}`,
     `Email: ${profile.email}`,
-    `Password to share: ${password}`,
     `Page: ${pageUrl || "/"}`,
     `Referrer: ${referrer || "-"}`,
     `Language: ${language}`,
@@ -230,7 +227,6 @@ async function sendAccessRequestEmail(profile, requestInfo, env) {
         <ul>
           <li><strong>Name:</strong> ${htmlName}</li>
           <li><strong>Email:</strong> ${htmlEmail}</li>
-          <li><strong>Password to share:</strong> ${htmlPassword}</li>
           <li><strong>Page:</strong> ${htmlPageUrl}</li>
           <li><strong>Referrer:</strong> ${htmlReferrer}</li>
           <li><strong>Language:</strong> ${htmlLanguage}</li>
