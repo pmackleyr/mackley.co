@@ -343,7 +343,7 @@
 
   function buildContext() {
     return {
-      site_name: "mackley.co",
+      site_name: "whoismackley.com",
       visitor_id: visitorId,
       session_id: sessionId,
       session_number: sessionNumber,
