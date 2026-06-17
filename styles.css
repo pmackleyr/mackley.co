@@ -18,8 +18,9 @@
   --button-bg: #f5f5f4;
   --button-bg-hover: #ffffff;
   --button-text: #0b0c0d;
-  --button-border: #f5f5f4;
-  --button-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+  --button-border: rgba(5, 5, 5, 0.12);
+  --button-border-hover: rgba(5, 5, 5, 0.28);
+  --button-shadow: none;
   --button-radius: 999px;
   --button-min-h: 46px;
   --button-pad: 12px 22px;
@@ -685,7 +686,7 @@ body.access-lock-open {
   cursor: pointer;
   text-decoration: none;
   box-shadow: var(--button-shadow);
-  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .product-block__cta:hover,
@@ -700,10 +701,9 @@ body.access-lock-open {
 .intake-button:focus-visible,
 .access-lock__button:not(:disabled):hover,
 .access-lock__button:not(:disabled):focus-visible {
-  border-color: var(--button-bg-hover);
+  border-color: var(--button-border-hover);
   background-color: var(--button-bg-hover);
   color: var(--button-text);
-  transform: translateY(-1px);
 }
 
 .product-block__cta:active,
@@ -713,7 +713,6 @@ body.access-lock-open {
 .intake-button:active,
 .access-lock__button:not(:disabled):active,
 .site-footer__link:active {
-  transform: translateY(0);
   background-color: var(--button-bg);
 }
 
@@ -1036,7 +1035,7 @@ body.access-lock-open {
 
 .modal__button:hover,
 .modal__button:focus-visible {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .modal__close {
@@ -1484,25 +1483,19 @@ body.product-page .carousel-dots button[aria-current="true"] {
   border-color: #050505;
 }
 
-html[data-landing-variant="a"] .home-product__button,
-body.product-page .cta,
-body.product-page .home-product__button {
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
-}
-
 html[data-landing-variant="a"] .home-product__button:hover,
 html[data-landing-variant="a"] .home-product__button:focus-visible,
 body.product-page .cta:hover,
 body.product-page .cta:focus-visible,
 body.product-page .home-product__button:hover,
 body.product-page .home-product__button:focus-visible {
-  transform: translateY(-1px);
+  border-color: var(--button-border-hover);
 }
 
 html[data-landing-variant="a"] .home-product__button:active,
 body.product-page .cta:active,
 body.product-page .home-product__button:active {
-  transform: translateY(0);
+  background: var(--button-bg);
 }
 
 body.product-page .social-proof {
@@ -1511,13 +1504,13 @@ body.product-page .social-proof {
 }
 
 body.product-page .product-footer-cta .product-footer-cta__button {
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
 }
 
 body.product-page .product-footer-cta .product-footer-cta__button:hover,
 body.product-page .product-footer-cta .product-footer-cta__button:focus-visible,
 body.product-page .product-footer-cta .product-footer-cta__button:active {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 html[data-landing-variant="b"] {
@@ -1704,11 +1697,11 @@ html[data-landing-variant="b"] .landing-b {
 
 .landing-b .home-product__button:hover,
 .landing-b .home-product__button:focus-visible {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .landing-b .home-product__button:active {
-  transform: translateY(0);
+  transform: none;
 }
 
 html[data-landing-variant="b"] body.modal-open .site-header,
@@ -1869,26 +1862,27 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 }
 
 .product-page .page {
-  padding-bottom: calc(var(--footer-h) + 148px);
+  padding-bottom: calc(var(--footer-h) + 136px + env(safe-area-inset-bottom));
 }
 
 .product-footer-cta {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: max(78px, calc(var(--footer-h) + 20px));
-  z-index: 3;
-  padding: 12px var(--page-pad);
+  bottom: 0;
+  z-index: 40;
+  padding: 20px var(--page-pad) calc(16px + env(safe-area-inset-bottom));
   pointer-events: none;
   display: flex;
-  justify-content: center;
+  justify-content: stretch;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.78) 62%, rgba(255, 255, 255, 0));
 }
 
 .product-footer-cta .product-footer-cta__button {
-  width: min(280px, calc(100vw - (var(--page-pad) * 2)));
-  min-height: 48px;
+  width: 100%;
+  min-height: 64px;
   pointer-events: auto;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  box-shadow: none;
 }
 
 .product-footer-cta .product-footer-cta__button:hover,
@@ -2786,12 +2780,12 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
   width: auto;
   min-height: 56px;
   align-self: auto;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  box-shadow: none;
 }
 
 .intake-step:not(.intake-confirm).is-active > .intake-button:hover,
 .intake-step:not(.intake-confirm).is-active > .intake-button:focus-visible {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .intake-confirm {
@@ -2807,7 +2801,7 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 
 .intake-confirm .intake-button:hover,
 .intake-confirm .intake-button:focus-visible {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .intake-share-status {
