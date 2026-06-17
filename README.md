@@ -6,12 +6,9 @@ Open `index.html` directly in a browser or serve the folder with any static file
 
 ## Production Deploys
 
-`https://whoismackley.com` is served by GitHub Pages from `origin/main` with the repository `CNAME`.
+`https://mackley.co` is served by GitHub Pages from `origin/main` with the repository `CNAME`.
 To publish live site changes, commit and push to `main`, then confirm the Pages deployment and live domain.
 Do not use `mackley.vercel.app` or Vercel as the production target for this site.
-
-`mackley.co` is a legacy domain. Configure it at the DNS/registrar layer as a permanent forward to
-`https://whoismackley.com` so the primary GitHub Pages custom domain remains `whoismackley.com`.
 
 ## Payments Worker (Cloudflare)
 

@@ -1338,6 +1338,161 @@ body.modal-open .narrative {
   display: none;
 }
 
+html[data-landing-variant="a"],
+body.product-page {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #f5f5f7;
+  --text: #050505;
+  --muted: #6e6e73;
+}
+
+html[data-landing-variant="a"] body,
+body.product-page {
+  background: #ffffff;
+  color: #050505;
+  letter-spacing: 0;
+}
+
+html[data-landing-variant="a"] #bg-layer,
+body.product-page #bg-layer {
+  display: none;
+}
+
+html[data-landing-variant="a"] .site-header,
+html[data-landing-variant="a"] .site-footer,
+body.product-page .site-header,
+body.product-page .site-footer {
+  color: #050505;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+html[data-landing-variant="a"] .site-title,
+body.product-page .site-title {
+  color: #050505;
+  text-shadow: none;
+}
+
+html[data-landing-variant="a"] .site-footer__link,
+html[data-landing-variant="a"] .site-footer__copy,
+body.product-page .site-footer__link,
+body.product-page .site-footer__copy {
+  color: #b8b8bd;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+html[data-landing-variant="a"] .site-footer__link:hover,
+html[data-landing-variant="a"] .site-footer__link:focus-visible,
+body.product-page .site-footer__link:hover,
+body.product-page .site-footer__link:focus-visible {
+  color: #050505;
+}
+
+html[data-landing-variant="a"] .swipe-hint {
+  color: rgba(5, 5, 5, 0.36);
+}
+
+html[data-landing-variant="a"] .swipe-hint svg {
+  filter: none;
+}
+
+html[data-landing-variant="a"] .line,
+html[data-landing-variant="a"] .paragraph.active .line,
+html[data-landing-variant="a"] .home-product__statement,
+html[data-landing-variant="a"] .home-product__title,
+html[data-landing-variant="a"] .home-product__subtext,
+body.product-page .page-title,
+body.product-page .page-subhead,
+body.product-page .prose {
+  color: #050505;
+  text-shadow: none;
+}
+
+html[data-landing-variant="a"] .paragraph.active .line {
+  color: #050505;
+}
+
+html[data-landing-variant="a"] .carousel-slide,
+body.product-page .carousel-slide {
+  border-color: #d8d8d8;
+  box-shadow: none;
+  background: #f5f5f7;
+}
+
+html[data-landing-variant="a"] .carousel-button,
+body.product-page .carousel-button {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  color: #050505;
+}
+
+html[data-landing-variant="a"] .carousel-button:hover,
+html[data-landing-variant="a"] .carousel-button:focus-visible,
+body.product-page .carousel-button:hover,
+body.product-page .carousel-button:focus-visible {
+  border-color: rgba(0, 0, 0, 0.32);
+  background: #ffffff;
+}
+
+html[data-landing-variant="a"] .carousel-dots button,
+body.product-page .carousel-dots button {
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+html[data-landing-variant="a"] .carousel-dots button[aria-current="true"],
+body.product-page .carousel-dots button[aria-current="true"] {
+  background: #050505;
+  border-color: #050505;
+}
+
+html[data-landing-variant="a"] .home-product__button,
+body.product-page .cta,
+body.product-page .home-product__button {
+  border-color: #050505;
+  background: #ffffff;
+  color: #050505;
+}
+
+html[data-landing-variant="a"] .home-product__button:hover,
+html[data-landing-variant="a"] .home-product__button:focus-visible,
+body.product-page .cta:hover,
+body.product-page .cta:focus-visible,
+body.product-page .home-product__button:hover,
+body.product-page .home-product__button:focus-visible {
+  border-color: #050505;
+  background: #050505;
+  color: #ffffff;
+}
+
+html[data-landing-variant="a"] .home-product__button:active,
+body.product-page .cta:active,
+body.product-page .home-product__button:active {
+  background: #222222;
+  color: #ffffff;
+}
+
+body.product-page .social-proof {
+  background: rgba(5, 5, 5, 0.06);
+  color: #6e6e73;
+}
+
+body.product-page .product-footer-cta .product-footer-cta__button {
+  background: #ffffff;
+  border-color: #050505;
+  color: #050505;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+body.product-page .product-footer-cta .product-footer-cta__button:hover,
+body.product-page .product-footer-cta .product-footer-cta__button:focus-visible,
+body.product-page .product-footer-cta .product-footer-cta__button:active {
+  background: #050505;
+  border-color: #050505;
+  color: #ffffff;
+}
+
 html[data-landing-variant="b"] {
   color-scheme: light;
   --bg: #ffffff;

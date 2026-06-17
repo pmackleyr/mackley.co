@@ -364,7 +364,7 @@
     const experiment = resolveLandingExperiment();
 
     return {
-      site_name: "whoismackley.com",
+      site_name: "mackley.co",
       visitor_id: visitorId,
       session_id: sessionId,
       session_number: sessionNumber,
