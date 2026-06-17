@@ -16,7 +16,13 @@
 
   function renderCarousels() {
     doc.querySelectorAll("[data-product-carousel] .carousel-track").forEach((track) => {
-      track.innerHTML = product.images.map((image, index) => `
+      const fallbackImages = Array.from(track.querySelectorAll(".carousel-image")).map((image) => ({
+        src: image.getAttribute("src"),
+        alt: image.getAttribute("alt") || product.name
+      })).filter((image) => image.src);
+      const images = product.images.length >= fallbackImages.length ? product.images : fallbackImages;
+
+      track.innerHTML = images.map((image, index) => `
         <div class="carousel-slide">
           <img class="carousel-image" src="${image.src}" alt="${image.alt}" ${index === 0 ? "decoding=\"async\" fetchpriority=\"high\"" : "loading=\"lazy\" decoding=\"async\""} />
         </div>
