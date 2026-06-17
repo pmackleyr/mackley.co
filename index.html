@@ -13,33 +13,12 @@
   <script>
     (function () {
       const key = "mackley_landing_variant_v1";
-      const params = new URLSearchParams(window.location.search);
-      const raw = (params.get("landing_variant") || params.get("variant") || params.get("ab") || "").trim().toLowerCase();
-      const forced = raw === "a" || raw === "b" ? raw : "";
-      let variant = forced;
-
-      if (!variant) {
-        try {
-          variant = window.localStorage.getItem(key) || "";
-        } catch (error) {
-          variant = "";
-        }
-      }
-
-      if (variant !== "a" && variant !== "b") {
-        if (window.crypto && window.crypto.getRandomValues) {
-          const bucket = new Uint32Array(1);
-          window.crypto.getRandomValues(bucket);
-          variant = bucket[0] % 2 === 0 ? "a" : "b";
-        } else {
-          variant = Math.random() < 0.5 ? "a" : "b";
-        }
-      }
+      const variant = "b";
 
       try {
         window.localStorage.setItem(key, variant);
       } catch (error) {
-        // The in-page assignment still works when storage is unavailable.
+        // The default assignment still works when storage is unavailable.
       }
 
       document.documentElement.dataset.landingVariant = variant;
@@ -47,11 +26,11 @@
         key,
         name: "home_landing_hero",
         variant,
-        forced: Boolean(forced)
+        forced: false
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260617-b-center-copy-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260617-b-default-centered-v1" />
   <script src="/domain-redirect.js?v=20260616-mackley-primary"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -210,8 +189,8 @@
   <script src="/product-render.js?v=20260617-three-product-images-v1"></script>
   <script src="/ads.js?v=20260610-get-started"></script>
   <script>
-    const activeVariant = document.documentElement.dataset.landingVariant || "a";
-    const narrative = document.querySelector(`[data-narrative-variant="${activeVariant}"]`) || document.querySelector("[data-narrative-variant=\"a\"]");
+    const activeVariant = document.documentElement.dataset.landingVariant || "b";
+    const narrative = document.querySelector(`[data-narrative-variant="${activeVariant}"]`) || document.querySelector("[data-narrative-variant=\"b\"]");
     const header = document.querySelector(".site-header");
     const footer = document.querySelector(".site-footer");
     const paragraphs = Array.from(narrative.querySelectorAll(".paragraph"));

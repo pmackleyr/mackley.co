@@ -93,7 +93,7 @@
   function resolveLandingExperiment() {
     const globalVariant = normalizeLandingVariant(win.MACKLEYExperiment?.variant);
     const storedVariant = normalizeLandingVariant(readStorage(storage, landingVariantKey));
-    const variant = globalVariant || storedVariant;
+    const variant = globalVariant || storedVariant || "b";
 
     return {
       name: win.MACKLEYExperiment?.name || landingExperimentName,
