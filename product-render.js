@@ -33,7 +33,7 @@
   function renderBuyLinks() {
     doc.querySelectorAll("[data-product-buy]").forEach((link) => {
       link.href = product.intakeLink || "/spray-intake/?next=payment";
-      link.textContent = product.ctaLabel || "Get Started";
+      link.textContent = product.ctaLabel || "Request Prescription";
       link.dataset.track = "get-started";
       link.dataset.item = product.name;
       link.dataset.stripeProductId = product.stripeProductId;
