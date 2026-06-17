@@ -352,10 +352,6 @@ body.access-lock-open {
   font-size: 1em;
 }
 
-.purpose-page .site-title {
-  font-size: clamp(28px, 3.3vw, 34px);
-}
-
 .purpose-page .narrative {
   padding-top: calc(var(--header-h) + clamp(10px, 2.2vh, 22px));
   padding-bottom: calc(var(--footer-h) + clamp(12px, 2.4vh, 22px));
