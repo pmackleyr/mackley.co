@@ -30,7 +30,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260617-b-default-centered-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260617-b-snappy-scroll-v1" />
   <script src="/domain-redirect.js?v=20260616-mackley-primary"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -126,10 +126,13 @@
   <main class="narrative" id="narrative-b" aria-label="Belief narrative" data-narrative-variant="b">
     <div class="snap-spacer" aria-hidden="true"></div>
     <div class="paragraph">
-      <p class="line">If you <em>can</em> change <span class="inside-hover" tabindex="0">how</span> you think,</p>
+      <p class="line">If you <em>can</em> change <span class="inside-hover" tabindex="0">your mind</span>,</p>
     </div>
     <div class="paragraph">
       <p class="line">then you <em>can</em> change <span class="outside-hover" tabindex="0">who</span> you are.</p>
+    </div>
+    <div class="paragraph">
+      <p class="line">We <span class="belief-hover" tabindex="0">believe</span> you <em>can</em>.</p>
     </div>
     <section class="paragraph home-product" id="product-b" aria-label="Intranasal Neuropeptide Formula" data-product-aria>
       <div class="home-product__statement">
@@ -191,6 +194,7 @@
   <script>
     const activeVariant = document.documentElement.dataset.landingVariant || "b";
     const narrative = document.querySelector(`[data-narrative-variant="${activeVariant}"]`) || document.querySelector("[data-narrative-variant=\"b\"]");
+    narrative.tabIndex = 0;
     const header = document.querySelector(".site-header");
     const footer = document.querySelector(".site-footer");
     const paragraphs = Array.from(narrative.querySelectorAll(".paragraph"));
@@ -223,6 +227,7 @@
     function poolForParagraph(paragraphEl) {
       if (!paragraphEl) return null;
       if (paragraphEl.querySelector(".revolution-hover")) return revolutionGifs;
+      if (paragraphEl.querySelector(".belief-hover")) return revolutionGifs;
       if (paragraphEl.querySelector(".inside-hover")) return insideGifs;
       if (paragraphEl.querySelector(".outside-hover")) return outsideGifs;
       return null;
@@ -321,8 +326,9 @@
 
     function opacityForDistance(distance, step) {
       const t = distance / Math.max(step, 1);
-      const floor = 0.02;
-      const k = 2.3;
+      const isVariantB = activeVariant === "b";
+      const floor = isVariantB ? 0.12 : 0.02;
+      const k = isVariantB ? 1.05 : 2.3;
       return Math.max(floor, Math.exp(-k * t));
     }
 
@@ -410,6 +416,88 @@
       narrative.scrollTop = Math.max(target, 0);
     }
 
+    function targetScrollForParagraph(index) {
+      const paragraph = paragraphs[index];
+      if (!paragraph) return 0;
+      const target = paragraph.offsetTop - (narrative.clientHeight / 2 - paragraph.offsetHeight / 2);
+      return Math.max(target, 0);
+    }
+
+    function closestParagraphIndex() {
+      const centerY = narrative.scrollTop + narrative.clientHeight / 2;
+      return paragraphMeta.reduce((closestIndex, { top, height }, index) => {
+        const currentDistance = Math.abs((top + height / 2) - centerY);
+        const closest = paragraphMeta[closestIndex];
+        const closestDistance = closest ? Math.abs((closest.top + closest.height / 2) - centerY) : Infinity;
+        return currentDistance < closestDistance ? index : closestIndex;
+      }, 0);
+    }
+
+    let snapIndex = 0;
+    let snapLockedUntil = 0;
+
+    function snapToParagraph(index) {
+      const nextIndex = Math.max(0, Math.min(paragraphs.length - 1, index));
+      snapIndex = nextIndex;
+      narrative.scrollTo({
+        top: targetScrollForParagraph(nextIndex),
+        behavior: "smooth"
+      });
+      window.setTimeout(updateOpacity, 360);
+    }
+
+    function snapByDirection(direction) {
+      if (!direction) return;
+      const now = Date.now();
+      if (now < snapLockedUntil) return;
+      snapLockedUntil = now + 520;
+      const currentIndex = closestParagraphIndex();
+      snapToParagraph(currentIndex + direction);
+    }
+
+    function onWheel(event) {
+      if (Math.abs(event.deltaY) < 8 || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      snapByDirection(event.deltaY > 0 ? 1 : -1);
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchIsVertical = false;
+
+    function onTouchStart(event) {
+      const touch = event.touches[0];
+      if (!touch) return;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchIsVertical = false;
+    }
+
+    function onTouchMove(event) {
+      const touch = event.touches[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      touchIsVertical = Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX) * 1.15;
+      if (touchIsVertical) event.preventDefault();
+    }
+
+    function onTouchEnd(event) {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      if (Math.abs(deltaY) < 36 || Math.abs(deltaY) < Math.abs(deltaX) * 1.15) return;
+      snapByDirection(deltaY < 0 ? 1 : -1);
+    }
+
+    function onKeyDown(event) {
+      const keys = ["ArrowDown", "PageDown", "Space", "ArrowUp", "PageUp"];
+      if (!keys.includes(event.code)) return;
+      event.preventDefault();
+      snapByDirection(event.code === "ArrowUp" || event.code === "PageUp" ? -1 : 1);
+    }
+
     let scrollTicking = false;
     function onScroll() {
       if (scrollTicking) return;
@@ -427,6 +515,7 @@
     updateInsets();
     measureParagraphs();
     centerFirstParagraph();
+    snapIndex = 0;
     updateOpacity();
 
     window.addEventListener("resize", () => {
@@ -434,11 +523,17 @@
       requestAnimationFrame(() => {
         fitAllLines();
         measureParagraphs();
+        snapToParagraph(snapIndex);
         updateOpacity();
       });
     });
 
     narrative.addEventListener("scroll", onScroll, { passive: true });
+    narrative.addEventListener("wheel", onWheel, { passive: false });
+    narrative.addEventListener("touchstart", onTouchStart, { passive: true });
+    narrative.addEventListener("touchmove", onTouchMove, { passive: false });
+    narrative.addEventListener("touchend", onTouchEnd, { passive: true });
+    narrative.addEventListener("keydown", onKeyDown);
   </script>
   <script type="module" src="/carousel.js?v=20260610-get-started"></script>
   <script src="/access-lock.js?v=20260617-password-iamchange-v1"></script>

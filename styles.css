@@ -3061,6 +3061,17 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
   }
 }
 
+@media (max-width: 800px) {
+  html[data-landing-variant="b"] .narrative {
+    scroll-snap-type: y mandatory;
+    scroll-snap-stop: always;
+  }
+
+  html[data-landing-variant="b"] .paragraph {
+    scroll-snap-stop: always;
+  }
+}
+
 @media (max-width: 520px) {
   .site-footer {
     gap: 6px;
