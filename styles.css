@@ -1513,62 +1513,6 @@ html[data-landing-variant="b"] .home-product__actions {
   justify-content: center;
 }
 
-html[data-landing-variant="b"] #product-b {
-  width: min(100%, calc(100vw - (var(--page-pad) * 2)));
-  max-width: min(1040px, calc(100vw - (var(--page-pad) * 2)));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  justify-self: center;
-  gap: clamp(16px, 2.8vh, 28px);
-  margin-inline: auto;
-  padding-inline: 0;
-  text-align: center;
-}
-
-html[data-landing-variant="b"] #product-b .home-product__statement,
-html[data-landing-variant="b"] #product-b .home-product__gallery,
-html[data-landing-variant="b"] #product-b .home-product__copy {
-  width: 100%;
-  justify-self: center;
-}
-
-html[data-landing-variant="b"] #product-b .home-product__statement,
-html[data-landing-variant="b"] #product-b .home-product__title {
-  max-width: min(1040px, calc(100vw - (var(--page-pad) * 2)));
-  margin-inline: auto;
-  font-size: var(--fitted-title-text, clamp(56px, 7vw, 104px));
-  line-height: 1.1;
-  text-align: center;
-  text-wrap: balance;
-}
-
-html[data-landing-variant="b"] #product-b .home-product__gallery {
-  display: grid;
-  place-items: center;
-  overflow: visible;
-}
-
-html[data-landing-variant="b"] #product-b .carousel {
-  --carousel-max: min(760px, calc(100vw - (var(--page-pad) * 2)));
-  width: 100%;
-  justify-items: center;
-}
-
-html[data-landing-variant="b"] #product-b .carousel-viewport {
-  margin-inline: auto;
-}
-
-html[data-landing-variant="b"] #product-b .home-product__copy {
-  align-items: center;
-  text-align: center;
-}
-
-html[data-landing-variant="b"] #product-b .home-product__title a {
-  display: inline;
-}
-
 @media (max-width: 1180px) {
   html[data-landing-variant="b"] .home-product {
     max-width: min(620px, calc(100vw - (var(--page-pad) * 2)));
@@ -1614,21 +1558,6 @@ html[data-landing-variant="b"] #product-b .home-product__title a {
 
   html[data-landing-variant="b"] .home-product__actions {
     width: 100%;
-  }
-
-  html[data-landing-variant="b"] #product-b {
-    max-width: calc(100vw - (var(--page-pad) * 2));
-    gap: 12px;
-  }
-
-  html[data-landing-variant="b"] #product-b .home-product__statement,
-  html[data-landing-variant="b"] #product-b .home-product__title {
-    font-size: var(--fitted-title-text, clamp(32px, 12vw, 48px));
-  }
-
-  html[data-landing-variant="b"] #product-b .carousel {
-    --carousel-max: min(calc(100vw - (var(--page-pad) * 2)), calc(100vh - var(--header-h) - var(--footer-h) - 168px));
-    --radius: 18px;
   }
 }
 
