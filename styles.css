@@ -1471,6 +1471,36 @@ html[data-landing-variant="b"] .paragraph.active .line {
   color: #050505;
 }
 
+html[data-landing-variant="b"] .line em,
+html[data-landing-variant="b"] .home-product__statement em {
+  font-style: italic;
+}
+
+html[data-landing-variant="b"] .home-product {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px) minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+
+html[data-landing-variant="b"] .home-product__statement,
+html[data-landing-variant="b"] .home-product__copy {
+  justify-self: center;
+  text-align: center;
+}
+
+html[data-landing-variant="b"] .home-product__copy {
+  align-items: center;
+}
+
+html[data-landing-variant="b"] .home-product__subtext {
+  align-items: center;
+  text-align: center;
+}
+
+html[data-landing-variant="b"] .home-product__actions {
+  justify-content: center;
+}
+
 html[data-landing-variant="a"] .carousel-slide,
 html[data-landing-variant="b"] .carousel-slide,
 body.product-page .carousel-slide {
