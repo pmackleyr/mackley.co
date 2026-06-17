@@ -267,7 +267,7 @@ function normalizeTracking(body) {
 }
 
 function isValidProofType(type) {
-  return type === "view" || type === "purchase";
+  return type === "view" || type === "purchase" || type === "click";
 }
 
 function normalizeWindow(windowSeconds) {

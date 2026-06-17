@@ -173,7 +173,7 @@
     return `${year}${month}${day}${hour}`;
   }
 
-  function postMetric(page) {
+  function postMetric(page, type = "view") {
     if (!page) return;
     fetch(socialProofEndpoint, {
       method: "POST",
@@ -181,7 +181,7 @@
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        type: "view",
+        type,
         page,
         record: true,
         total: true
@@ -198,6 +198,13 @@
 
     postMetric(metricKey);
     postMetric(normalizeMetricKey(metricName, currentHourStamp()));
+  }
+
+  function recordProofClick(metricName) {
+    const metricKey = normalizeMetricKey(metricName);
+    if (!metricKey) return;
+
+    postMetric(metricKey, "click");
   }
 
   function setCheckoutSkip() {
@@ -704,6 +711,7 @@
         };
 
         recordSiteMetric("get-started");
+        recordProofClick("request-prescription");
         trackEvent("begin_checkout", payload, navigate);
         win.setTimeout(navigate, 180);
       });

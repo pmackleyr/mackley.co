@@ -1977,7 +1977,7 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 }
 
 .product-page .page {
-  padding-bottom: calc(var(--footer-h) + 136px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--footer-h) + 174px + env(safe-area-inset-bottom));
 }
 
 .product-footer-cta {
@@ -1989,8 +1989,16 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
   padding: 20px var(--page-pad) calc(16px + env(safe-area-inset-bottom));
   pointer-events: none;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: stretch;
+  gap: 10px;
   background: linear-gradient(to top, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.78) 62%, rgba(255, 255, 255, 0));
+}
+
+.product-footer-cta__proof {
+  align-self: center;
+  margin: 0;
 }
 
 .product-footer-cta .product-footer-cta__button {
