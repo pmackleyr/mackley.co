@@ -1397,17 +1397,6 @@ html[data-landing-variant="b"] #bg-layer.active {
   opacity: 0.2;
 }
 
-body.product-page #bg-layer {
-  display: block;
-  background-image: url("/public/product/ad2.gif");
-  background-size: min(760px, 92vw) auto;
-  background-position: center 18vh;
-  background-repeat: repeat-y;
-  opacity: 0.08;
-  filter: grayscale(1) contrast(0.9) brightness(1.2);
-  mix-blend-mode: multiply;
-}
-
 html[data-landing-variant="a"] .site-header,
 html[data-landing-variant="a"] .site-footer,
 body.product-page .site-header,
