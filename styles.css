@@ -1354,9 +1354,26 @@ body.product-page {
   letter-spacing: 0;
 }
 
-html[data-landing-variant="a"] #bg-layer,
+html[data-landing-variant="a"] #bg-layer {
+  display: block;
+  opacity: 0;
+  filter: grayscale(1) contrast(0.92) brightness(1.14);
+  mix-blend-mode: multiply;
+}
+
+html[data-landing-variant="a"] #bg-layer.active {
+  opacity: 0.2;
+}
+
 body.product-page #bg-layer {
-  display: none;
+  display: block;
+  background-image: url("/public/product/ad2.gif");
+  background-size: min(760px, 92vw) auto;
+  background-position: center 18vh;
+  background-repeat: repeat-y;
+  opacity: 0.08;
+  filter: grayscale(1) contrast(0.9) brightness(1.2);
+  mix-blend-mode: multiply;
 }
 
 html[data-landing-variant="a"] .site-header,
