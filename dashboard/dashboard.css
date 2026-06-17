@@ -13,6 +13,17 @@
   --accent-soft: rgba(76, 139, 245, 0.12);
   --danger: #bc5b5b;
   --shadow: 0 22px 70px rgba(0, 0, 0, 0.08);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --button-bg: #232327;
+  --button-bg-hover: #050505;
+  --button-text: #ffffff;
+  --button-border: #232327;
+  --button-radius: 999px;
+  --button-min-h: 46px;
+  --button-pad: 12px 22px;
+  --button-font-size: 13px;
+  --button-weight: 600;
+  --button-letter: 0.06em;
 }
 
 * {
@@ -27,8 +38,14 @@ body {
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.7), transparent 34%),
     linear-gradient(180deg, var(--bg), var(--bg-2));
   color: var(--text);
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 body {
@@ -142,27 +159,40 @@ body {
 .ghost-button,
 .primary-button,
 .secondary-button {
-  padding: 11px 16px;
-  border-radius: 14px;
+  min-height: var(--button-min-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--button-pad);
+  border: 1px solid var(--button-border);
+  border-radius: var(--button-radius);
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-weight);
+  line-height: 1;
+  letter-spacing: var(--button-letter);
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.ghost-button {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid var(--line);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+.ghost-button:hover,
+.ghost-button:focus-visible,
+.primary-button:hover,
+.primary-button:focus-visible,
+.secondary-button:hover,
+.secondary-button:focus-visible {
+  border-color: var(--button-bg-hover);
+  background: var(--button-bg-hover);
+  transform: translateY(-1px);
 }
 
-.primary-button {
-  color: #fff;
-  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
-  font-weight: 800;
-}
-
-.secondary-button {
-  color: #d5d5d9;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.ghost-button:active,
+.primary-button:active,
+.secondary-button:active {
+  transform: translateY(0);
 }
 
 .dashboard-main {

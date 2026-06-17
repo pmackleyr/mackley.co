@@ -10,10 +10,22 @@
   --bg-soft: #121415;
   --text: #f5f5f4;
   --muted: rgba(245, 245, 244, 0.55);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   --header-h: 0px;
   --footer-h: 0px;
   --page-pad: clamp(12px, 3.5vw, 56px);
   --heading-text: clamp(24px, 2.7vw, 38px);
+  --button-bg: #f5f5f4;
+  --button-bg-hover: #ffffff;
+  --button-text: #0b0c0d;
+  --button-border: #f5f5f4;
+  --button-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+  --button-radius: 999px;
+  --button-min-h: 46px;
+  --button-pad: 12px 22px;
+  --button-font-size: 13px;
+  --button-weight: 600;
+  --button-letter: 0.06em;
 }
 
 html, body {
@@ -21,11 +33,22 @@ html, body {
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg);
   color: var(--text);
   letter-spacing: 0.01em;
   overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  letter-spacing: inherit;
 }
 
 a {
@@ -62,7 +85,7 @@ body.access-lock-open {
   padding: 15px;
   background: var(--access-primary);
   color: var(--access-secondary);
-  font-family: "Inter", "Inter Placeholder", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
@@ -181,17 +204,9 @@ body.access-lock-open {
   position: relative;
   z-index: 0;
   width: 100%;
-  height: 40px;
   margin: 0;
-  padding: 0 10px 1px;
   overflow: hidden;
-  border: 0;
-  border-radius: 8px;
-  background: var(--access-button-bg);
-  color: var(--access-tertiary);
-  cursor: pointer;
-  font: inherit;
-  text-decoration: none;
+  box-shadow: none;
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 
@@ -648,23 +663,28 @@ body.access-lock-open {
 
 .product-block__cta,
 .cta,
-.home-product__button {
-  min-height: 46px;
+.home-product__button,
+.modal__button,
+.intake-button,
+.access-lock__button {
+  min-height: var(--button-min-h);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
-  background: transparent;
-  color: #fff;
-  padding: 12px 18px;
-  font-size: 13px;
-  font-weight: 600;
+  border: 1px solid var(--button-border);
+  border-radius: var(--button-radius);
+  background: var(--button-bg);
+  color: var(--button-text);
+  padding: var(--button-pad);
+  font-family: var(--font-sans);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-weight);
   line-height: 1;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--button-letter);
   text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: var(--button-shadow);
   transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -673,18 +693,28 @@ body.access-lock-open {
 .cta:hover,
 .cta:focus-visible,
 .home-product__button:hover,
-.home-product__button:focus-visible {
-  border-color: rgba(255, 255, 255, 0.85);
-  background-color: rgba(255, 255, 255, 0.08);
+.home-product__button:focus-visible,
+.modal__button:hover,
+.modal__button:focus-visible,
+.intake-button:hover,
+.intake-button:focus-visible,
+.access-lock__button:not(:disabled):hover,
+.access-lock__button:not(:disabled):focus-visible {
+  border-color: var(--button-bg-hover);
+  background-color: var(--button-bg-hover);
+  color: var(--button-text);
   transform: translateY(-1px);
 }
 
 .product-block__cta:active,
 .cta:active,
 .home-product__button:active,
+.modal__button:active,
+.intake-button:active,
+.access-lock__button:not(:disabled):active,
 .site-footer__link:active {
   transform: translateY(0);
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: var(--button-bg);
 }
 
 .site-footer__link--tight {
@@ -1001,21 +1031,11 @@ body.access-lock-open {
 }
 
 .modal__button {
-  height: 46px;
-  border-radius: 999px;
-  border: none;
-  background: #111;
-  color: #fff;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  width: 100%;
 }
 
 .modal__button:hover,
 .modal__button:focus-visible {
-  background: #000;
   transform: translateY(-1px);
 }
 
@@ -1467,9 +1487,7 @@ body.product-page .carousel-dots button[aria-current="true"] {
 html[data-landing-variant="a"] .home-product__button,
 body.product-page .cta,
 body.product-page .home-product__button {
-  border-color: #050505;
-  background: #ffffff;
-  color: #050505;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
 }
 
 html[data-landing-variant="a"] .home-product__button:hover,
@@ -1478,16 +1496,13 @@ body.product-page .cta:hover,
 body.product-page .cta:focus-visible,
 body.product-page .home-product__button:hover,
 body.product-page .home-product__button:focus-visible {
-  border-color: #050505;
-  background: #050505;
-  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 html[data-landing-variant="a"] .home-product__button:active,
 body.product-page .cta:active,
 body.product-page .home-product__button:active {
-  background: #222222;
-  color: #ffffff;
+  transform: translateY(0);
 }
 
 body.product-page .social-proof {
@@ -1496,18 +1511,13 @@ body.product-page .social-proof {
 }
 
 body.product-page .product-footer-cta .product-footer-cta__button {
-  background: #ffffff;
-  border-color: #050505;
-  color: #050505;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
 }
 
 body.product-page .product-footer-cta .product-footer-cta__button:hover,
 body.product-page .product-footer-cta .product-footer-cta__button:focus-visible,
 body.product-page .product-footer-cta .product-footer-cta__button:active {
-  background: #050505;
-  border-color: #050505;
-  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 html[data-landing-variant="b"] {
@@ -1690,31 +1700,14 @@ html[data-landing-variant="b"] .landing-b {
 
 .landing-b .home-product__button {
   min-width: 208px;
-  min-height: 50px;
-  border: 2px solid #050505;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #050505;
-  padding: 10px 24px;
-  font-size: 1.28rem;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .landing-b .home-product__button:hover,
 .landing-b .home-product__button:focus-visible {
-  border-color: #050505;
-  background: #050505;
-  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .landing-b .home-product__button:active {
-  background: #222222;
-  color: #ffffff;
   transform: translateY(0);
 }
 
@@ -1761,8 +1754,7 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
   }
 
   .landing-b__audience,
-  .landing-b__formula,
-  .landing-b .home-product__button {
+  .landing-b__formula {
     font-size: 1.1rem;
   }
 }
@@ -1873,8 +1865,6 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 
   .landing-b .home-product__button {
     min-width: 0;
-    min-height: 46px;
-    font-size: 1rem;
   }
 }
 
@@ -1897,19 +1887,13 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 .product-footer-cta .product-footer-cta__button {
   width: min(280px, calc(100vw - (var(--page-pad) * 2)));
   min-height: 48px;
-  font-size: 13px;
   pointer-events: auto;
-  background: #0b0c0d;
-  border-color: rgba(255, 255, 255, 0.72);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
 
 .product-footer-cta .product-footer-cta__button:hover,
 .product-footer-cta .product-footer-cta__button:focus-visible,
 .product-footer-cta .product-footer-cta__button:active {
-  background: #0b0c0d;
-  border-color: rgba(255, 255, 255, 0.95);
-  color: #fff;
   outline: none;
 }
 
@@ -2357,32 +2341,20 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 
 .cta--primary {
   width: 100%;
-  padding: 14px 22px;
-  border-color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(255, 255, 255, 0.08);
   text-align: center;
 }
 
 .site-footer__center .cta--primary {
   width: auto;
   min-width: 132px;
-  padding: 12px 18px;
-  background: transparent;
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: none;
 }
 
 .site-footer__center .cta--primary:hover,
 .site-footer__center .cta--primary:focus-visible {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.85);
   transform: translateY(-1px);
 }
 
 .site-footer__center .cta--primary:active {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.85);
   transform: translateY(0);
 }
 
@@ -2790,24 +2762,7 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 .intake-button {
   width: auto;
   min-width: 180px;
-  min-height: 46px;
   align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
-  background: transparent;
-  color: #fff;
-  padding: 12px 22px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .intake-step:not(.intake-confirm).is-active::after {
@@ -2831,24 +2786,11 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
   width: auto;
   min-height: 56px;
   align-self: auto;
-  border-color: #f5f5f4;
-  background: #f5f5f4;
-  color: #0b0c0d;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
 }
 
 .intake-step:not(.intake-confirm).is-active > .intake-button:hover,
 .intake-step:not(.intake-confirm).is-active > .intake-button:focus-visible {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #0b0c0d;
-}
-
-.intake-button:hover,
-.intake-button:focus-visible {
-  border-color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -2861,14 +2803,11 @@ html[data-landing-variant="b"] body.modal-open .landing-b {
 
 .intake-confirm .intake-button {
   align-self: center;
-  background: #0b0c0d;
-  border-color: rgba(255, 255, 255, 0.72);
 }
 
 .intake-confirm .intake-button:hover,
 .intake-confirm .intake-button:focus-visible {
-  background: #0b0c0d;
-  border-color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
 }
 
 .intake-share-status {
