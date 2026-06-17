@@ -39,9 +39,9 @@
       "Learning and growth are not purely cognitive. Human beings learn through imitation, trust, belonging, and community. And oxytocin appears to underlie many of these experiences. Semax can help your brain adapt. Selank can help reduce noise. Oxytocin can help strengthen connection in the very environments where we learn and grow.",
       "The goal of this formula is neither stimulation nor sedation. INF&trade; exists to encourage a new state primed for learning, action, and growth. Not so you can take another product and wait for your life to change, but so you can enter the moments that change you with more clarity, calm, and connection. It is the combination of these three neuropeptides that makes INF&trade; a category of its own.",
       "If you would like a prescription, tap the \"Request Prescription\" button toward the bottom of this page. You will then:",
-      "Complete a short health questionnaire, which is sent to a licensed provider for review.",
-      "The licensed medical provider will determine whether INF&trade; is appropriate for you.",
-      "If approved, your prescription will be processed and shipped to the address you provide on a monthly basis.",
+      "1. Complete a short health questionnaire, which is sent to a licensed provider for review.",
+      "2. The licensed medical provider will determine whether INF&trade; is appropriate for you.",
+      "3. If approved, your prescription will be processed and shipped to the address you provide on a monthly basis.",
       "If you have any questions, please visit the Support button in the footer of this page, where frequently asked questions are answered and contact information is provided."
     ]
   };
