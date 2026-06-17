@@ -10,7 +10,7 @@
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Intranasal Neuropeptide Formula | MACKLEY</title>
   <link rel="canonical" href="https://mackley.co/product/" />
-  <link rel="stylesheet" href="/styles.css?v=20260617-product-copy-clean-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260617-product-header-glass-v1" />
   <script src="/domain-redirect.js?v=20260616-mackley-primary"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -115,5 +115,19 @@
   <script type="module" src="/carousel.js?v=20260610-get-started"></script>
   <script type="module" src="/social-proof.js"></script>
   <script src="/access-lock.js?v=20260617-password-iamchange-v1"></script>
+  <script>
+    (() => {
+      const header = document.querySelector(".site-header");
+      const page = document.querySelector(".page");
+      if (!header || !page) return;
+
+      function updateHeaderGlass() {
+        header.classList.toggle("is-scrolled", page.scrollTop > 12);
+      }
+
+      updateHeaderGlass();
+      page.addEventListener("scroll", updateHeaderGlass, { passive: true });
+    })();
+  </script>
 </body>
 </html>

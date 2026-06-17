@@ -1412,6 +1412,18 @@ body.product-page .site-title {
   text-shadow: none;
 }
 
+body.product-page .site-header {
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+body.product-page .site-header.is-scrolled {
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(5, 5, 5, 0.08);
+  box-shadow: 0 18px 42px rgba(5, 5, 5, 0.08);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+
 html[data-landing-variant="a"] .site-footer__link,
 html[data-landing-variant="a"] .site-footer__copy,
 body.product-page .site-footer__link,
