@@ -6,7 +6,7 @@
     fullNameHtml: "<span class=\"home-product__code\">INF&trade;</span> Intranasal Neuropeptide Formula",
     audience: "For adults (18+)",
     formula: "with Semax + Selank + Oxytocin",
-    purpose: "for plasticity, clarity and confidence",
+    purpose: "for plasticity, clarity and connection",
     ctaLabel: "Request Prescription",
     value: "30",
     currency: "USD",
