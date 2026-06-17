@@ -24,6 +24,22 @@
       {
         src: "/public/product/inf-product-03.png",
         alt: "INF intranasal formula kit packed in a black travel bag"
+      },
+      {
+        src: "/public/product/product1.png",
+        alt: "MACKLEY copper neti pots with pouring spouts"
+      },
+      {
+        src: "/public/product/product2.png",
+        alt: "MACKLEY copper neti pots on tile"
+      },
+      {
+        src: "/public/product/product3.png",
+        alt: "Close-up of MACKLEY copper finish"
+      },
+      {
+        src: "/public/product/spray.png",
+        alt: "INF intranasal spray bottle with copper cap"
       }
     ],
     story: [

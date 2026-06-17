@@ -51,7 +51,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260616-product-sticky-cta-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260617-b-scroll-product-v1" />
   <script src="/domain-redirect.js?v=20260616-mackley-primary"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -91,7 +91,7 @@
     </svg>
   </div>
 
-  <main class="narrative" id="narrative" aria-label="Purpose narrative">
+  <main class="narrative" id="narrative-a" aria-label="Purpose narrative" data-narrative-variant="a">
     <div class="snap-spacer" aria-hidden="true"></div>
     <div class="paragraph">
       <p class="line"><span class="brand">MACKLEY</span> means <span class="revolution-hover brand" tabindex="0">REVOLUTION</span>:</p>
@@ -119,6 +119,18 @@
               <div class="carousel-slide">
                 <img class="carousel-image" src="/public/product/inf-product-03.png" alt="INF intranasal formula kit packed in a black travel bag" loading="lazy" decoding="async" />
               </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product1.png" alt="MACKLEY copper neti pots with pouring spouts" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product2.png" alt="MACKLEY copper neti pots on tile" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product3.png" alt="Close-up of MACKLEY copper finish" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/spray.png" alt="INF intranasal spray bottle with copper cap" loading="lazy" decoding="async" />
+              </div>
             </div>
           </div>
           <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
@@ -144,14 +156,19 @@
     <div class="snap-spacer" aria-hidden="true"></div>
   </main>
 
-  <main class="landing-b" id="landing-b" aria-label="Product landing">
-    <section class="landing-b__hero" aria-label="MACKLEY INF landing page" data-product-aria>
-      <h1 class="landing-b__headline">
-        If you <span>can</span> change <u>how</u> you think,<br />
-        then you <span>can</span> change <u>who</u> you are.
-      </h1>
-
-      <div class="landing-b__gallery" aria-label="Product gallery">
+  <main class="narrative" id="narrative-b" aria-label="Belief narrative" data-narrative-variant="b">
+    <div class="snap-spacer" aria-hidden="true"></div>
+    <div class="paragraph">
+      <p class="line">If you can change <span class="inside-hover" tabindex="0">how</span> you think,</p>
+    </div>
+    <div class="paragraph">
+      <p class="line">then you can change <span class="outside-hover" tabindex="0">who</span> you are.</p>
+    </div>
+    <section class="paragraph home-product" id="product-b" aria-label="Intranasal Neuropeptide Formula" data-product-aria>
+      <div class="home-product__statement">
+        <p>we believe you can.</p>
+      </div>
+      <div class="home-product__gallery" aria-label="Product gallery">
         <section class="carousel" aria-label="Product images" data-product-carousel>
           <div class="carousel-viewport" tabindex="0">
             <div class="carousel-track">
@@ -164,6 +181,18 @@
               <div class="carousel-slide">
                 <img class="carousel-image" src="/public/product/inf-product-03.png" alt="INF intranasal formula kit packed in a black travel bag" loading="lazy" decoding="async" />
               </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product1.png" alt="MACKLEY copper neti pots with pouring spouts" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product2.png" alt="MACKLEY copper neti pots on tile" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/product3.png" alt="Close-up of MACKLEY copper finish" loading="lazy" decoding="async" />
+              </div>
+              <div class="carousel-slide">
+                <img class="carousel-image" src="/public/product/spray.png" alt="INF intranasal spray bottle with copper cap" loading="lazy" decoding="async" />
+              </div>
             </div>
           </div>
           <button class="carousel-button carousel-button--prev" type="button" aria-label="Previous slide">‹</button>
@@ -171,22 +200,22 @@
           <div class="carousel-dots" aria-label="Carousel slides"></div>
         </section>
       </div>
-
-      <div class="landing-b__copy">
-        <h2 class="landing-b__title">
+      <div class="home-product__copy">
+        <h1 class="home-product__title">
           <a href="/product/" data-product-full-name><span class="home-product__code">INF&trade;</span> Intranasal Neuropeptide Formula</a>
-        </h2>
-        <p class="landing-b__audience" data-product-audience>For adults (18+)</p>
-        <p class="landing-b__formula">
-          <span data-product-formula>with Semax + Selank + Oxytocin</span>
+        </h1>
+        <p class="home-product__subtext">
+          <span class="home-product__audience" data-product-audience>For adults (18+)</span>
+          <span class="home-product__formula" data-product-formula>with Semax + Selank + Oxytocin</span>
           <span data-product-purpose>for plasticity, clarity and confidence</span>
         </p>
-        <div class="landing-b__actions home-product__actions">
-          <a class="home-product__button" href="/product/">Learn More</a>
+        <div class="home-product__actions">
+          <a class="home-product__button" href="/product/">Learn more</a>
           <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="30">Get Started</a>
         </div>
       </div>
     </section>
+    <div class="snap-spacer" aria-hidden="true"></div>
   </main>
 
   <footer class="site-footer">
@@ -201,14 +230,15 @@
     </div>
   </footer>
 
-  <script src="/product-data.js?v=20260616-current-product-images-v1"></script>
-  <script src="/product-render.js?v=20260616-current-product-images-v1"></script>
+  <script src="/product-data.js?v=20260617-product-set-v1"></script>
+  <script src="/product-render.js?v=20260617-product-set-v1"></script>
   <script src="/ads.js?v=20260610-get-started"></script>
   <script>
-    const narrative = document.getElementById("narrative");
+    const activeVariant = document.documentElement.dataset.landingVariant || "a";
+    const narrative = document.querySelector(`[data-narrative-variant="${activeVariant}"]`) || document.querySelector("[data-narrative-variant=\"a\"]");
     const header = document.querySelector(".site-header");
     const footer = document.querySelector(".site-footer");
-    const paragraphs = Array.from(document.querySelectorAll(".paragraph"));
+    const paragraphs = Array.from(narrative.querySelectorAll(".paragraph"));
     const bgLayer = document.getElementById("bg-layer");
     const preloadCache = new Map();
 
@@ -407,7 +437,7 @@
     }
 
     function fitAllLines() {
-      const lines = Array.from(document.querySelectorAll(".line"));
+      const lines = Array.from(narrative.querySelectorAll(".line"));
       const maxFontSize = Math.min(104, Math.max(60, window.innerWidth * 0.07));
       const minFontSize = Math.max(28, Math.min(60, window.innerWidth * 0.042));
       const fittedSize = lines.reduce((smallest, line) => {
