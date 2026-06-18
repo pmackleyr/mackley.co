@@ -1,5 +1,5 @@
 (() => {
-  const PASSWORD = "Iamchange";
+  const PASSWORD = "icanchange";
   const ACCESS_KEY = "mackley_access_lock_v1";
   const API_BASE = "https://mackley-payments.macrevers.workers.dev";
 
