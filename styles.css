@@ -5143,10 +5143,10 @@ body.product-page .product-footer-cta .product-footer-cta__button:active {
 .access-lock__button:not(:disabled):focus-visible::before {
   background:
     linear-gradient(180deg, rgba(255, 235, 216, 0.18), rgba(112, 38, 7, 0.1)),
-    url("/public/assets/copper.jpg?v=20260626-product-description-v1") center / 118% 118%;
+    url("/public/assets/copper.jpg?v=20260626-mackley-primary-v1") center / 118% 118%;
   opacity: 0.42;
   mix-blend-mode: soft-light;
-  animation: copper-texture-rotate 9s linear infinite;
+  animation: copper-texture-rotate 30s linear infinite;
 }
 
 @keyframes copper-texture-rotate {

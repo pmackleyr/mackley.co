@@ -1,5 +1,5 @@
 (function () {
-  const redirectHosts = new Set(["whoismackley.com", "www.whoismackley.com"]);
+  const redirectHosts = new Set(["whoismackley.com", "www.whoismackley.com", "www.mackley.co"]);
   const canonicalHost = "mackley.co";
 
   if (!redirectHosts.has(window.location.hostname)) return;

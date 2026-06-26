@@ -7,10 +7,10 @@ import {
 } from "./analytics.js";
 
 const ALLOWED_HOSTS = new Set([
-  "whoismackley.com",
-  "whoismackley.com:443",
-  "www.whoismackley.com",
-  "www.whoismackley.com:443",
+  "mackley.co",
+  "mackley.co:443",
+  "www.mackley.co",
+  "www.mackley.co:443",
   "mackley.co",
   "mackley.co:443",
   "www.mackley.co",
@@ -24,8 +24,8 @@ const ALLOWED_HOSTS = new Set([
 ]);
 
 const CLICK_TRACKING_KEYS = ["gclid", "gclsrc", "wbraid", "gbraid"];
-const CHECKOUT_SUCCESS_URL = "https://whoismackley.com/thank-you?session_id={CHECKOUT_SESSION_ID}";
-const CHECKOUT_CANCEL_URL = "https://whoismackley.com/checkout";
+const CHECKOUT_SUCCESS_URL = "https://mackley.co/thank-you?session_id={CHECKOUT_SESSION_ID}";
+const CHECKOUT_CANCEL_URL = "https://mackley.co/checkout";
 const PRODUCT_NAME = "Intranasal Neuropeptide Formula";
 const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
 const PRODUCT_SKU = "INF-01";
