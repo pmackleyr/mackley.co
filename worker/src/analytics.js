@@ -580,7 +580,7 @@ function buildRecommendations(metrics, sources, clicks, experiment) {
     recommendations.push({
       priority: "high",
       title: "Form starts are not becoming submissions",
-      detail: `Only ${metrics.providerSurveyRateFromCheckout}% of Request Prescription clicks complete the provider survey.`,
+      detail: `Only ${metrics.providerSurveyRateFromCheckout}% of Get Started clicks complete the provider survey.`,
       action: "Shorten the intake, clarify required fields, or save progress earlier in the flow."
     });
   }

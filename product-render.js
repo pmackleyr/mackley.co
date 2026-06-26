@@ -33,7 +33,7 @@
   function renderBuyLinks() {
     doc.querySelectorAll("[data-product-buy]").forEach((link) => {
       link.href = product.intakeLink || "/spray-intake/?next=payment";
-      link.textContent = product.ctaLabel || "Request Prescription";
+      link.textContent = product.ctaLabel || "Get Prescription";
       link.dataset.track = "get-started";
       link.dataset.item = product.name;
       link.dataset.stripeProductId = product.stripeProductId;
@@ -43,7 +43,10 @@
 
   function renderStory() {
     doc.querySelectorAll("[data-product-story]").forEach((story) => {
-      story.innerHTML = product.story.map((paragraph) => `<p>${paragraph}</p>`).join("");
+      story.innerHTML = product.story.map((section) => {
+        if (typeof section === "object" && section.html) return section.html;
+        return `<p>${section}</p>`;
+      }).join("");
     });
   }
 

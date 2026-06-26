@@ -1,5 +1,6 @@
 const form = document.getElementById("spray-intake-form");
 const steps = Array.from(document.querySelectorAll(".intake-step"));
+const reviewSteps = steps.filter((step) => step.dataset.step !== "complete");
 const product = window.MACKLEYProduct || {};
 const intakeStorageKey = "mackley_provider_intake";
 const referralStorageKey = "mackley_referral_claim";
@@ -13,9 +14,7 @@ function getProductName() {
 }
 
 function trackLoopEvent(name, payload) {
-  if (!window.MACKLEYAnalytics || typeof window.MACKLEYAnalytics.track !== "function") {
-    return;
-  }
+  if (!window.MACKLEYAnalytics || typeof window.MACKLEYAnalytics.track !== "function") return;
   window.MACKLEYAnalytics.track(name, {
     timestamp: new Date().toISOString(),
     ...payload
@@ -98,12 +97,8 @@ function hasFirstAndLastName(value) {
   return String(value || "").trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
-function showStep(index) {
-  currentStep = index;
-  steps.forEach((step, stepIndex) => {
-    step.classList.toggle("is-active", stepIndex === index);
-  });
-  window.scrollTo({ top: 0, behavior: "smooth" });
+function stepErrorName() {
+  return steps[currentStep]?.dataset.step || "";
 }
 
 function errorFor(name) {
@@ -116,78 +111,183 @@ function setError(name, message) {
 }
 
 function checkedValues(name) {
+  if (!form) return [];
   return Array.from(form.querySelectorAll(`[name="${name}"]:checked`)).map((input) => input.value);
 }
 
-function conditionValues() {
-  const otherValue = String(form.elements.conditionsOther?.value || "").trim();
-  return checkedValues("conditions").map((value) => {
-    if (value === "Other" && otherValue) return `Other: ${otherValue}`;
-    return value;
+function value(name) {
+  return String(form?.elements[name]?.value || "").trim();
+}
+
+function valuesWithOther(name, otherName) {
+  return checkedValues(name).map((item) => {
+    if (item === "Other" && otherName && value(otherName)) return `Other: ${value(otherName)}`;
+    return item;
   });
 }
 
-function validateRequiredGroup(name) {
-  const group = form.querySelector(`[data-required-group="${name}"]`);
-  const valid = checkedValues(name).length > 0;
-  group?.classList.toggle("has-error", !valid);
+function setGroupError(group, invalid) {
+  group?.classList.toggle("has-error", Boolean(invalid));
+}
+
+function validateRequiredGroup(group) {
+  if (!group || group.hidden) return true;
+  const groupName = group.dataset.requiredGroup;
+  const valid = checkedValues(groupName).length > 0;
+  setGroupError(group, !valid);
   return valid;
 }
 
-function validateConditions() {
-  const values = checkedValues("conditions");
-  const otherSelected = values.includes("Other");
-  const otherField = form.querySelector('[data-conditional-field="conditionsOther"]');
-  const otherValid = !otherSelected || String(form.elements.conditionsOther?.value || "").trim().length > 0;
-  const valid = values.length > 0 && otherValid;
-
-  otherField?.classList.toggle("has-error", otherSelected && !otherValid);
-  setError("conditions", valid ? "" : "Please select at least one option and specify any other condition.");
-  return valid;
-}
-
-function validateProfile() {
-  const active = steps[currentStep];
-  const fields = Array.from(active.querySelectorAll("input[required], select[required]"));
+function validateRequiredFields(active) {
   let valid = true;
-
-  fields.forEach((field) => {
-    const isRadio = field.type === "radio";
-    const fieldValid = isRadio ? checkedValues(field.name).length > 0 : field.checkValidity();
-    field.closest(".intake-field")?.classList.toggle("has-error", !fieldValid);
+  active.querySelectorAll("input[required]:not([type='radio']):not([type='checkbox']), select[required], textarea[required]").forEach((field) => {
+    if (field.disabled || field.closest("[hidden]")) return;
+    const fieldValid = field.checkValidity() && String(field.value || "").trim().length > 0;
+    field.closest(".intake-field, .intake-conditional-field")?.classList.toggle("has-error", !fieldValid);
     valid = valid && fieldValid;
   });
+  return valid;
+}
 
+function validateGenericStep() {
+  const active = steps[currentStep];
+  if (!active) return true;
+  let valid = validateRequiredFields(active);
+
+  active.querySelectorAll("[data-required-group]").forEach((group) => {
+    valid = validateRequiredGroup(group) && valid;
+  });
+
+  return valid;
+}
+
+function validateIdentity() {
+  let valid = validateGenericStep();
   const fullName = form.elements.fullName;
   const fullNameValid = hasFirstAndLastName(fullName?.value);
   fullName?.closest(".intake-field")?.classList.toggle("has-error", !fullNameValid);
   valid = valid && fullNameValid;
 
   const age = Number(form.elements.age?.value || 0);
-  if (age && age < 18) {
-    valid = false;
-    form.elements.age.closest(".intake-field")?.classList.add("has-error");
-  }
+  const ageValid = age >= 18 && age <= 120;
+  form.elements.age?.closest(".intake-field")?.classList.toggle("has-error", !ageValid);
+  valid = valid && ageValid;
 
-  setError("profile", valid ? "" : "Please complete every required field. First and last name are required, and you must be at least 18.");
+  setError("identity", valid ? "" : "Please complete every required field. First and last name are required, and you must be at least 18.");
   return valid;
 }
 
-function validateAttestation() {
-  const recentSurgeriesValid = validateRequiredGroup("recentSurgeries");
-  const riskDiagnosesValid = validateRequiredGroup("riskDiagnoses");
-  const medicationsValid = validateRequiredGroup("prescriptionMedications");
-  const valid = recentSurgeriesValid && riskDiagnosesValid && medicationsValid;
-  setError("attestation", valid ? "" : "Please complete every required question.");
+function validateSafety() {
+  const valid = validateGenericStep();
+  setError("safety", valid ? "" : "Please select at least one option and specify Other if selected.");
+  return valid;
+}
+
+function validateMedications() {
+  let valid = validateGenericStep();
+  if (checkedValues("prescriptionMedications")[0] === "Yes") {
+    const medicationGroup = document.querySelector('[data-required-group="medicationTypes"]');
+    valid = validateRequiredGroup(medicationGroup) && valid;
+  }
+  setError("medications", valid ? "" : "Please answer the medication question and select any medication categories that apply.");
+  return valid;
+}
+
+function validateGoals() {
+  const goals = checkedValues("goals");
+  const valid = validateGenericStep() && goals.length <= 3;
+  setError("goals", valid ? "" : "Please pick up to 3 options and specify Other if selected.");
+  return valid;
+}
+
+function validateBaseline() {
+  const valid = validateGenericStep();
+  setError("baseline", valid ? "" : "Please answer every baseline score.");
   return valid;
 }
 
 function validateCurrentStep() {
-  const stepName = steps[currentStep]?.dataset.step;
-  if (stepName === "conditions") return validateConditions();
-  if (stepName === "profile") return validateProfile();
-  if (stepName === "attestation") return validateAttestation();
-  return true;
+  const stepName = stepErrorName();
+  if (stepName === "identity") return validateIdentity();
+  if (stepName === "safety") return validateSafety();
+  if (stepName === "medications") return validateMedications();
+  if (stepName === "goals") return validateGoals();
+  if (stepName === "baseline") return validateBaseline();
+  setError(stepName, "");
+  return validateGenericStep();
+}
+
+function updateProgress() {
+  const progressLabel = document.querySelector("[data-progress-label]");
+  const progressBar = document.querySelector("[data-progress-bar]");
+  const activeStep = steps[currentStep];
+  const reviewIndex = reviewSteps.indexOf(activeStep);
+
+  if (reviewIndex < 0) {
+    progressLabel?.setAttribute("hidden", "");
+    progressBar?.style.setProperty("--intake-progress", "100%");
+    return;
+  }
+
+  const progress = ((reviewIndex + 1) / reviewSteps.length) * 100;
+  if (progressLabel) {
+    progressLabel.hidden = false;
+    progressLabel.textContent = `Step ${reviewIndex + 1} of ${reviewSteps.length}`;
+  }
+  progressBar?.style.setProperty("--intake-progress", `${progress}%`);
+}
+
+function showStep(index) {
+  currentStep = Math.max(0, Math.min(index, steps.length - 1));
+  steps.forEach((step, stepIndex) => {
+    step.classList.toggle("is-active", stepIndex === currentStep);
+  });
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function syncConditionalFields() {
+  document.querySelectorAll("[data-conditional-field]").forEach((field) => {
+    const fieldName = field.dataset.conditionalField;
+    const visible = Boolean(form.querySelector(`[data-reveals="${fieldName}"]:checked`));
+
+    field.hidden = !visible;
+    field.querySelectorAll("input, select, textarea").forEach((input) => {
+      input.disabled = !visible;
+      if (!visible) {
+        if (input.type === "checkbox" || input.type === "radio") input.checked = false;
+        else input.value = "";
+      }
+    });
+
+    if (!visible) field.classList.remove("has-error");
+  });
+}
+
+function enforceMaxChecked(target) {
+  const group = target.closest("[data-max-checked]");
+  if (!group || !target.checked) return;
+  const max = Number(group.dataset.maxChecked || 0);
+  if (!max) return;
+
+  const checked = Array.from(group.querySelectorAll(`input[name="${target.name}"]:checked`));
+  if (checked.length <= max) return;
+  target.checked = false;
+  setError(group.dataset.requiredGroup || target.name, `Pick up to ${max}.`);
+}
+
+function baselinePayload() {
+  return {
+    mentallyClear: value("baselineClarity"),
+    focusWhenNeeded: value("baselineFocus"),
+    calmInBody: value("baselineCalm"),
+    emotionallySteady: value("baselineSteady"),
+    connectedToPeople: value("baselineConnected"),
+    motivatedForWhatMattered: value("baselineMotivated"),
+    sleptWell: value("baselineSlept"),
+    wokeUpRestored: value("baselineRestored"),
+    becomingWhoIWantToBe: value("baselineBecoming")
+  };
 }
 
 function collectPayload() {
@@ -198,19 +298,20 @@ function collectPayload() {
     stripeProductId: product.stripeProductId || "prod_UgF2SFTaA6cCVy",
     status: "pending_provider_approval",
     paymentStatus: "not_started",
-    conditions: conditionValues(),
-    email: form.elements.email.value,
-    fullName: form.elements.fullName.value,
-    age: form.elements.age.value,
-    sex: checkedValues("sex")[0] || "",
-    state: form.elements.state.value,
-    recentSurgeries: checkedValues("recentSurgeries")[0] || "",
-    recentSurgeriesDetails: form.elements.recentSurgeriesDetails?.value || "",
-    riskDiagnoses: checkedValues("riskDiagnoses"),
+    email: value("email"),
+    fullName: value("fullName"),
+    age: value("age"),
+    sex: value("sex"),
+    state: value("state"),
+    pregnancyStatus: checkedValues("pregnancyStatus")[0] || "",
+    safetyDiagnoses: valuesWithOther("safetyDiagnoses", "safetyOther"),
     prescriptionMedications: checkedValues("prescriptionMedications")[0] || "",
-    medicationsList: form.elements.medicationsList?.value || "",
-    goalsSymptoms: form.elements.goalsSymptoms?.value || "",
-    attestation: "I attest that this request is for my personal use. I understand that submission of this form does not guarantee approval. All requests are reviewed by a licensed healthcare provider, who will determine eligibility based on medical history, current medications, symptoms, and treatment goals. Payment and fulfillment remain subject to provider approval.",
+    medicationTypes: valuesWithOther("medicationTypes", "medicationOther"),
+    medicationNames: value("medicationNames"),
+    goals: valuesWithOther("goals", "goalsOther"),
+    baseline: baselinePayload(),
+    clinicianNote: value("clinicianNote"),
+    attestation: "I attest that this prescription request is for my personal use. I understand that submission of this form does not guarantee approval. All requests are reviewed by a licensed healthcare provider, who will determine eligibility based on medical history, current medications, symptoms, and treatment goals. Payment and fulfillment remain subject to provider approval. I understand this is not emergency care. If I am experiencing thoughts of self-harm, harm to others, chest pain, severe allergic reaction, or a medical emergency, I should call 911 or seek emergency care.",
     referral,
     submittedAt: new Date().toISOString()
   };
@@ -252,21 +353,6 @@ function showReferralLink(url) {
   link.hidden = false;
   link.href = url;
   link.textContent = url;
-}
-
-function syncConditionalFields() {
-  document.querySelectorAll("[data-conditional-field]").forEach((field) => {
-    const fieldName = field.dataset.conditionalField;
-    const visible = Boolean(form.querySelector(`[data-reveals="${fieldName}"]:checked`));
-
-    field.hidden = !visible;
-    field.querySelectorAll("input, select, textarea").forEach((input) => {
-      input.disabled = !visible;
-      if (!visible) input.value = "";
-    });
-
-    if (!visible) field.classList.remove("has-error");
-  });
 }
 
 async function shareReferral() {
@@ -335,49 +421,58 @@ async function shareReferral() {
   }
 }
 
-form.addEventListener("change", (event) => {
-  const target = event.target;
-  if (target.matches("[data-exclusive]") && target.checked) {
-    const groupName = target.dataset.exclusive;
-    form.querySelectorAll(`[name="${groupName}"]`).forEach((input) => {
-      if (input !== target) input.checked = false;
-    });
-  } else if (target.name && target.checked) {
-    const exclusive = form.querySelector(`[data-exclusive="${target.name}"]`);
-    if (exclusive && exclusive !== target) exclusive.checked = false;
-  }
+if (form) {
+  form.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
 
-  syncConditionalFields();
-});
+    if (target.matches("[data-exclusive]") && target.checked) {
+      const groupName = target.dataset.exclusive;
+      form.querySelectorAll(`[name="${groupName}"]`).forEach((input) => {
+        if (input !== target) input.checked = false;
+      });
+    } else if (target.name && target.checked) {
+      const exclusive = form.querySelector(`[data-exclusive="${target.name}"]`);
+      if (exclusive && exclusive !== target) exclusive.checked = false;
+    }
 
-syncConditionalFields();
-
-document.querySelectorAll("[data-next]").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (!validateCurrentStep()) return;
-    showStep(currentStep + 1);
+    enforceMaxChecked(target);
+    syncConditionalFields();
   });
-});
 
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  if (!validateCurrentStep()) return;
-
-  const payload = collectPayload();
-  latestPayload = payload;
-  localStorage.setItem(intakeStorageKey, JSON.stringify(payload));
-
-  if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
-    window.MACKLEYAnalytics.track("provider_survey_submitted", {
-      product: payload.product,
-      value: payload.price,
-      destination: "licensed_provider_review",
-      status: payload.status
+  document.querySelectorAll("[data-next]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!validateCurrentStep()) return;
+      showStep(currentStep + 1);
     });
-  }
+  });
 
-  updateCompletionState(payload);
-  showStep(steps.findIndex((step) => step.dataset.step === "complete"));
-});
+  document.querySelectorAll("[data-back]").forEach((button) => {
+    button.addEventListener("click", () => showStep(currentStep - 1));
+  });
 
-document.querySelector("[data-share-referral]")?.addEventListener("click", shareReferral);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!validateCurrentStep()) return;
+
+    const payload = collectPayload();
+    latestPayload = payload;
+    localStorage.setItem(intakeStorageKey, JSON.stringify(payload));
+
+    if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
+      window.MACKLEYAnalytics.track("provider_survey_submitted", {
+        product: payload.product,
+        value: payload.price,
+        destination: "licensed_provider_review",
+        status: payload.status
+      });
+    }
+
+    updateCompletionState(payload);
+    showStep(steps.findIndex((step) => step.dataset.step === "complete"));
+  });
+
+  document.querySelector("[data-share-referral]")?.addEventListener("click", shareReferral);
+  syncConditionalFields();
+  showStep(0);
+}
