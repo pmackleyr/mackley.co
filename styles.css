@@ -1231,14 +1231,35 @@ body.modal-open .narrative {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   font-size: clamp(16px, 1.9vw, 19px);
-  line-height: 1.8;
+  line-height: 1.68;
   color: #fff;
 }
 
 .prose p {
   margin: 0;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0;
+  padding-left: 1.35em;
+}
+
+.prose li {
+  margin: 0.08em 0;
+}
+
+.prose blockquote {
+  margin: 0;
+  padding-left: 1em;
+  border-left: 2px solid currentColor;
+  color: inherit;
+}
+
+.prose blockquote p + p {
+  margin-top: 0.25em;
 }
 
 .purpose-copy {
@@ -5059,4 +5080,81 @@ body.product-page .product-footer-cta .product-footer-cta__button:active {
 
 .intake-page .intake-actions {
   padding-bottom: clamp(24px, 4vh, 42px);
+}
+
+/* 2026 product-copy and copper hover polish */
+.ui-button,
+.product-block__cta,
+.cta,
+.home-product__button,
+.modal__button,
+.intake-button,
+.access-lock__button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ui-button::before,
+.product-block__cta::before,
+.cta::before,
+.home-product__button::before,
+.modal__button::before,
+.intake-button::before,
+.access-lock__button::before,
+.ui-button::after,
+.product-block__cta::after,
+.cta::after,
+.home-product__button::after,
+.modal__button::after,
+.intake-button::after,
+.access-lock__button::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.ui-button::before,
+.product-block__cta::before,
+.cta::before,
+.home-product__button::before,
+.modal__button::before,
+.intake-button::before,
+.access-lock__button::before {
+  inset: -42%;
+  z-index: -1;
+  border-radius: inherit;
+  transform-origin: center;
+}
+
+.ui-button:hover::before,
+.ui-button:focus-visible::before,
+.product-block__cta:hover::before,
+.product-block__cta:focus-visible::before,
+.cta:hover::before,
+.cta:focus-visible::before,
+.home-product__button:hover::before,
+.home-product__button:focus-visible::before,
+.modal__button:hover::before,
+.modal__button:focus-visible::before,
+.intake-button:hover::before,
+.intake-button:focus-visible::before,
+.access-lock__button:not(:disabled):hover::before,
+.access-lock__button:not(:disabled):focus-visible::before {
+  background:
+    linear-gradient(180deg, rgba(255, 235, 216, 0.18), rgba(112, 38, 7, 0.1)),
+    url("/public/assets/copper.jpg?v=20260626-product-description-v1") center / 118% 118%;
+  opacity: 0.42;
+  mix-blend-mode: soft-light;
+  animation: copper-texture-rotate 9s linear infinite;
+}
+
+@keyframes copper-texture-rotate {
+  from {
+    transform: rotate(0deg) scale(1.08);
+  }
+
+  to {
+    transform: rotate(360deg) scale(1.08);
+  }
 }
