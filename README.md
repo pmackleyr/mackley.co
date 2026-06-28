@@ -34,7 +34,7 @@ Do not use `mackley.vercel.app` or Vercel as the production target for this site
 
 ## Payments Worker (Cloudflare)
 
-Deploy the Stripe PaymentIntent worker:
+Deploy the Stripe Checkout/manual-capture worker:
 
 ```sh
 npm i -g wrangler
@@ -42,10 +42,13 @@ wrangler login
 cd worker
 npm i
 wrangler secret put STRIPE_SECRET_KEY
+wrangler secret put STRIPE_WEBHOOK_SECRET
+wrangler secret put PROVIDER_ADMIN_SECRET
 wrangler deploy
 ```
 
-After deploy, confirm `https://api.mackley.co/create-payment-intent` responds.
+Configure Stripe to send `checkout.session.completed` to `https://api.mackley.co/stripe/webhook`.
+After deploy, confirm `https://api.mackley.co/create-payment-intent` returns `410` and provider-review checkout uses `/create-checkout-session` only.
 
 ## Event Counts
 

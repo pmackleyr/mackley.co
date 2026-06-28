@@ -8,7 +8,7 @@
     formula: "with Semax + Selank + Oxytocin",
     purpose: "for plasticity, clarity and connection",
     ctaLabel: "Get Prescription",
-    value: "30",
+    value: "99",
     currency: "USD",
     stripeProductId: "prod_UgF2SFTaA6cCVy",
     intakeLink: "/spray-intake/?next=payment",

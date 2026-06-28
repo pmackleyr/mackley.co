@@ -11,10 +11,17 @@ routes = [
 
 durable_objects = { bindings = [
   { name = "SOCIAL_PROOF", class_name = "SocialProof" },
-  { name = "ANALYTICS_STORE", class_name = "AnalyticsStore" }
+  { name = "ANALYTICS_STORE", class_name = "AnalyticsStore" },
+  { name = "REFERRAL_STORE", class_name = "ReferralStore" },
+  { name = "ORDER_STORE", class_name = "OrderStore" }
 ] }
 
 migrations = [
   { tag = "v1", new_sqlite_classes = ["SocialProof"] },
-  { tag = "v2", new_sqlite_classes = ["AnalyticsStore"] }
+  { tag = "v2", new_sqlite_classes = ["AnalyticsStore"] },
+  { tag = "v3", new_sqlite_classes = ["ReferralStore"] },
+  { tag = "v4", new_sqlite_classes = ["OrderStore"] }
 ]
+
+[vars]
+PAYMENTS_EMAIL_FROM = "MACKLEY <contact@mackley.co>"

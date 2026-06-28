@@ -47,7 +47,7 @@
     conversionTarget: globalConfig.conversionTarget || "",
     adsenseClient: readMeta("google-adsense-client") || storage.getItem("mackley_adsense_client") || "",
     currency: readMeta("store-currency") || "USD",
-    value: Number(readMeta("store-value") || 30)
+    value: Number(readMeta("store-value") || 99)
   };
 
   const conversionTarget = config.conversionTarget || (

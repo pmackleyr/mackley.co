@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="store-currency" content="USD" />
-  <meta name="store-value" content="30" />
+  <meta name="store-value" content="99" />
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Purpose | MACKLEY</title>
   <link rel="canonical" href="https://mackley.co/" />
@@ -30,7 +30,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260626-mackley-primary-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260627-form-flow-v1" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -113,7 +113,7 @@
         </p>
         <div class="home-product__actions">
           <a class="home-product__button" href="/product/">Learn more</a>
-          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="30">Get Prescription</a>
+          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
         </div>
       </div>
     </section>
@@ -160,7 +160,7 @@
         </p>
         <div class="home-product__actions">
           <a class="home-product__button" href="/product/">Learn more</a>
-          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="30">Get Prescription</a>
+          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
         </div>
       </div>
     </section>
@@ -388,8 +388,9 @@
 
     function fitAllLines() {
       const lines = Array.from(narrative.querySelectorAll(".line"));
-      const maxFontSize = Math.min(104, Math.max(60, window.innerWidth * 0.07));
-      const minFontSize = Math.max(28, Math.min(60, window.innerWidth * 0.042));
+      const width = window.innerWidth;
+      const maxFontSize = width >= 1600 ? 92 : width >= 1100 ? 78 : width >= 760 ? 62 : width >= 480 ? 46 : 34;
+      const minFontSize = width >= 1100 ? 52 : width >= 760 ? 40 : width >= 480 ? 30 : 20;
       const fittedSize = lines.reduce((smallest, line) => {
         return Math.min(smallest, measureLineFit(line, maxFontSize, minFontSize));
       }, maxFontSize);
@@ -436,7 +437,7 @@
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
   <script type="module" src="/carousel.js?v=20260610-get-started"></script>
-  <script src="/site-chrome.js?v=20260626-mackley-primary-v1"></script>
+  <script src="/site-chrome.js?v=20260627-manual-review-v1"></script>
   <script type="module" src="/social-proof.js?v=20260626-mackley-primary-v1"></script>
   <script src="/access-lock.js?v=20260618-password-icanchange-v1"></script>
 </body>

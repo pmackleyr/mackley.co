@@ -5,12 +5,23 @@ const product = window.MACKLEYProduct || {};
 const intakeStorageKey = "mackley_provider_intake";
 const referralStorageKey = "mackley_referral_claim";
 const referralShareStorageKey = "mackley_referral_share";
+const referralApiBase = "https://api.mackley.co/referrals";
+const checkoutApiBase = "https://api.mackley.co";
 const referralParams = new URLSearchParams(window.location.search);
 let currentStep = 0;
 let latestPayload = null;
+let paymentInFlight = false;
+let embeddedCheckout = null;
 
 function getProductName() {
   return product.name || "Intranasal Neuropeptide Formula";
+}
+
+function setButtonLabel(button, label) {
+  if (!button) return;
+  const labelNode = button.querySelector(".ui-button__label");
+  if (labelNode) labelNode.textContent = label;
+  else button.textContent = label;
 }
 
 function trackLoopEvent(name, payload) {
@@ -30,6 +41,20 @@ function normalizeToken(value) {
     .slice(0, 48);
 }
 
+function normalizeReferralCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 16);
+}
+
+function displayReferralCode(value) {
+  const code = normalizeReferralCode(value);
+  if (code.length <= 3) return code;
+  return `${code.slice(0, 3)}-${code.slice(3)}`;
+}
+
 function shortHash(value) {
   let hash = 0;
   const input = String(value || "");
@@ -47,17 +72,20 @@ function buildActorId(payload) {
 
 function readReferralClaim() {
   const referrer = normalizeToken(referralParams.get("ref"));
+  const code = normalizeReferralCode(referralParams.get("code"));
   const loop = normalizeToken(referralParams.get("loop"));
-  const offer = referralParams.get("offer") === "20" ? "20" : "";
+  const offer = referralParams.get("offer") === "10" ? "10" : "";
   const depth = Math.max(0, Number(referralParams.get("depth") || 0) || 0);
 
-  if (!referrer && !loop && !offer) return null;
+  if (!referrer && !code && !loop && !offer) return null;
 
   return {
     referrerUserId: referrer,
+    referralCode: code,
     loopId: loop || `loop-${shortHash(referrer || Date.now())}`,
-    offerPercent: offer || "20",
+    offerPercent: offer || "10",
     shareDepth: depth,
+    status: "unverified_link",
     claimedAt: new Date().toISOString()
   };
 }
@@ -70,7 +98,11 @@ function applyReferralClaim() {
   localStorage.setItem(referralStorageKey, JSON.stringify(claim));
   if (note) {
     note.hidden = false;
-    note.textContent = `${claim.offerPercent}% referral offer applied.`;
+    note.textContent = `${claim.offerPercent}% referral offer saved. It will be verified when you submit.`;
+  }
+  const codeInput = form?.elements.referralCode;
+  if (codeInput && claim.referralCode) {
+    codeInput.value = displayReferralCode(claim.referralCode);
   }
   trackLoopEvent("loop_demand_claimed", {
     actor_user_id: "",
@@ -92,6 +124,21 @@ function readStoredReferralClaim() {
 }
 
 const activeReferralClaim = applyReferralClaim() || readStoredReferralClaim();
+
+async function referralRequest(path, payload) {
+  const response = await fetch(`${referralApiBase}/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload || {})
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "referral_request_failed");
+  }
+  return data;
+}
 
 function hasFirstAndLastName(value) {
   return String(value || "").trim().split(/\s+/).filter(Boolean).length >= 2;
@@ -294,7 +341,7 @@ function collectPayload() {
   const referral = activeReferralClaim || readStoredReferralClaim();
   return {
     product: getProductName(),
-    price: Number(product.value || 30),
+    price: Number(product.value || 99),
     stripeProductId: product.stripeProductId || "prod_UgF2SFTaA6cCVy",
     status: "pending_provider_approval",
     paymentStatus: "not_started",
@@ -308,6 +355,7 @@ function collectPayload() {
     prescriptionMedications: checkedValues("prescriptionMedications")[0] || "",
     medicationTypes: valuesWithOther("medicationTypes", "medicationOther"),
     medicationNames: value("medicationNames"),
+    referralCode: normalizeReferralCode(value("referralCode")),
     goals: valuesWithOther("goals", "goalsOther"),
     baseline: baselinePayload(),
     clinicianNote: value("clinicianNote"),
@@ -317,6 +365,67 @@ function collectPayload() {
   };
 }
 
+async function confirmReferralClaim(payload) {
+  const manualCode = normalizeReferralCode(payload.referralCode);
+  const storedReferral = activeReferralClaim || readStoredReferralClaim();
+  if (!manualCode && !storedReferral?.referrerUserId && !storedReferral?.referralCode) {
+    return null;
+  }
+
+  const note = document.getElementById("referral-note");
+  try {
+    const data = await referralRequest("claim", {
+      referrerUserId: storedReferral?.referrerUserId || "",
+      referralCode: manualCode || storedReferral?.referralCode || "",
+      loopId: storedReferral?.loopId || "",
+      shareDepth: storedReferral?.shareDepth || 0,
+      claimantEmail: payload.email,
+      claimantName: payload.fullName
+    });
+
+    if (data.accepted && data.claim) {
+      const verifiedClaim = {
+        ...data.claim,
+        offerPercent: String(data.claim.receiverOfferPercent || 10),
+        claimedAt: new Date().toISOString()
+      };
+      localStorage.setItem(referralStorageKey, JSON.stringify(verifiedClaim));
+      if (note) {
+        note.hidden = false;
+        note.textContent = "Referral accepted: 10% off if approved.";
+      }
+      trackLoopEvent("loop_demand_claimed", {
+        actor_user_id: "",
+        subject_user_id: buildActorId(payload),
+        loop_id: verifiedClaim.loopId,
+        channel: manualCode ? "manual_code" : "link",
+        share_depth: verifiedClaim.shareDepth,
+        referrer_user_id: verifiedClaim.referrerActorId
+      });
+      return verifiedClaim;
+    }
+
+    if (note) {
+      note.hidden = false;
+      note.textContent = data.message || "Referral could not be applied.";
+    }
+    return {
+      ...(storedReferral || {}),
+      status: "rejected",
+      reason: data.reason || "not_accepted"
+    };
+  } catch (error) {
+    if (note) {
+      note.hidden = false;
+      note.textContent = "Referral could not be verified. You can still submit your survey.";
+    }
+    return {
+      ...(storedReferral || {}),
+      status: "verification_failed"
+    };
+  }
+}
+
 function updateCompletionState(payload) {
   const status = document.getElementById("intake-status");
   if (status) {
@@ -324,19 +433,139 @@ function updateCompletionState(payload) {
   }
 }
 
-function buildReferralLink(payload) {
-  const actorUserId = buildActorId(payload);
-  const loopId = `inf-${shortHash(`${actorUserId}:${payload.submittedAt || Date.now()}`)}`;
+async function createProviderRequest(payload) {
+  const response = await fetch(`${checkoutApiBase}/provider-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.requestId) {
+    throw new Error(data.error || "provider_request_failed");
+  }
+  return data;
+}
+
+async function initializeEmbeddedCheckout() {
+  if (paymentInFlight || !latestPayload?.requestId) return;
+  if (embeddedCheckout) return;
+  const button = document.querySelector("[data-authorize-payment]");
+  const originalLabel = button?.textContent || "Load secure payment form";
+  const mount = document.getElementById("embedded-checkout");
+  const publishableKey = document.querySelector('meta[name="stripe-publishable-key"]')?.content || "";
+  paymentInFlight = true;
+  setError("payment", "");
+  if (button) {
+    button.disabled = true;
+    setButtonLabel(button, "Opening secure checkout...");
+  }
+
+  try {
+    if (!window.Stripe || !publishableKey || !mount) throw new Error("stripe_unavailable");
+    const stripe = window.Stripe(publishableKey);
+    embeddedCheckout = await stripe.initEmbeddedCheckout({
+      fetchClientSecret: async () => {
+        const response = await fetch(`${checkoutApiBase}/create-checkout-session`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            requestId: latestPayload.requestId,
+            quantity: 1,
+            email: latestPayload.email,
+            name: latestPayload.fullName,
+            referral: latestPayload.referral || null,
+            embedded: true
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.clientSecret) throw new Error(data.error || "checkout_session_failed");
+        latestPayload.checkoutSessionId = data.sessionId;
+        latestPayload.paymentStatus = "authorization_started";
+        localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
+        return data.clientSecret;
+      }
+    });
+    embeddedCheckout.mount(mount);
+    if (button) button.hidden = true;
+    paymentInFlight = false;
+  } catch (error) {
+    paymentInFlight = false;
+    if (button) {
+      button.disabled = false;
+      setButtonLabel(button, originalLabel);
+    }
+    setError("payment", "Secure checkout could not be opened. Please try again.");
+  }
+}
+
+async function verifyCheckoutReturn(sessionId) {
+  if (!sessionId) return false;
+  const response = await fetch(`${checkoutApiBase}/verify-checkout-session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.verified) throw new Error(data.error || "authorization_not_verified");
+  if (latestPayload) {
+    latestPayload.paymentStatus = "authorized_pending_provider_review";
+    latestPayload.orderId = data.orderId;
+    latestPayload.checkoutSessionId = data.sessionId;
+    localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
+    updateCompletionState(latestPayload);
+  }
+  showStep(steps.findIndex((step) => step.dataset.step === "complete"));
+  return true;
+}
+
+async function verifyEmailToken(token) {
+  if (!token) return;
+  const status = document.getElementById("email-verification-status");
+  if (status) {
+    status.hidden = false;
+    status.textContent = "Verifying your email...";
+  }
+  try {
+    const response = await fetch(`${checkoutApiBase}/provider-requests/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.verified) throw new Error("email_verification_failed");
+    if (status) status.textContent = "Email verified. Your provider request is ready for review after payment authorization.";
+  } catch (error) {
+    if (status) status.textContent = "This verification link is invalid or expired. Submit the form again to receive a new link.";
+  }
+}
+
+async function buildReferralLink(payload) {
   const priorDepth = Number(payload.referral?.shareDepth || 0) || 0;
+  const created = await referralRequest("create", {
+    email: payload.email,
+    fullName: payload.fullName,
+    priorReferral: payload.referral || null,
+    shareDepth: priorDepth
+  });
   const url = new URL("/spray-intake/", window.location.origin);
-  url.searchParams.set("ref", actorUserId);
-  url.searchParams.set("offer", "20");
-  url.searchParams.set("loop", loopId);
+  url.searchParams.set("ref", created.actorUserId);
+  url.searchParams.set("code", created.referralCode);
+  url.searchParams.set("offer", String(created.receiverOfferPercent || 10));
+  url.searchParams.set("loop", created.loopId);
   url.searchParams.set("depth", String(priorDepth + 1));
 
   return {
-    actorUserId,
-    loopId,
+    actorUserId: created.actorUserId,
+    referralCode: created.referralCode,
+    displayCode: created.displayCode || displayReferralCode(created.referralCode),
+    loopId: created.loopId,
+    receiverOfferPercent: created.receiverOfferPercent || 10,
+    sharerRewardPercent: created.sharerRewardPercent || 10,
+    maxTotalPercent: created.maxTotalPercent || 20,
     shareDepth: priorDepth + 1,
     url: url.toString()
   };
@@ -347,12 +576,18 @@ function writeShareStatus(message) {
   if (status) status.textContent = message;
 }
 
-function showReferralLink(url) {
+function showReferralLink(share) {
   const link = document.getElementById("share-link");
-  if (!link) return;
-  link.hidden = false;
-  link.href = url;
-  link.textContent = url;
+  const code = document.getElementById("share-code");
+  if (link) {
+    link.hidden = false;
+    link.href = share.url;
+    link.textContent = share.url;
+  }
+  if (code) {
+    code.hidden = false;
+    code.textContent = `Code: ${share.displayCode || displayReferralCode(share.referralCode)}`;
+  }
 }
 
 async function shareReferral() {
@@ -369,10 +604,17 @@ async function shareReferral() {
     return;
   }
 
-  const share = buildReferralLink(latestPayload);
+  let share = null;
+  try {
+    share = await buildReferralLink(latestPayload);
+  } catch (error) {
+    writeShareStatus("Referral link could not be created. Please try again.");
+    return;
+  }
+
   const sharePayload = {
     title: "INF by MACKLEY",
-    text: "I thought you might want to check out INF. This link applies 20% off if you are approved by a licensed provider.",
+    text: "I got you 10% off INF if approved by a licensed provider. Use my link or code when you submit the survey.",
     url: share.url
   };
 
@@ -401,11 +643,15 @@ async function shareReferral() {
         share_depth: share.shareDepth,
         referrer_user_id: latestPayload.referral?.referrerUserId || ""
       });
-      writeShareStatus("Referral link ready to send.");
+      showReferralLink(share);
+      writeShareStatus(`Shared. Your code is ${share.displayCode}.`);
       return;
     }
 
-    showReferralLink(share.url);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(`${share.url}\nCode: ${share.displayCode}`);
+    }
+    showReferralLink(share);
     trackLoopEvent("loop_link_copied", {
       actor_user_id: share.actorUserId,
       subject_user_id: "",
@@ -414,10 +660,10 @@ async function shareReferral() {
       share_depth: share.shareDepth,
       referrer_user_id: latestPayload.referral?.referrerUserId || ""
     });
-    writeShareStatus("Referral link ready.");
+    writeShareStatus(`Referral link copied. Your code is ${share.displayCode}.`);
   } catch (error) {
-    showReferralLink(share.url);
-    writeShareStatus("Referral link ready.");
+    showReferralLink(share);
+    writeShareStatus(`Referral link ready. Your code is ${share.displayCode}.`);
   }
 }
 
@@ -451,28 +697,66 @@ if (form) {
     button.addEventListener("click", () => showStep(currentStep - 1));
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!validateCurrentStep()) return;
 
-    const payload = collectPayload();
-    latestPayload = payload;
-    localStorage.setItem(intakeStorageKey, JSON.stringify(payload));
+    const submitButton = form.querySelector('[data-step="attestation"] button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
 
-    if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
-      window.MACKLEYAnalytics.track("provider_survey_submitted", {
-        product: payload.product,
-        value: payload.price,
-        destination: "licensed_provider_review",
-        status: payload.status
-      });
+    try {
+      const payload = collectPayload();
+      payload.referral = await confirmReferralClaim(payload);
+      const providerRequest = await createProviderRequest(payload);
+      payload.requestId = providerRequest.requestId;
+      payload.verificationEmailSent = Boolean(providerRequest.verificationEmailSent);
+      latestPayload = payload;
+      localStorage.setItem(intakeStorageKey, JSON.stringify(payload));
+
+      if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
+        window.MACKLEYAnalytics.track("provider_survey_submitted", {
+          product: payload.product,
+          value: payload.price,
+          destination: "licensed_provider_review",
+          status: payload.status
+        });
+      }
+
+      const verificationNote = document.getElementById("verification-email-note");
+      if (verificationNote && !payload.verificationEmailSent) {
+        verificationNote.textContent = "We could not send the verification email. Your payment information can still be authorized, but provider approval will wait until your email is verified.";
+      }
+      showStep(steps.findIndex((step) => step.dataset.step === "payment"));
+      initializeEmbeddedCheckout();
+    } catch (error) {
+      setError("attestation", "Your survey could not be saved. Please try again.");
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-
-    updateCompletionState(payload);
-    showStep(steps.findIndex((step) => step.dataset.step === "complete"));
   });
 
+  document.querySelector("[data-authorize-payment]")?.addEventListener("click", initializeEmbeddedCheckout);
   document.querySelector("[data-share-referral]")?.addEventListener("click", shareReferral);
   syncConditionalFields();
-  showStep(0);
+  if (referralParams.get("checkout") === "canceled" || referralParams.get("checkout") === "return") {
+    try {
+      latestPayload = JSON.parse(localStorage.getItem(intakeStorageKey) || "null");
+    } catch (error) {
+      latestPayload = null;
+    }
+  }
+  const returningSessionId = referralParams.get("session_id");
+  const verificationToken = referralParams.get("verify_email");
+  if (returningSessionId && referralParams.get("checkout") === "return") {
+    verifyCheckoutReturn(returningSessionId).catch(() => {
+      showStep(steps.findIndex((step) => step.dataset.step === "payment"));
+      setError("payment", "We could not verify the authorization yet. Please reload this page in a moment.");
+    });
+  } else {
+    showStep(latestPayload?.requestId
+      ? steps.findIndex((step) => step.dataset.step === "payment")
+      : 0);
+    if (latestPayload?.requestId) initializeEmbeddedCheckout();
+  }
+  verifyEmailToken(verificationToken);
 }

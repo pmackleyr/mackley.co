@@ -6,10 +6,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="store-currency" content="USD" />
-  <meta name="store-value" content="30" />
+  <meta name="store-value" content="99" />
+  <meta name="stripe-publishable-key" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
   <title>Provider Survey | MACKLEY</title>
   <link rel="canonical" href="https://mackley.co/spray-intake/" />
-  <link rel="stylesheet" href="/styles.css?v=20260626-mackley-primary-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260627-form-flow-v1" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -24,10 +25,10 @@
   </header>
 
   <main class="intake" aria-label="Provider survey">
+    <p class="intake-verification-status" id="email-verification-status" hidden aria-live="polite"></p>
     <form class="intake-form" id="spray-intake-form" novalidate>
-      <p class="intake-referral-note" id="referral-note" hidden>20% referral offer applied.</p>
       <div class="intake-progress" aria-hidden="true">
-        <span class="intake-progress__label" data-progress-label>Step 1 of 7</span>
+        <span class="intake-progress__label" data-progress-label>Step 1 of 8</span>
         <span class="intake-progress__track"><span class="intake-progress__bar" data-progress-bar></span></span>
       </div>
 
@@ -46,14 +47,20 @@
           <span>Age <strong>*</strong></span>
           <input type="number" name="age" min="18" max="120" inputmode="numeric" placeholder="Age" required />
         </label>
-        <label class="intake-field">
-          <span>Sex <strong>*</strong></span>
-          <input type="text" name="sex" autocomplete="off" placeholder="Sex" required />
-        </label>
+        <fieldset class="intake-field intake-radio-group" data-required-group="sex">
+          <legend>Sex <strong>*</strong></legend>
+          <label><input type="radio" name="sex" value="Male" required /> <span>Male</span></label>
+          <label><input type="radio" name="sex" value="Female" /> <span>Female</span></label>
+        </fieldset>
         <label class="intake-field">
           <span>State <strong>*</strong></span>
           <input type="text" name="state" autocomplete="address-level1" placeholder="State" required />
         </label>
+        <label class="intake-field intake-referral-code-field">
+          <span>Referral code</span>
+          <input type="text" name="referralCode" autocomplete="off" placeholder="Optional" data-referral-code-input />
+        </label>
+        <p class="intake-referral-note" id="referral-note" hidden>Referral offer saved.</p>
         <fieldset class="intake-field intake-radio-group" data-required-group="pregnancyStatus">
           <legend>Pregnant / breastfeeding? <strong>*</strong></legend>
           <label><input type="radio" name="pregnancyStatus" value="Yes" required /> <span>Yes</span></label>
@@ -72,6 +79,8 @@
           <legend>Have you ever been diagnosed with or treated for any of these? <strong>*</strong></legend>
           <label><input type="checkbox" name="safetyDiagnoses" value="Bipolar disorder" /> <span>Bipolar disorder</span></label>
           <label><input type="checkbox" name="safetyDiagnoses" value="Psychosis / schizophrenia" /> <span>Psychosis / schizophrenia</span></label>
+          <label><input type="checkbox" name="safetyDiagnoses" value="Psychiatric hospitalization" /> <span>Psychiatric hospitalization</span></label>
+          <label><input type="checkbox" name="safetyDiagnoses" value="Hallucinations or delusions" /> <span>Hallucinations or delusions</span></label>
           <label><input type="checkbox" name="safetyDiagnoses" value="Seizure disorder" /> <span>Seizure disorder</span></label>
           <label><input type="checkbox" name="safetyDiagnoses" value="Traumatic brain injury" /> <span>Traumatic brain injury</span></label>
           <label><input type="checkbox" name="safetyDiagnoses" value="Substance use disorder" /> <span>Substance use disorder</span></label>
@@ -279,17 +288,36 @@
         <p class="intake-error" data-error-for="attestation"></p>
         <div class="intake-actions">
           <button class="intake-button intake-button--back" type="button" data-back>Back</button>
-          <button class="intake-button" type="submit">Submit for review</button>
+          <button class="intake-button" type="submit">Continue to payment</button>
+        </div>
+      </section>
+
+      <section class="intake-step intake-payment" data-step="payment" aria-label="Payment authorization">
+        <p class="intake-kicker">Step 8: Payment authorization</p>
+        <h1>Authorize your payment method.</h1>
+        <p class="intake-subhead">Your card will be authorized for $99 today. You will only be charged after approval by a licensed provider.</p>
+        <section class="intake-attestation" aria-label="Payment terms">
+          <p>If approved, the $99 authorization will be captured and your monthly INF&trade; subscription will begin. Future monthly renewals use the same saved payment method.</p>
+          <p>If you are not approved, the authorization will be canceled and you will not be charged. Card holds are temporary and release timing is controlled by your bank.</p>
+        </section>
+        <p class="intake-note" id="verification-email-note">We sent a verification link to your email. Provider approval requires a verified email address.</p>
+        <div class="intake-embedded-checkout" id="embedded-checkout" aria-label="Secure payment form"></div>
+        <p class="intake-error" data-error-for="payment" aria-live="polite"></p>
+        <div class="intake-actions">
+          <button class="intake-button intake-button--back" type="button" data-back>Back</button>
+          <button class="intake-button" type="button" data-authorize-payment>Load secure payment form</button>
         </div>
       </section>
 
       <section class="intake-step intake-confirm" data-step="complete" aria-label="Submitted for review">
         <p class="intake-kicker">Submitted</p>
-        <h1>Your provider survey has been submitted.</h1>
-        <p class="intake-subhead">We will email you a payment link once a licensed physician has reviewed and approved your profile. Your purchase will not occur unless the survey is reviewed and accepted.</p>
+        <h1>Pending Licensed Provider Review.</h1>
+        <p class="intake-subhead">Your payment method is authorized, but you have not been charged. If approved, the authorization will be captured and your subscription will begin. If denied, the hold will be released.</p>
         <p class="intake-note" id="intake-status">Status: pending provider approval.</p>
-        <button class="intake-button" type="button" data-share-referral>Share with a friend for 20% off</button>
+        <p class="intake-note">Maximum referral savings: 20% total. No self-referrals. One referral offer per approved customer. Rewards are tied to verified emails and completed orders.</p>
+        <button class="intake-button intake-share-button" type="button" data-share-referral>Share 10% link</button>
         <p class="intake-note intake-share-status" id="share-status" aria-live="polite"></p>
+        <p class="intake-share-code" id="share-code" hidden></p>
         <a class="intake-share-link" id="share-link" href="#" target="_blank" rel="noreferrer" hidden>Open referral link</a>
       </section>
     </form>
@@ -304,9 +332,10 @@
   </footer>
 
   <script src="/product-data.js?v=20260626-mackley-primary-v1"></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <script src="/ads.js?v=20260610-get-started"></script>
-  <script src="/spray-intake.js?v=20260625-seven-step-v1"></script>
-  <script src="/site-chrome.js?v=20260626-mackley-primary-v1"></script>
+  <script src="/spray-intake.js?v=20260627-form-flow-v1"></script>
+  <script src="/site-chrome.js?v=20260627-manual-review-v1"></script>
   <script type="module" src="/social-proof.js?v=20260626-mackley-primary-v1"></script>
   <script src="/access-lock.js?v=20260618-password-icanchange-v1"></script>
 </body>

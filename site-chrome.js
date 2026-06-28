@@ -1,9 +1,27 @@
 (function () {
-  const CTA_HREF = "/spray-intake/?next=payment";
-  const CTA_LABEL = "Get Prescription";
-  const PRODUCT_NAME = "Intranasal Neuropeptide Formula";
-  const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
-  const PRODUCT_VALUE = "30";
+  const product = window.MACKLEYProduct || {};
+  const CTA_HREF = product.intakeLink || "/spray-intake/?next=payment";
+  const CTA_LABEL = product.ctaLabel || "Get Prescription";
+  const PRODUCT_NAME = product.name || "Intranasal Neuropeptide Formula";
+  const PRODUCT_ID = product.stripeProductId || "prod_UgF2SFTaA6cCVy";
+  const PRODUCT_VALUE = product.value || "99";
+  const DEFAULT_SCROLL_TICK_COUNT = 13;
+  const HOME_SCROLL_TICK_COUNT = 3;
+
+  function ensureButtonLabel(button) {
+    if (!button || button.querySelector(":scope > .ui-button__label")) return;
+    const label = document.createElement("span");
+    label.className = "ui-button__label";
+    while (button.firstChild) label.append(button.firstChild);
+    button.append(label);
+  }
+
+  function decorateButton(button, variant) {
+    if (!button) return;
+    button.classList.add("ui-button", variant === "primary" ? "ui-button--primary" : "ui-button--secondary");
+    button.dataset.uiButton = variant;
+    ensureButtonLabel(button);
+  }
 
   function renderHeader() {
     const header = document.querySelector(".site-header");
@@ -19,7 +37,7 @@
       </nav>
       <div class="cta-proof site-header__action">
         <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">Live activity updating</p>
-        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}">${CTA_LABEL}</a>
+        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
       </div>
     `;
   }
@@ -38,28 +56,44 @@
   }
 
   function decorateButtons() {
-    document.querySelectorAll(".home-product__button").forEach((button) => {
-      button.classList.add("ui-button", button.matches("[data-product-buy]") ? "ui-button--primary" : "ui-button--secondary", "blur-trigger");
-    });
-
-    document.querySelectorAll(".cta, .product-block__cta, .modal__button, .access-lock__button").forEach((button) => {
-      button.classList.add("ui-button");
-      button.classList.add(button.classList.contains("cta--primary") || button.matches("[data-product-buy]") ? "ui-button--primary" : "ui-button--secondary");
-      if (!button.classList.contains("access-lock__button")) button.classList.add("blur-trigger");
-    });
-
-    document.querySelectorAll(".intake-button").forEach((button) => {
-      button.classList.add("ui-button", button.classList.contains("intake-button--back") ? "ui-button--secondary" : "ui-button--primary");
-    });
-
     document.querySelectorAll("[data-product-buy]").forEach((button) => {
       button.textContent = CTA_LABEL;
       button.setAttribute("href", CTA_HREF);
+      button.dataset.commerceAction = "request-prescription";
       button.dataset.track = "get-started";
       button.dataset.item = PRODUCT_NAME;
       button.dataset.stripeProductId = PRODUCT_ID;
       button.dataset.value = PRODUCT_VALUE;
     });
+
+    document.querySelectorAll(".home-product__button").forEach((button) => {
+      decorateButton(button, button.matches("[data-product-buy]") ? "primary" : "secondary");
+      button.classList.add("blur-trigger");
+    });
+
+    document.querySelectorAll(".cta, .product-block__cta, .modal__button, .access-lock__button").forEach((button) => {
+      decorateButton(button, button.classList.contains("cta--primary") || button.matches("[data-product-buy]") ? "primary" : "secondary");
+      if (!button.classList.contains("access-lock__button")) button.classList.add("blur-trigger");
+    });
+
+    document.querySelectorAll(".intake-button").forEach((button) => {
+      decorateButton(button, button.classList.contains("intake-button--back") ? "secondary" : "primary");
+    });
+
+    document.querySelectorAll(".ui-button").forEach(ensureButtonLabel);
+  }
+
+  function renderScrollGuide() {
+    if (document.body.classList.contains("intake-page") || document.querySelector(".scroll-guide")) return;
+    const tickCount = document.body.classList.contains("purpose-page")
+      ? HOME_SCROLL_TICK_COUNT
+      : DEFAULT_SCROLL_TICK_COUNT;
+    const guide = document.createElement("aside");
+    guide.className = "scroll-guide";
+    guide.dataset.sectionCount = String(tickCount);
+    guide.setAttribute("aria-hidden", "true");
+    guide.innerHTML = `<span class="scroll-guide__track">${Array.from({ length: tickCount }, () => "<i class=\"scroll-guide__tick\"></i>").join("")}</span>`;
+    document.body.append(guide);
   }
 
   function attachProofToHomeCtas() {
@@ -108,6 +142,49 @@
     return scrollTop + clientHeight >= scrollHeight - 24;
   }
 
+  function scrollMetrics(scroller) {
+    const isDocument = !scroller || scroller === document.documentElement || scroller === document.body;
+    const top = isDocument ? window.scrollY : scroller.scrollTop;
+    const client = isDocument ? window.innerHeight : scroller.clientHeight;
+    const height = isDocument ? document.documentElement.scrollHeight : scroller.scrollHeight;
+    const max = Math.max(0, height - client);
+    return { max, progress: max > 0 ? Math.min(1, Math.max(0, top / max)) : 0 };
+  }
+
+  function updateScrollGuide() {
+    const guide = document.querySelector(".scroll-guide");
+    if (!guide) return;
+    const scroller = getScrollContainer();
+    const { max, progress: scrollProgress } = scrollMetrics(scroller);
+    const homeSections = document.body.classList.contains("purpose-page")
+      ? Array.from(scroller?.querySelectorAll?.(".paragraph") || []).filter((section) => {
+        const narrative = section.closest(".narrative");
+        return narrative && window.getComputedStyle(narrative).display !== "none";
+      })
+      : [];
+    let progress = scrollProgress;
+
+    if (homeSections.length > 1) {
+      const center = scroller.scrollTop + (scroller.clientHeight / 2);
+      const currentIndex = homeSections.reduce((closestIndex, section, index) => {
+        const sectionCenter = section.offsetTop + (section.offsetHeight / 2);
+        const closest = homeSections[closestIndex];
+        const closestCenter = closest.offsetTop + (closest.offsetHeight / 2);
+        return Math.abs(sectionCenter - center) < Math.abs(closestCenter - center) ? index : closestIndex;
+      }, 0);
+      progress = currentIndex / (homeSections.length - 1);
+    }
+
+    guide.hidden = max < 80;
+    guide.style.setProperty("--scroll-progress", progress.toFixed(4));
+    const ticks = Array.from(guide.querySelectorAll(".scroll-guide__tick"));
+    const current = Math.round(progress * Math.max(0, ticks.length - 1));
+    ticks.forEach((tick, index) => {
+      tick.classList.toggle("is-passed", index < current);
+      tick.classList.toggle("is-current", index === current);
+    });
+  }
+
   function isHomeProductInView() {
     if (!document.body.classList.contains("purpose-page")) return false;
     const scroller = getScrollContainer();
@@ -133,8 +210,12 @@
 
   function bindScrollVisibility() {
     const scroller = getScrollContainer();
-    const update = () => window.requestAnimationFrame(updateFooterVisibility);
+    const update = () => window.requestAnimationFrame(() => {
+      updateFooterVisibility();
+      updateScrollGuide();
+    });
     updateFooterVisibility();
+    updateScrollGuide();
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", () => {
       updateInsets();
@@ -150,6 +231,41 @@
   renderFooter();
   decorateButtons();
   attachProofToHomeCtas();
+  renderScrollGuide();
   updateInsets();
   bindScrollVisibility();
+
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-commerce-action]");
+    if (!target) return;
+    document.dispatchEvent(new CustomEvent("mackley:commerce-intent", {
+      detail: {
+        action: target.dataset.commerceAction,
+        item: target.dataset.item || PRODUCT_NAME,
+        stripeProductId: target.dataset.stripeProductId || PRODUCT_ID,
+        value: target.dataset.value || PRODUCT_VALUE
+      }
+    }));
+  });
+
+  window.MACKLEYStorefrontUI = {
+    refresh() {
+      decorateButtons();
+      attachProofToHomeCtas();
+      updateInsets();
+      updateScrollGuide();
+    }
+  };
+
+  if ("MutationObserver" in window) {
+    let decorationFrame = 0;
+    new MutationObserver(() => {
+      if (decorationFrame) return;
+      decorationFrame = window.requestAnimationFrame(() => {
+        decorationFrame = 0;
+        const pending = document.querySelector(".access-lock__button:not([data-ui-button]), .modal__button:not([data-ui-button])");
+        if (pending) decorateButtons();
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+  }
 })();
