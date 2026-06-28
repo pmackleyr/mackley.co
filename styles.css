@@ -6364,3 +6364,67 @@ body.product-page .prose {
     animation: none !important;
   }
 }
+
+/* Payment is intentionally taller than the one-screen survey steps. */
+.intake-button[hidden] {
+  display: none !important;
+}
+
+.intake-page:has(.intake-payment.is-active) {
+  height: auto !important;
+  min-height: 100dvh;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.intake-page:has(.intake-payment.is-active) .intake {
+  height: auto !important;
+  min-height: 100dvh !important;
+  align-items: flex-start !important;
+  overflow: visible !important;
+  padding-top: clamp(24px, 5vh, 48px);
+  padding-bottom: clamp(48px, 8vh, 96px);
+}
+
+.intake-page:has(.intake-payment.is-active) .intake-form {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.intake-payment.is-active {
+  min-height: 0 !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
+}
+
+.intake-payment .intake-referral-code-field {
+  width: 100%;
+}
+
+.intake-payment .intake-actions {
+  position: static !important;
+  margin-top: 10px;
+  padding-bottom: 0 !important;
+}
+
+.intake-payment .intake-actions .intake-button:not(.intake-button--back) {
+  flex: 1 1 420px;
+}
+
+.intake-embedded-checkout,
+.intake-embedded-checkout:has(iframe) {
+  min-height: 0;
+  overflow: visible !important;
+}
+
+.intake-embedded-checkout iframe {
+  display: block;
+  width: 100% !important;
+  min-height: 980px !important;
+}
+
+@media (max-width: 720px) {
+  .intake-embedded-checkout iframe {
+    min-height: 1120px !important;
+  }
+}

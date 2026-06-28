@@ -694,11 +694,6 @@ async function approveProviderOrder(orderId, env) {
   let { order } = await orderStoreRequest(env, "/orders/get", { orderId });
   if (!order) throw Object.assign(new Error("order_not_found"), { status: 404 });
   if (order.status === ORDER_STATUS.DENIED) throw Object.assign(new Error("order_already_denied"), { status: 409 });
-  const { request: providerRequest } = await orderStoreRequest(env, "/requests/get", { requestId: order.requestId });
-  if (!providerRequest?.emailVerifiedAt) {
-    throw Object.assign(new Error("email_not_verified"), { status: 409 });
-  }
-
   if (order.status !== ORDER_STATUS.ACTIVE) {
     await orderStoreRequest(env, "/orders/update", {
       orderId,

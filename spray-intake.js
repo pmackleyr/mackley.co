@@ -98,7 +98,7 @@ function applyReferralClaim() {
   localStorage.setItem(referralStorageKey, JSON.stringify(claim));
   if (note) {
     note.hidden = false;
-    note.textContent = `${claim.offerPercent}% referral offer saved. It will be verified when you submit.`;
+    note.textContent = `${claim.offerPercent}% referral offer saved. It will be verified before secure payment.`;
   }
   const codeInput = form?.elements.referralCode;
   if (codeInput && claim.referralCode) {
@@ -448,11 +448,19 @@ async function createProviderRequest(payload) {
   return data;
 }
 
+function updateVerificationNote(payload) {
+  const note = document.getElementById("verification-email-note");
+  if (!note || !payload?.email) return;
+  note.textContent = payload.verificationEmailSent
+    ? `We sent a link to ${payload.email} to confirm where provider updates should go. You can continue with payment authorization now; you will not be charged unless a licensed provider approves your request.`
+    : `We could not send an email confirmation to ${payload.email}. You can still continue and be reviewed; we will use this address for provider updates. You will not be charged unless a licensed provider approves your request.`;
+}
+
 async function initializeEmbeddedCheckout() {
   if (paymentInFlight || !latestPayload?.requestId) return;
   if (embeddedCheckout) return;
   const button = document.querySelector("[data-authorize-payment]");
-  const originalLabel = button?.textContent || "Load secure payment form";
+  const originalLabel = button?.textContent || "Continue to secure payment";
   const mount = document.getElementById("embedded-checkout");
   const publishableKey = document.querySelector('meta[name="stripe-publishable-key"]')?.content || "";
   paymentInFlight = true;
@@ -464,6 +472,9 @@ async function initializeEmbeddedCheckout() {
 
   try {
     if (!window.Stripe || !publishableKey || !mount) throw new Error("stripe_unavailable");
+    latestPayload.referralCode = normalizeReferralCode(value("referralCode"));
+    latestPayload.referral = await confirmReferralClaim(latestPayload);
+    localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
     const stripe = window.Stripe(publishableKey);
     embeddedCheckout = await stripe.initEmbeddedCheckout({
       fetchClientSecret: async () => {
@@ -706,7 +717,6 @@ if (form) {
 
     try {
       const payload = collectPayload();
-      payload.referral = await confirmReferralClaim(payload);
       const providerRequest = await createProviderRequest(payload);
       payload.requestId = providerRequest.requestId;
       payload.verificationEmailSent = Boolean(providerRequest.verificationEmailSent);
@@ -722,12 +732,8 @@ if (form) {
         });
       }
 
-      const verificationNote = document.getElementById("verification-email-note");
-      if (verificationNote && !payload.verificationEmailSent) {
-        verificationNote.textContent = "We could not send the verification email. Your payment information can still be authorized, but provider approval will wait until your email is verified.";
-      }
+      updateVerificationNote(payload);
       showStep(steps.findIndex((step) => step.dataset.step === "payment"));
-      initializeEmbeddedCheckout();
     } catch (error) {
       setError("attestation", "Your survey could not be saved. Please try again.");
     } finally {
@@ -756,7 +762,13 @@ if (form) {
     showStep(latestPayload?.requestId
       ? steps.findIndex((step) => step.dataset.step === "payment")
       : 0);
-    if (latestPayload?.requestId) initializeEmbeddedCheckout();
+    if (latestPayload?.requestId) {
+      const referralInput = form.elements.referralCode;
+      if (referralInput && latestPayload.referralCode) {
+        referralInput.value = displayReferralCode(latestPayload.referralCode);
+      }
+      updateVerificationNote(latestPayload);
+    }
   }
   verifyEmailToken(verificationToken);
 }
