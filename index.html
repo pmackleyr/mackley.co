@@ -195,6 +195,7 @@
     const preloadCache = new Map();
 
     let insideGifs = [
+      "/public/inside/brain.gif",
       "/public/inside/lightning.gif",
       "/public/inside/chamber.gif",
       "/public/inside/heart.gif",
@@ -213,8 +214,10 @@
       "/public/outside/bubble.gif",
       "/public/outside/astronaut.gif",
       "/public/outside/diver.gif",
+      "/public/outside/horse.gif",
+      "/public/outside/run.gif",
       "/public/outside/slackliner.gif",
-      "/public/outside/surfer.gif",
+      "/public/outside/surf.gif",
       "/public/outside/yogi.gif"
     ];
 
@@ -273,7 +276,7 @@
         const ordered = weightedShuffle(poolName, assets, data.ranking || []);
         if (poolName === "inside") insideGifs = ordered;
         if (poolName === "outside") outsideGifs = ordered;
-        preloadGif(ordered[0]);
+        preloadGif(ordered[0], "high");
       } catch (error) {
         // The locally shuffled order remains the fallback.
       }
@@ -299,8 +302,8 @@
 
     insideGifs = weightedShuffle("inside", insideGifs);
     outsideGifs = weightedShuffle("outside", outsideGifs);
-    preloadGif(insideGifs[0]);
-    preloadGif(outsideGifs[0]);
+    preloadGif(insideGifs[0], "high");
+    preloadGif(outsideGifs[0], "high");
     rankGifPool("inside", insideGifs);
     rankGifPool("outside", outsideGifs);
 
@@ -334,11 +337,11 @@
 
     let pendingGifId = 0;
 
-    function preloadGif(url) {
+    function preloadGif(url, priority = "auto") {
       if (preloadCache.has(url)) return preloadCache.get(url);
       const img = new Image();
       img.decoding = "async";
-      img.fetchPriority = "high";
+      img.fetchPriority = priority;
       img.src = url;
       preloadCache.set(url, img);
       return img;
@@ -347,7 +350,7 @@
     function setGif(pool) {
       const next = nextFromPool(pool);
       const requestId = ++pendingGifId;
-      const img = preloadGif(next);
+      const img = preloadGif(next, "high");
 
       const applyNext = () => {
         if (pendingGifId !== requestId) return;
@@ -357,6 +360,9 @@
         activeGifAsset = next;
         activeGifPoolName = next.includes("/inside/") ? "inside" : "outside";
         activeGifStartedAt = Date.now();
+        const upcomingIndex = poolIndices.get(pool) ?? 0;
+        const upcoming = pool[upcomingIndex % pool.length];
+        if (upcoming) window.setTimeout(() => preloadGif(upcoming, "low"), 150);
         activeGifWatchTimer = window.setTimeout(() => {
           recordGifMetric(activeGifPoolName, activeGifAsset, "watch");
           activeGifWatchTimer = null;
