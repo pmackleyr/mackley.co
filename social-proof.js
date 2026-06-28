@@ -65,7 +65,7 @@ async function updateProof(el, record) {
       el.textContent = formatProofText(el, count);
     }
   } catch (error) {
-    // Keep placeholder text on error.
+    el.textContent = "Count unavailable";
   } finally {
     el.classList.add("is-ready");
   }

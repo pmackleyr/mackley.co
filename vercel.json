@@ -22,17 +22,17 @@
     },
     {
       "source": "/checkout",
-      "destination": "/spray-intake/?next=payment",
+      "destination": "/intake/?next=payment",
       "permanent": false
     },
     {
       "source": "/checkout/",
-      "destination": "/spray-intake/?next=payment",
+      "destination": "/intake/?next=payment",
       "permanent": false
     },
     {
       "source": "/checkout.html",
-      "destination": "/spray-intake/?next=payment",
+      "destination": "/intake/?next=payment",
       "permanent": false
     }
   ],

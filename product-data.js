@@ -11,7 +11,7 @@
     value: "99",
     currency: "USD",
     stripeProductId: "prod_UgF2SFTaA6cCVy",
-    intakeLink: "/spray-intake/?next=payment",
+    intakeLink: "/intake/?next=payment",
     images: [
       {
         src: "/public/product/inf-product-tight-01.png?v=20260626-mackley-primary-v1",

@@ -30,7 +30,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260627-form-flow-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260628-adaptive-live-v1" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -113,7 +113,7 @@
         </p>
         <div class="home-product__actions">
           <a class="home-product__button" href="/product/">Learn more</a>
-          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
+          <a class="home-product__button" href="/intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
         </div>
       </div>
     </section>
@@ -160,7 +160,7 @@
         </p>
         <div class="home-product__actions">
           <a class="home-product__button" href="/product/">Learn more</a>
-          <a class="home-product__button" href="/spray-intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
+          <a class="home-product__button" href="/intake/?next=payment" data-product-buy data-track="get-started" data-item="Intranasal Neuropeptide Formula" data-stripe-product-id="prod_UgF2SFTaA6cCVy" data-value="99">Get Prescription</a>
         </div>
       </div>
     </section>
@@ -180,7 +180,7 @@
     </div>
   </footer>
 
-  <script src="/product-data.js?v=20260626-mackley-primary-v1"></script>
+  <script src="/product-data.js?v=20260628-intake-route-v1"></script>
   <script src="/product-render.js?v=20260626-mackley-primary-v1"></script>
   <script src="/ads.js?v=20260617-product-click-proof-v1"></script>
   <script>
@@ -192,7 +192,7 @@
     const bgLayer = document.getElementById("bg-layer");
     const preloadCache = new Map();
 
-    const insideGifs = [
+    let insideGifs = [
       "/public/inside/lightning.gif",
       "/public/inside/chamber.gif",
       "/public/inside/heart.gif",
@@ -207,13 +207,97 @@
       "/public/revolution/woodstock.gif"
     ];
 
-    const outsideGifs = [
+    let outsideGifs = [
+      "/public/outside/bubble.gif",
       "/public/outside/astronaut.gif",
       "/public/outside/diver.gif",
       "/public/outside/slackliner.gif",
       "/public/outside/surfer.gif",
       "/public/outside/yogi.gif"
     ];
+
+    const gifPerformanceEndpoint = "https://api.mackley.co/gif-performance";
+    const gifWatchThresholdMs = 1200;
+    const gifSessionKey = "mackley_gif_session_v1";
+    const gifOrderKey = "mackley_gif_order_v1";
+
+    function getGifSessionId() {
+      try {
+        const existing = window.sessionStorage.getItem(gifSessionKey);
+        if (existing) return existing;
+        const created = window.crypto?.randomUUID?.() || `gif-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        window.sessionStorage.setItem(gifSessionKey, created);
+        return created;
+      } catch (error) {
+        return `gif-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+    }
+
+    function avoidPreviousOrder(poolName, ordered) {
+      if (ordered.length < 2) return ordered;
+      try {
+        const stored = JSON.parse(window.localStorage.getItem(gifOrderKey) || "{}");
+        const previous = Array.isArray(stored[poolName]) ? stored[poolName] : [];
+        if (previous.join("|") === ordered.join("|")) ordered.push(ordered.shift());
+        stored[poolName] = ordered;
+        window.localStorage.setItem(gifOrderKey, JSON.stringify(stored));
+      } catch (error) {
+        // Randomization still works when storage is unavailable.
+      }
+      return ordered;
+    }
+
+    function weightedShuffle(poolName, assets, ranking = []) {
+      const scoreByAsset = new Map(ranking.map((entry) => [entry.asset, Math.max(1, Number(entry.score) || 1)]));
+      const ordered = assets
+        .map((asset) => ({
+          asset,
+          key: Math.pow(Math.max(Math.random(), 0.0001), 1 / (scoreByAsset.get(asset) || 1))
+        }))
+        .sort((a, b) => b.key - a.key)
+        .map((entry) => entry.asset);
+      return avoidPreviousOrder(poolName, ordered);
+    }
+
+    async function rankGifPool(poolName, assets) {
+      try {
+        const response = await fetch(gifPerformanceEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pool: poolName, event: "rank", assets })
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const ordered = weightedShuffle(poolName, assets, data.ranking || []);
+        if (poolName === "inside") insideGifs = ordered;
+        if (poolName === "outside") outsideGifs = ordered;
+      } catch (error) {
+        // The locally shuffled order remains the fallback.
+      }
+    }
+
+    function recordGifMetric(poolName, asset, event) {
+      const assets = poolName === "inside" ? insideGifs : outsideGifs;
+      fetch(gifPerformanceEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pool: poolName,
+          event,
+          asset,
+          assets,
+          sessionId: getGifSessionId()
+        }),
+        keepalive: true
+      }).catch(() => {
+        // Ranking telemetry is best effort.
+      });
+    }
+
+    insideGifs = weightedShuffle("inside", insideGifs);
+    outsideGifs = weightedShuffle("outside", outsideGifs);
+    rankGifPool("inside", insideGifs);
+    rankGifPool("outside", outsideGifs);
 
     function poolForParagraph(paragraphEl) {
       if (!paragraphEl) return null;
@@ -226,6 +310,10 @@
     let gifTimer = null;
     let currentPool = null;
     const poolIndices = new Map();
+    let activeGifAsset = "";
+    let activeGifPoolName = "";
+    let activeGifStartedAt = 0;
+    let activeGifWatchTimer = null;
 
     function resetQueue(pool) {
       if (!pool) return;
@@ -258,6 +346,14 @@
         if (pendingGifId !== requestId) return;
         bgLayer.style.backgroundImage = `url(${next})`;
         bgLayer.classList.add("active");
+        if (activeGifWatchTimer) window.clearTimeout(activeGifWatchTimer);
+        activeGifAsset = next;
+        activeGifPoolName = next.includes("/inside/") ? "inside" : "outside";
+        activeGifStartedAt = Date.now();
+        activeGifWatchTimer = window.setTimeout(() => {
+          recordGifMetric(activeGifPoolName, activeGifAsset, "watch");
+          activeGifWatchTimer = null;
+        }, gifWatchThresholdMs);
       };
 
       if (img.complete) {
@@ -290,6 +386,13 @@
       }
       resetQueue(currentPool);
       currentPool = null;
+      if (activeGifWatchTimer) {
+        window.clearTimeout(activeGifWatchTimer);
+        activeGifWatchTimer = null;
+      }
+      activeGifAsset = "";
+      activeGifPoolName = "";
+      activeGifStartedAt = 0;
       bgLayer.classList.remove("active");
       bgLayer.style.backgroundImage = "none";
     }
@@ -299,6 +402,20 @@
     function setActiveParagraph(paragraphEl) {
       document.body.classList.toggle("is-product-active", paragraphEl?.classList.contains("home-product"));
       if (activeParagraphEl === paragraphEl) return;
+      const previousIndex = paragraphs.indexOf(activeParagraphEl);
+      const nextIndex = paragraphs.indexOf(paragraphEl);
+      if (
+        activeGifAsset
+        && nextIndex > previousIndex
+        && Date.now() - activeGifStartedAt >= gifWatchThresholdMs
+      ) {
+        if (activeGifWatchTimer) {
+          window.clearTimeout(activeGifWatchTimer);
+          activeGifWatchTimer = null;
+          recordGifMetric(activeGifPoolName, activeGifAsset, "watch");
+        }
+        recordGifMetric(activeGifPoolName, activeGifAsset, "advance");
+      }
       activeParagraphEl = paragraphEl;
 
       const pool = poolForParagraph(paragraphEl);
@@ -437,8 +554,8 @@
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
   <script type="module" src="/carousel.js?v=20260610-get-started"></script>
-  <script src="/site-chrome.js?v=20260627-manual-review-v1"></script>
-  <script type="module" src="/social-proof.js?v=20260626-mackley-primary-v1"></script>
+  <script src="/site-chrome.js?v=20260628-adaptive-live-v1"></script>
+  <script type="module" src="/social-proof.js?v=20260628-live-count-v1"></script>
   <script src="/access-lock.js?v=20260618-password-icanchange-v1"></script>
 </body>
 </html>

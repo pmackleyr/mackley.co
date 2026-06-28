@@ -562,7 +562,7 @@ async function buildReferralLink(payload) {
     priorReferral: payload.referral || null,
     shareDepth: priorDepth
   });
-  const url = new URL("/spray-intake/", window.location.origin);
+  const url = new URL("/intake/", window.location.origin);
   url.searchParams.set("ref", created.actorUserId);
   url.searchParams.set("code", created.referralCode);
   url.searchParams.set("offer", String(created.receiverOfferPercent || 10));

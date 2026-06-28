@@ -1,5 +1,5 @@
 (function () {
-  const intakeLink = "/spray-intake/?next=payment";
+  const intakeLink = "/intake/?next=payment";
   let redirectInFlight = false;
 
   function track(name, payload, options) {

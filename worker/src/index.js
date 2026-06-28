@@ -27,7 +27,7 @@ const ALLOWED_HOSTS = new Set([
 
 const CLICK_TRACKING_KEYS = ["gclid", "gclsrc", "wbraid", "gbraid"];
 const CHECKOUT_SUCCESS_URL = "https://mackley.co/thank-you?session_id={CHECKOUT_SESSION_ID}";
-const CHECKOUT_CANCEL_URL = "https://mackley.co/spray-intake/?checkout=canceled";
+const CHECKOUT_CANCEL_URL = "https://mackley.co/intake/?checkout=canceled";
 const PRODUCT_NAME = "Intranasal Neuropeptide Formula";
 const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
 const PRODUCT_PRICE_ID = "price_1Tn1iaH2VzsYlSl5EgIJwOwV";
@@ -347,7 +347,7 @@ async function sendAccessRequestEmail(profile, requestInfo, env) {
 async function sendEmailVerification(profile, requestId, token, env) {
   const apiKey = String(env.RESEND_API_KEY || "").trim();
   if (!apiKey || !isValidEmail(profile.email)) return { ok: false, error: "email_not_configured" };
-  const verificationUrl = new URL("https://mackley.co/spray-intake/");
+  const verificationUrl = new URL("https://mackley.co/intake/");
   verificationUrl.searchParams.set("verify_email", token);
   verificationUrl.searchParams.set("request_id", requestId);
   const safeName = escapeHtml(profile.name);
@@ -388,7 +388,7 @@ function normalizeTracking(body) {
 }
 
 function isValidProofType(type) {
-  return type === "view" || type === "purchase";
+  return type === "view" || type === "click" || type === "purchase";
 }
 
 function normalizeWindow(windowSeconds) {
@@ -400,6 +400,19 @@ function normalizeWindow(windowSeconds) {
 
 function isValidPage(page) {
   return typeof page === "string" && /^[a-z0-9-]+$/.test(page) && page.length <= 64;
+}
+
+function normalizeGifPool(value) {
+  return value === "inside" || value === "outside" ? value : "";
+}
+
+function normalizeGifAsset(value, pool) {
+  if (typeof value !== "string" || !pool) return "";
+  const asset = value.trim();
+  const prefix = `/public/${pool}/`;
+  return asset.startsWith(prefix) && /^[a-z0-9/_-]+\.gif$/i.test(asset) && asset.length <= 120
+    ? asset
+    : "";
 }
 
 async function stripePost(path, params, env, idempotencyKey = "") {
@@ -471,7 +484,7 @@ function buildCheckoutSessionParams(payload) {
   params.set("mode", "payment");
   if (payload.embedded) {
     params.set("ui_mode", "embedded");
-    params.set("return_url", "https://mackley.co/spray-intake/?checkout=return&session_id={CHECKOUT_SESSION_ID}");
+    params.set("return_url", "https://mackley.co/intake/?checkout=return&session_id={CHECKOUT_SESSION_ID}");
     params.set("redirect_on_completion", "always");
   } else {
     params.set("success_url", CHECKOUT_SUCCESS_URL);
@@ -926,6 +939,54 @@ export default {
       return jsonResponse(200, data, corsOrigin);
     }
 
+    if (url.pathname === "/gif-performance") {
+      const corsOrigin = corsOriginForSocialProof(origin || effectiveOrigin);
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: withCorsHeaders(new Headers(), corsOrigin)
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, corsOrigin);
+      }
+
+      let payload = null;
+      try {
+        payload = await request.json();
+      } catch (error) {
+        return jsonResponse(400, { error: "Invalid JSON." }, corsOrigin);
+      }
+
+      const pool = normalizeGifPool(payload?.pool);
+      const event = ["rank", "watch", "advance"].includes(payload?.event) ? payload.event : "";
+      const assets = Array.isArray(payload?.assets)
+        ? payload.assets.map((asset) => normalizeGifAsset(asset, pool)).filter(Boolean).slice(0, 12)
+        : [];
+      const asset = normalizeGifAsset(payload?.asset, pool);
+      const sessionId = sanitizeTrackingValue(payload?.sessionId || "").slice(0, 80);
+      if (!pool || !event || !assets.length || (event !== "rank" && (!asset || !sessionId))) {
+        return jsonResponse(400, { error: "Invalid payload." }, corsOrigin);
+      }
+
+      const id = env.SOCIAL_PROOF.idFromName("social-proof");
+      const stub = env.SOCIAL_PROOF.get(id);
+      const response = await stub.fetch("https://social-proof/gif-performance", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "gif-performance",
+          pool,
+          event,
+          assets,
+          asset,
+          sessionId
+        })
+      });
+      const data = await response.json();
+      return jsonResponse(response.status, data, corsOrigin);
+    }
+
     if (url.pathname === "/analytics/collect") {
       if (!effectiveOrigin) {
         return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
@@ -1297,6 +1358,10 @@ export class SocialProof {
       return new Response("Invalid JSON.", { status: 400 });
     }
 
+    if (payload?.mode === "gif-performance") {
+      return this.gifPerformance(payload);
+    }
+
     const key = payload?.key;
     const totalMode = Boolean(payload?.total);
     const windowSeconds = totalMode ? null : normalizeWindow(payload?.window);
@@ -1334,6 +1399,57 @@ export class SocialProof {
       headers: {
         "Content-Type": "application/json"
       }
+    });
+  }
+
+  async gifPerformance(payload) {
+    const pool = normalizeGifPool(payload?.pool);
+    const event = ["rank", "watch", "advance"].includes(payload?.event) ? payload.event : "";
+    const assets = Array.isArray(payload?.assets)
+      ? payload.assets.map((asset) => normalizeGifAsset(asset, pool)).filter(Boolean).slice(0, 12)
+      : [];
+    const asset = normalizeGifAsset(payload?.asset, pool);
+    const sessionId = sanitizeTrackingValue(payload?.sessionId || "").slice(0, 80);
+    if (!pool || !event || !assets.length || (event !== "rank" && (!asset || !sessionId))) {
+      return new Response(JSON.stringify({ error: "Invalid payload." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    const statsKey = `gif-performance:${pool}`;
+    const stored = await this.state.storage.get(statsKey);
+    const stats = stored && typeof stored === "object" ? stored : {};
+
+    if (event !== "rank") {
+      const dedupeKey = `gif-session:${pool}:${sessionId}:${asset}`;
+      const dedupe = await this.state.storage.get(dedupeKey) || {};
+      if (!dedupe[event]) {
+        const current = stats[asset] || { watches: 0, advances: 0 };
+        current[event === "watch" ? "watches" : "advances"] += 1;
+        stats[asset] = current;
+        dedupe[event] = Date.now();
+        await this.state.storage.put(dedupeKey, dedupe);
+        await this.state.storage.put(statsKey, stats);
+      }
+    }
+
+    const ranking = assets.map((candidate) => {
+      const candidateStats = stats[candidate] || { watches: 0, advances: 0 };
+      const watches = Number(candidateStats.watches) || 0;
+      const advances = Number(candidateStats.advances) || 0;
+      const completionRate = (advances + 1) / (watches + 2);
+      const confidence = Math.min(1, Math.log2(watches + 1) / 5);
+      return {
+        asset: candidate,
+        watches,
+        advances,
+        score: 1 + (completionRate * confidence * 4)
+      };
+    }).sort((a, b) => b.score - a.score || b.advances - a.advances || b.watches - a.watches);
+
+    return new Response(JSON.stringify({ ranking }), {
+      headers: { "Content-Type": "application/json" }
     });
   }
 }

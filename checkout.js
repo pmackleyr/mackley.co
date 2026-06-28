@@ -1,1 +1,1 @@
-window.location.replace("/spray-intake/?next=payment");
+window.location.replace("/intake/?next=payment");

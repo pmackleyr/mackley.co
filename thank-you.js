@@ -57,7 +57,7 @@
       });
       const data = await response.json();
       if (!response.ok || !data.referralCode) throw new Error("referral_create_failed");
-      const url = new URL("/spray-intake/", window.location.origin);
+      const url = new URL("/intake/", window.location.origin);
       url.searchParams.set("ref", data.actorUserId);
       url.searchParams.set("code", data.referralCode);
       url.searchParams.set("offer", String(data.receiverOfferPercent || 10));

@@ -1,6 +1,6 @@
 (function () {
   const product = window.MACKLEYProduct || {};
-  const CTA_HREF = product.intakeLink || "/spray-intake/?next=payment";
+  const CTA_HREF = product.intakeLink || "/intake/?next=payment";
   const CTA_LABEL = product.ctaLabel || "Get Prescription";
   const PRODUCT_NAME = product.name || "Intranasal Neuropeptide Formula";
   const PRODUCT_ID = product.stripeProductId || "prod_UgF2SFTaA6cCVy";
@@ -36,7 +36,7 @@
         <a class="site-header__link blur-trigger" href="/support/">FAQ</a>
       </nav>
       <div class="cta-proof site-header__action">
-        <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">Live activity updating</p>
+        <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">0 people clicked recently</p>
         <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
       </div>
     `;
@@ -110,7 +110,7 @@
       proof.dataset.label = "people clicked recently";
       proof.dataset.singular = "person clicked recently";
       proof.setAttribute("aria-live", "polite");
-      proof.textContent = "Live activity updating";
+      proof.textContent = "0 people clicked recently";
 
       button.parentNode.insertBefore(wrapper, button);
       wrapper.append(proof, button);
