@@ -460,7 +460,7 @@ async function initializeEmbeddedCheckout() {
   if (paymentInFlight || !latestPayload?.requestId) return;
   if (embeddedCheckout) return;
   const button = document.querySelector("[data-authorize-payment]");
-  const originalLabel = button?.textContent || "Continue to secure payment";
+  const originalLabel = button?.textContent || "Retry secure payment";
   const mount = document.getElementById("embedded-checkout");
   const publishableKey = document.querySelector('meta[name="stripe-publishable-key"]')?.content || "";
   paymentInFlight = true;
@@ -506,6 +506,7 @@ async function initializeEmbeddedCheckout() {
   } catch (error) {
     paymentInFlight = false;
     if (button) {
+      button.hidden = false;
       button.disabled = false;
       setButtonLabel(button, originalLabel);
     }
@@ -734,6 +735,7 @@ if (form) {
 
       updateVerificationNote(payload);
       showStep(steps.findIndex((step) => step.dataset.step === "payment"));
+      initializeEmbeddedCheckout();
     } catch (error) {
       setError("attestation", "Your survey could not be saved. Please try again.");
     } finally {
@@ -742,6 +744,17 @@ if (form) {
   });
 
   document.querySelector("[data-authorize-payment]")?.addEventListener("click", initializeEmbeddedCheckout);
+  form.elements.referralCode?.addEventListener("change", () => {
+    if (!latestPayload?.requestId || !embeddedCheckout) return;
+    try {
+      embeddedCheckout.destroy();
+    } catch (error) {
+      // A failed teardown should not block a fresh checkout attempt.
+    }
+    embeddedCheckout = null;
+    document.getElementById("embedded-checkout")?.replaceChildren();
+    initializeEmbeddedCheckout();
+  });
   document.querySelector("[data-share-referral]")?.addEventListener("click", shareReferral);
   syncConditionalFields();
   if (referralParams.get("checkout") === "canceled" || referralParams.get("checkout") === "return") {
@@ -768,6 +781,7 @@ if (form) {
         referralInput.value = displayReferralCode(latestPayload.referralCode);
       }
       updateVerificationNote(latestPayload);
+      initializeEmbeddedCheckout();
     }
   }
   verifyEmailToken(verificationToken);

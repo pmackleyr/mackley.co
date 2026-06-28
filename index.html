@@ -10,6 +10,8 @@
   <meta name="google-site-verification" content="PP3TPX6bMcaqnBTeW3YLw2NxuSre6aO7pVJZUd8HOOs" />
   <title>Purpose | MACKLEY</title>
   <link rel="canonical" href="https://mackley.co/" />
+  <link rel="preconnect" href="https://api.mackley.co" crossorigin />
+  <link rel="dns-prefetch" href="//api.mackley.co" />
   <script>
     (function () {
       const key = "mackley_landing_variant_v1";
@@ -30,7 +32,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260628-adaptive-live-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260628-intake-performance-v1" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -271,6 +273,7 @@
         const ordered = weightedShuffle(poolName, assets, data.ranking || []);
         if (poolName === "inside") insideGifs = ordered;
         if (poolName === "outside") outsideGifs = ordered;
+        preloadGif(ordered[0]);
       } catch (error) {
         // The locally shuffled order remains the fallback.
       }
@@ -296,6 +299,8 @@
 
     insideGifs = weightedShuffle("inside", insideGifs);
     outsideGifs = weightedShuffle("outside", outsideGifs);
+    preloadGif(insideGifs[0]);
+    preloadGif(outsideGifs[0]);
     rankGifPool("inside", insideGifs);
     rankGifPool("outside", outsideGifs);
 
@@ -332,6 +337,8 @@
     function preloadGif(url) {
       if (preloadCache.has(url)) return preloadCache.get(url);
       const img = new Image();
+      img.decoding = "async";
+      img.fetchPriority = "high";
       img.src = url;
       preloadCache.set(url, img);
       return img;

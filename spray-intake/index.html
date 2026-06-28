@@ -13,7 +13,7 @@
   <meta name="stripe-publishable-key" content="pk_live_51SkZpZH2VzsYlSl5XTxatFaWuB9zo5vU1Zq9mlpCFFwwUo0J816D6L5BMVGVeXCrjqlkXyzE6UuMIMg2Vm9v8KE9000uSCswcG" />
   <title>Provider Survey | MACKLEY</title>
   <link rel="canonical" href="https://mackley.co/intake/" />
-  <link rel="stylesheet" href="/styles.css?v=20260628-adaptive-live-v1" />
+  <link rel="stylesheet" href="/styles.css?v=20260628-intake-performance-v1" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -355,14 +355,14 @@
         <label class="intake-field intake-referral-code-field">
           <span>Referral code</span>
           <input type="text" name="referralCode" autocomplete="off" placeholder="Optional" data-referral-code-input />
-          <small>Enter a referral code before opening secure payment.</small>
+          <small>Changing this code refreshes the secure payment form.</small>
         </label>
         <p class="intake-referral-note" id="referral-note" hidden>Referral offer saved.</p>
         <div class="intake-embedded-checkout" id="embedded-checkout" aria-label="Secure payment form"></div>
         <p class="intake-error" data-error-for="payment" aria-live="polite"></p>
         <div class="intake-actions">
           <button class="intake-button intake-button--back" type="button" data-back>Back</button>
-          <button class="intake-button" type="button" data-authorize-payment>Continue to secure payment</button>
+          <button class="intake-button" type="button" data-authorize-payment hidden>Retry secure payment</button>
         </div>
       </section>
 
@@ -391,7 +391,7 @@
   <script src="/product-data.js?v=20260628-intake-route-v1"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script src="/ads.js?v=20260610-get-started"></script>
-  <script src="/spray-intake.js?v=20260627-payment-flow-v2"></script>
+  <script src="/spray-intake.js?v=20260628-auto-payment-v1"></script>
   <script src="/site-chrome.js?v=20260628-adaptive-live-v1"></script>
   <script type="module" src="/social-proof.js?v=20260628-live-count-v1"></script>
   <script src="/access-lock.js?v=20260618-password-icanchange-v1"></script>

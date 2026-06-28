@@ -6411,6 +6411,11 @@ body.product-page .prose {
   flex: 1 1 420px;
 }
 
+.intake-actions > .intake-button {
+  min-height: 64px !important;
+  align-self: stretch;
+}
+
 .intake-embedded-checkout,
 .intake-embedded-checkout:has(iframe) {
   min-height: 0;
@@ -6424,6 +6429,10 @@ body.product-page .prose {
 }
 
 @media (max-width: 720px) {
+  .intake-actions > .intake-button {
+    min-height: 56px !important;
+  }
+
   .intake-embedded-checkout iframe {
     min-height: 1120px !important;
   }
