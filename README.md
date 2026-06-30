@@ -5,9 +5,10 @@ MACKLEY is a static GitHub Pages site. There is no app framework and no build st
 - `index.html` is the home page.
 - `styles.css` is the shared design system and site stylesheet. Keep global font, button, spacing, and page-level styles here.
 - `product/`, `spray-intake/`, `checkout/`, `thank-you/`, `legal/`, `cookie/`, `purpose/`, and `deeper/` are static page folders.
-- `dashboard/` is the private analytics dashboard and has its own `dashboard.css` and `dashboard.js`.
+- `dashboard/` is the private operations dashboard. Localhost uses synthetic preview data; production requires Cloudflare Access.
 - `public/` contains product images, logos, and visual assets.
-- `worker/` contains the Cloudflare Worker used for payments and analytics support.
+- `worker/` contains the Cloudflare Worker used for intake, payments, provider review, referrals, analytics, and operator APIs.
+- `docs/` contains architecture, security, metrics, data-model, and runbook documentation.
 - `supabase/` contains Supabase function/config files.
 - `scripts/` contains local utility scripts.
 - `CNAME`, `_redirects`, `robots.txt`, and `domain-redirect.js` control production domain and routing behavior.
@@ -21,7 +22,20 @@ MACKLEY is a static GitHub Pages site. There is no app framework and no build st
 
 ## Getting Started
 
-Open `index.html` directly in a browser or serve the folder with any static file server.
+Open `index.html` directly in a browser or run:
+
+```sh
+npm run dev
+```
+
+Then open `http://127.0.0.1:8000/`. The operations preview is at `http://127.0.0.1:8000/dashboard/`.
+
+Run the contract and security checks with:
+
+```sh
+npm test
+npm run test:security
+```
 
 ## Production Deploys
 
@@ -43,12 +57,14 @@ cd worker
 npm i
 wrangler secret put STRIPE_SECRET_KEY
 wrangler secret put STRIPE_WEBHOOK_SECRET
-wrangler secret put PROVIDER_ADMIN_SECRET
+wrangler secret put CF_ACCESS_AUD
 wrangler deploy
 ```
 
 Configure Stripe to send `checkout.session.completed` to `https://api.mackley.co/stripe/webhook`.
 After deploy, confirm `https://api.mackley.co/create-payment-intent` returns `410` and provider-review checkout uses `/create-checkout-session` only.
+
+Operator routes use Cloudflare Access JWTs and role allowlists. See `docs/security.md` and `worker/README.md` before deploying Worker changes.
 
 ## Event Counts
 

@@ -1,52 +1,69 @@
-# MACKLEY Payments Worker
+# MACKLEY API Worker
 
-## Overview
-Cloudflare Worker for provider requests, Stripe Checkout manual authorization, and licensed-provider approval or denial.
+## Responsibilities
 
-## Deploy
-1) Install Wrangler
-```sh
-npm i -g wrangler
+- Accept provider requests and email verification.
+- Create Stripe Checkout Sessions using manual capture.
+- Persist the provider-review order lifecycle.
+- Capture or cancel authorizations after provider decisions.
+- Create subscriptions only after approval.
+- Track referrals, social proof, and first-party analytics.
+- Serve role-scoped operator read models.
+
+## Operator Authentication
+
+Protect these paths with Cloudflare Access and require a valid Access JWT in the Worker:
+
+- `/ops/*`
+- `/api/provider/*`
+- `/analytics/dashboard`
+- `/access-entries`
+- `/referrals/redeem`
+
+Configure:
+
+```text
+CF_ACCESS_TEAM_DOMAIN=<team>.cloudflareaccess.com
+CF_ACCESS_AUD=<application audience tag>
+OPS_OWNER_EMAILS=owner@example.com
+OPS_PROVIDER_EMAILS=provider@example.com
+OPS_ANALYST_EMAILS=analyst@example.com
+OPS_SUPPORT_EMAILS=support@example.com
+ALLOW_LEGACY_ADMIN_SECRET=false
 ```
 
-2) Authenticate
-```sh
-wrangler login
-```
+Email lists are comma-separated. Unlisted identities are denied even when Cloudflare Access authenticates them.
 
-3) Install dependencies
-```sh
-cd worker
-npm i
-```
+`ALLOW_LEGACY_ADMIN_SECRET=true` currently keeps the dashboard functional until Cloudflare Access is configured. The dashboard holds that password in memory only. Set the flag to `false` and remove the old secret immediately after Access is verified.
 
-4) Set the required secrets
+## Required Secrets
+
 ```sh
 wrangler secret put STRIPE_SECRET_KEY
 wrangler secret put STRIPE_WEBHOOK_SECRET
-wrangler secret put PROVIDER_ADMIN_SECRET
 wrangler secret put RESEND_API_KEY
+wrangler secret put CF_ACCESS_AUD
 ```
 
-Optional access request email overrides:
-```sh
-wrangler secret put ACCESS_EMAIL_FROM
-wrangler secret put ACCESS_REQUEST_NOTIFY_TO
-wrangler secret put PAYMENTS_EMAIL_FROM
-```
+The Access audience is not confidential, but storing it as deployment configuration avoids committing environment-specific identifiers.
 
-5) Deploy
+## Deploy
+
 ```sh
-wrangler deploy
+cd worker
+npm install
+npm run deploy
 ```
 
 Configure Stripe to send `checkout.session.completed` to `https://api.mackley.co/stripe/webhook`.
 
-The customer flow uses `/provider-requests`, then `/create-checkout-session`. Checkout authorizes $99 without capture. Provider actions require `Authorization: Bearer <PROVIDER_ADMIN_SECRET>`:
+## Payment Invariants
 
-```sh
-curl -X POST https://api.mackley.co/api/provider/approve/ORDER_ID -H "Authorization: Bearer $PROVIDER_ADMIN_SECRET"
-curl -X POST https://api.mackley.co/api/provider/deny/ORDER_ID -H "Authorization: Bearer $PROVIDER_ADMIN_SECRET"
-```
+1. Checkout uses `capture_method=manual`.
+2. `checkout.session.completed` creates `PENDING_PROVIDER_REVIEW`.
+3. Approval captures once, then creates one subscription using idempotency keys.
+4. Denial cancels the authorization and never creates a subscription.
+5. `ACTIVE` and `DENIED` are terminal states.
+6. Every status transition appends an application audit event.
 
-Approval captures the authorization and creates the monthly subscription. Denial cancels the authorization. `/create-payment-intent` is intentionally retired with HTTP `410`.
+`/create-payment-intent` remains retired with HTTP `410`.

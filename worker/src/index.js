@@ -5,6 +5,14 @@ import {
   handleAccessEntry,
   handleAnalyticsCollect
 } from "./analytics.js";
+import { authorizeOperator } from "./auth.js";
+import {
+  ORDER_STATUS,
+  assertOrderTransition,
+  isOrderStatus,
+  isTerminalOrderStatus
+} from "./domain/order-state.js";
+import { buildOpsDashboard } from "./ops-dashboard.js";
 
 const ALLOWED_HOSTS = new Set([
   "mackley.co",
@@ -22,6 +30,7 @@ const ALLOWED_HOSTS = new Set([
   "localhost:5173",
   "127.0.0.1:8000",
   "127.0.0.1:8017",
+  "127.0.0.1:8011",
   "127.0.0.1:5500"
 ]);
 
@@ -33,13 +42,6 @@ const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
 const PRODUCT_PRICE_ID = "price_1Tn1iaH2VzsYlSl5EgIJwOwV";
 const PRODUCT_SKU = "INF-01";
 const PRODUCT_UNIT_AMOUNT = 9900;
-const ORDER_STATUS = Object.freeze({
-  ACTIVE: "ACTIVE",
-  DENIED: "DENIED",
-  PAYMENT_CAPTURED: "PAYMENT_CAPTURED",
-  PENDING: "PENDING_PROVIDER_REVIEW",
-  PROCESSING: "APPROVAL_PROCESSING"
-});
 const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 300;
 
 function originFromHeader(value) {
@@ -68,42 +70,6 @@ function corsOriginForSocialProof(origin) {
   return origin;
 }
 
-function normalizeDashboardSecret(value) {
-  const next = String(value || "").trim();
-  return next || "BreatheDeeper";
-}
-
-function readDashboardAuthorization(request) {
-  const header = request.headers.get("authorization") || request.headers.get("x-dashboard-secret") || "";
-  if (header.toLowerCase().startsWith("bearer ")) {
-    return header.slice(7).trim();
-  }
-  return header.trim();
-}
-
-function readReferralAuthorization(request) {
-  const header = request.headers.get("authorization")
-    || request.headers.get("x-referral-secret")
-    || request.headers.get("x-dashboard-secret")
-    || "";
-  if (header.toLowerCase().startsWith("bearer ")) {
-    return header.slice(7).trim();
-  }
-  return header.trim();
-}
-
-function hasReferralAdminAccess(request, env) {
-  const expected = String(env.REFERRAL_ADMIN_SECRET || env.DASHBOARD_SHARED_SECRET || "").trim();
-  const provided = readReferralAuthorization(request);
-  return Boolean(expected && provided && provided === expected);
-}
-
-function hasProviderAdminAccess(request, env) {
-  const expected = String(env.PROVIDER_ADMIN_SECRET || env.DASHBOARD_SHARED_SECRET || "").trim();
-  const provided = readReferralAuthorization(request);
-  return Boolean(expected && provided && provided === expected);
-}
-
 function jsonResponse(status, data, origin) {
   const headers = {
     "Content-Type": "application/json"
@@ -111,6 +77,7 @@ function jsonResponse(status, data, origin) {
   if (origin) {
     headers["Access-Control-Allow-Origin"] = origin;
     headers["Vary"] = "Origin";
+    if (origin !== "*") headers["Access-Control-Allow-Credentials"] = "true";
   }
   return new Response(JSON.stringify(data), { status, headers });
 }
@@ -121,6 +88,7 @@ function withCorsHeaders(headers, origin, methods = "POST, OPTIONS", allowedHead
   headers.set("Access-Control-Allow-Methods", methods);
   headers.set("Access-Control-Allow-Headers", allowedHeaders);
   headers.set("Vary", "Origin");
+  if (origin !== "*") headers.set("Access-Control-Allow-Credentials", "true");
   return headers;
 }
 
@@ -703,15 +671,22 @@ function oneMonthFromNowUnix() {
   return Math.floor(date.getTime() / 1000);
 }
 
-async function approveProviderOrder(orderId, env) {
+async function approveProviderOrder(orderId, env, actor) {
   let { order } = await orderStoreRequest(env, "/orders/get", { orderId });
   if (!order) throw Object.assign(new Error("order_not_found"), { status: 404 });
   if (order.status === ORDER_STATUS.DENIED) throw Object.assign(new Error("order_already_denied"), { status: 409 });
   if (order.status !== ORDER_STATUS.ACTIVE) {
-    await orderStoreRequest(env, "/orders/update", {
-      orderId,
-      patch: { status: ORDER_STATUS.PROCESSING, providerApprovedAt: new Date().toISOString() }
-    });
+    if (order.status === ORDER_STATUS.PENDING) {
+      await orderStoreRequest(env, "/orders/update", {
+        orderId,
+        patch: { status: ORDER_STATUS.PROCESSING, providerApprovedAt: new Date().toISOString() },
+        actor,
+        reason: "provider_approved"
+      });
+      order.status = ORDER_STATUS.PROCESSING;
+    } else if (![ORDER_STATUS.PROCESSING, ORDER_STATUS.PAYMENT_CAPTURED].includes(order.status)) {
+      throw Object.assign(new Error("order_not_ready_for_approval"), { status: 409 });
+    }
 
     const intentResponse = await stripeGet(`payment_intents/${encodeURIComponent(order.paymentIntentId)}?expand[]=latest_charge`, env);
     let intent = await intentResponse.json();
@@ -725,10 +700,15 @@ async function approveProviderOrder(orderId, env) {
       );
       intent = await captureResponse.json();
       if (!captureResponse.ok || intent.status !== "succeeded") throw new Error("payment_capture_failed");
-      await orderStoreRequest(env, "/orders/update", {
-        orderId,
-        patch: { status: ORDER_STATUS.PAYMENT_CAPTURED, capturedAt: new Date().toISOString() }
-      });
+      if (order.status !== ORDER_STATUS.PAYMENT_CAPTURED) {
+        await orderStoreRequest(env, "/orders/update", {
+          orderId,
+          patch: { status: ORDER_STATUS.PAYMENT_CAPTURED, capturedAt: new Date().toISOString() },
+          actor,
+          reason: "authorization_captured"
+        });
+        order.status = ORDER_STATUS.PAYMENT_CAPTURED;
+      }
     } else if (intent.status !== "succeeded") {
       throw Object.assign(new Error("authorization_not_capturable"), { status: 409 });
     }
@@ -762,7 +742,9 @@ async function approveProviderOrder(orderId, env) {
         subscriptionId: order.subscriptionId,
         paymentMethodId,
         activatedAt: new Date().toISOString()
-      }
+      },
+      actor,
+      reason: "subscription_activated"
     });
 
     const session = await retrieveCheckoutSession(order.checkoutSessionId, env);
@@ -782,7 +764,7 @@ async function approveProviderOrder(orderId, env) {
   return orderStoreRequest(env, "/orders/get", { orderId });
 }
 
-async function denyProviderOrder(orderId, env) {
+async function denyProviderOrder(orderId, env, actor) {
   let { order } = await orderStoreRequest(env, "/orders/get", { orderId });
   if (!order) throw Object.assign(new Error("order_not_found"), { status: 404 });
   if (order.status === ORDER_STATUS.ACTIVE || order.status === ORDER_STATUS.PAYMENT_CAPTURED) {
@@ -802,7 +784,9 @@ async function denyProviderOrder(orderId, env) {
     }
     await orderStoreRequest(env, "/orders/update", {
       orderId,
-      patch: { status: ORDER_STATUS.DENIED, deniedAt: new Date().toISOString() }
+      patch: { status: ORDER_STATUS.DENIED, deniedAt: new Date().toISOString() },
+      actor,
+      reason: "provider_denied"
     });
     ({ order } = await orderStoreRequest(env, "/orders/get", { orderId }));
   }
@@ -861,12 +845,16 @@ export default {
         });
       }
       if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
-      if (!hasProviderAdminAccess(request, env)) return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin);
+      const identity = await authorizeOperator(request, env, ["owner", "provider"], {
+        legacySecretNames: ["PROVIDER_ADMIN_SECRET", "DASHBOARD_SHARED_SECRET"]
+      });
+      if (!identity) return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin);
       try {
         const orderId = providerActionMatch[2];
+        const actor = { id: identity.sub, email: identity.email, role: identity.role };
         const result = providerActionMatch[1] === "approve"
-          ? await approveProviderOrder(orderId, env)
-          : await denyProviderOrder(orderId, env);
+          ? await approveProviderOrder(orderId, env, actor)
+          : await denyProviderOrder(orderId, env, actor);
         return jsonResponse(200, { ok: true, ...result }, effectiveOrigin);
       } catch (error) {
         return jsonResponse(error.status || 500, { ok: false, error: error.message || "provider_action_failed" }, effectiveOrigin);
@@ -881,7 +869,10 @@ export default {
         });
       }
       if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
-      if (!hasProviderAdminAccess(request, env)) return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin);
+      const identity = await authorizeOperator(request, env, ["owner", "provider"], {
+        legacySecretNames: ["PROVIDER_ADMIN_SECRET", "DASHBOARD_SHARED_SECRET"]
+      });
+      if (!identity) return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin);
       try {
         const result = await orderStoreRequest(env, "/orders/list", {});
         return jsonResponse(200, result, effectiveOrigin);
@@ -1014,6 +1005,55 @@ export default {
       });
     }
 
+    if (url.pathname === "/ops/dashboard") {
+      const responseOrigin = effectiveOrigin || originFromHeader(origin);
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: withCorsHeaders(
+            new Headers(),
+            responseOrigin,
+            "POST, OPTIONS",
+            "Content-Type, Authorization, X-Dashboard-Secret"
+          )
+        });
+      }
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, responseOrigin);
+      }
+
+      const identity = await authorizeOperator(request, env, ["owner", "provider", "analyst", "support"], {
+        legacySecretNames: ["PROVIDER_ADMIN_SECRET", "DASHBOARD_SHARED_SECRET"]
+      });
+      if (!identity) return jsonResponse(403, { error: "Forbidden." }, responseOrigin);
+
+      const payload = await request.json().catch(() => ({}));
+      const days = [7, 14, 30, 60, 90].includes(Number(payload.days)) ? Number(payload.days) : 14;
+      try {
+        const analyticsId = env.ANALYTICS_STORE.idFromName("analytics");
+        const analyticsStub = env.ANALYTICS_STORE.get(analyticsId);
+        const [analyticsResponse, orderResult] = await Promise.all([
+          analyticsStub.fetch("https://analytics/dashboard", {
+            method: "POST",
+            body: JSON.stringify({ days })
+          }),
+          orderStoreRequest(env, "/orders/list", {})
+        ]);
+        const analyticsPayload = await analyticsResponse.json();
+        const dashboard = buildOpsDashboard({
+          analytics: analyticsPayload.dashboard || {},
+          orderEntries: orderResult.orders || [],
+          identity,
+          days
+        });
+        const response = jsonResponse(200, { ok: true, dashboard }, responseOrigin);
+        response.headers.set("Cache-Control", "no-store");
+        return response;
+      } catch (error) {
+        return jsonResponse(500, { ok: false, error: "ops_dashboard_failed" }, responseOrigin);
+      }
+    }
+
     if (url.pathname === "/analytics/dashboard") {
       if (request.method === "OPTIONS") {
         return new Response(null, {
@@ -1026,9 +1066,10 @@ export default {
         return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin || null);
       }
 
-      const providedSecret = readDashboardAuthorization(request);
-      const expectedSecret = normalizeDashboardSecret(env.DASHBOARD_SHARED_SECRET);
-      if (!providedSecret || providedSecret !== expectedSecret) {
+      const identity = await authorizeOperator(request, env, ["owner", "analyst"], {
+        legacySecretNames: ["DASHBOARD_SHARED_SECRET"]
+      });
+      if (!identity) {
         return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin || null);
       }
 
@@ -1124,9 +1165,10 @@ export default {
         return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin || null);
       }
 
-      const providedSecret = readDashboardAuthorization(request);
-      const expectedSecret = normalizeDashboardSecret(env.DASHBOARD_SHARED_SECRET);
-      if (!providedSecret || providedSecret !== expectedSecret) {
+      const identity = await authorizeOperator(request, env, ["owner", "analyst"], {
+        legacySecretNames: ["DASHBOARD_SHARED_SECRET"]
+      });
+      if (!identity) {
         return jsonResponse(403, { error: "Forbidden." }, effectiveOrigin || null);
       }
 
@@ -1142,7 +1184,12 @@ export default {
     }
 
     if (url.pathname.startsWith("/referrals/")) {
-      const adminReferralRequest = url.pathname === "/referrals/redeem" && hasReferralAdminAccess(request, env);
+      const referralIdentity = url.pathname === "/referrals/redeem"
+        ? await authorizeOperator(request, env, ["owner", "support"], {
+          legacySecretNames: ["REFERRAL_ADMIN_SECRET", "DASHBOARD_SHARED_SECRET"]
+        })
+        : null;
+      const adminReferralRequest = Boolean(referralIdentity);
       if (!effectiveOrigin && !adminReferralRequest) {
         return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
       }
@@ -1798,6 +1845,26 @@ export class OrderStore {
     });
   }
 
+  async appendAudit(orderId, input) {
+    const key = `audit:${orderId}`;
+    const history = await this.state.storage.get(key) || [];
+    history.unshift({
+      id: crypto.randomUUID(),
+      at: new Date().toISOString(),
+      action: String(input.action || "order_updated").slice(0, 80),
+      fromStatus: input.fromStatus || null,
+      toStatus: input.toStatus || null,
+      reason: String(input.reason || "").slice(0, 160),
+      actor: {
+        id: String(input.actor?.id || "system").slice(0, 160),
+        email: String(input.actor?.email || "").toLowerCase().slice(0, 200),
+        role: String(input.actor?.role || "system").slice(0, 40)
+      }
+    });
+    await this.state.storage.put(key, history.slice(0, 200));
+    return history;
+  }
+
   async fetch(request) {
     if (request.method !== "POST") return this.response(405, { error: "method_not_allowed" });
     const payload = await request.json().catch(() => ({}));
@@ -1847,15 +1914,35 @@ export class OrderStore {
       const orderId = sanitizeTrackingValue(incoming?.orderId || "");
       if (!incoming || !orderId) return this.response(400, { error: "invalid_order" });
       const existing = await this.state.storage.get(`order:${orderId}`) || {};
-      const terminal = existing.status === ORDER_STATUS.ACTIVE || existing.status === ORDER_STATUS.DENIED;
+      const requestedStatus = incoming.status || existing.status;
+      if (requestedStatus && !isOrderStatus(requestedStatus)) {
+        return this.response(400, { error: "invalid_order_status" });
+      }
+      try {
+        assertOrderTransition(existing.status, requestedStatus);
+      } catch (error) {
+        return this.response(409, { error: error.message });
+      }
+      if (isTerminalOrderStatus(existing.status) && requestedStatus !== existing.status) {
+        return this.response(409, { error: "terminal_order_cannot_change" });
+      }
       const order = {
         ...existing,
         ...incoming,
-        status: terminal ? existing.status : incoming.status || existing.status,
+        status: requestedStatus,
         createdAt: existing.createdAt || incoming.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       await this.state.storage.put(`order:${orderId}`, order);
+      if (!existing.orderId || existing.status !== order.status) {
+        await this.appendAudit(orderId, {
+          action: existing.orderId ? "status_changed" : "order_created",
+          fromStatus: existing.status,
+          toStatus: order.status,
+          reason: payload.reason || (existing.orderId ? "order_upsert" : "checkout_completed"),
+          actor: payload.actor
+        });
+      }
       if (order.checkoutSessionId) await this.state.storage.put(`session:${order.checkoutSessionId}`, orderId);
       const orderIds = await this.state.storage.get("order:index") || [];
       if (!orderIds.includes(orderId)) {
@@ -1879,9 +1966,32 @@ export class OrderStore {
       const patch = payload.patch && typeof payload.patch === "object" ? payload.patch : null;
       const existing = orderId ? await this.state.storage.get(`order:${orderId}`) : null;
       if (!existing || !patch) return this.response(404, { error: "order_not_found" });
+      if (patch.status && !isOrderStatus(patch.status)) {
+        return this.response(400, { error: "invalid_order_status" });
+      }
+      try {
+        assertOrderTransition(existing.status, patch.status || existing.status);
+      } catch (error) {
+        return this.response(409, { error: error.message });
+      }
       const order = { ...existing, ...patch, orderId, updatedAt: new Date().toISOString() };
       await this.state.storage.put(`order:${orderId}`, order);
+      if (existing.status !== order.status) {
+        await this.appendAudit(orderId, {
+          action: "status_changed",
+          fromStatus: existing.status,
+          toStatus: order.status,
+          reason: payload.reason || "order_update",
+          actor: payload.actor
+        });
+      }
       return this.response(200, { order });
+    }
+
+    if (url.pathname === "/orders/audit") {
+      const orderId = sanitizeTrackingValue(payload.orderId);
+      const audit = orderId ? await this.state.storage.get(`audit:${orderId}`) : null;
+      return this.response(200, { audit: audit || [] });
     }
 
     if (url.pathname === "/orders/list") {
@@ -1889,8 +1999,13 @@ export class OrderStore {
       const orders = (await Promise.all(orderIds.map((orderId) => this.state.storage.get(`order:${orderId}`))))
         .filter(Boolean);
       const requests = await Promise.all(orders.map((order) => this.state.storage.get(`request:${order.requestId}`)));
+      const audits = await Promise.all(orders.map((order) => this.state.storage.get(`audit:${order.orderId}`)));
       return this.response(200, {
-        orders: orders.map((order, index) => ({ order, request: requests[index] || null }))
+        orders: orders.map((order, index) => ({
+          order,
+          request: requests[index] || null,
+          audit: audits[index] || []
+        }))
       });
     }
 

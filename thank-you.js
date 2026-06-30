@@ -31,7 +31,22 @@
 
   function intakePayload() {
     try {
-      return JSON.parse(window.localStorage.getItem("mackley_provider_intake") || "null");
+      const key = "mackley_provider_intake";
+      const receipt = JSON.parse(window.sessionStorage.getItem(key) || "null");
+      if (receipt) return receipt;
+      const legacy = JSON.parse(window.localStorage.getItem(key) || "null");
+      if (!legacy) return null;
+      const sanitized = {
+        version: 2,
+        requestId: String(legacy.requestId || ""),
+        email: String(legacy.email || ""),
+        fullName: String(legacy.fullName || ""),
+        referral: legacy.referral && typeof legacy.referral === "object" ? legacy.referral : null,
+        orderId: String(legacy.orderId || "")
+      };
+      window.sessionStorage.setItem(key, JSON.stringify(sanitized));
+      window.localStorage.removeItem(key);
+      return sanitized;
     } catch (error) {
       return null;
     }

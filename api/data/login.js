@@ -1,5 +1,6 @@
 const {
   getPassword,
+  getSessionSecret,
   serializeSessionCookie,
   verifyPassword,
 } = require("../../lib/data-auth");
@@ -11,10 +12,10 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!getPassword()) {
+  if (!getPassword() || !getSessionSecret()) {
     sendJson(res, 500, {
       ok: false,
-      error: "dashboard_password_not_configured",
+      error: "legacy_dashboard_not_configured",
     });
     return;
   }

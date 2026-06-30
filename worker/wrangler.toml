@@ -1,9 +1,8 @@
 name = "mackley-payments"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
-workers_dev = true
+workers_dev = false
 account_id = "e23bc9f2899c5065f73cf561b5524378"
-zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657"
 
 routes = [
   { pattern = "api.mackley.co/*", zone_id = "fab3fe670ea1c49cefb8cbfb30b2c657" }
@@ -25,3 +24,5 @@ migrations = [
 
 [vars]
 PAYMENTS_EMAIL_FROM = "MACKLEY <contact@mackley.co>"
+# Temporary fallback until the Cloudflare Access application is configured.
+ALLOW_LEGACY_ADMIN_SECRET = "true"
