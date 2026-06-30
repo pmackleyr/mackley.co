@@ -1,4 +1,4 @@
-const { getPassword, isAuthenticated } = require("../../lib/data-auth");
+const { isAuthenticated } = require("../../lib/data-auth");
 const { methodNotAllowed, sendJson } = require("../../lib/http");
 
 function normalizeDays(value) {
@@ -23,12 +23,21 @@ module.exports = async (req, res) => {
 
   const days = normalizeDays(req.query?.days);
 
+  if (String(process.env.ALLOW_LEGACY_ADMIN_SECRET || "").toLowerCase() !== "true"
+    || !process.env.DASHBOARD_SHARED_SECRET) {
+    sendJson(res, 410, {
+      ok: false,
+      error: "legacy_dashboard_retired",
+    });
+    return;
+  }
+
   try {
     const response = await fetch("https://api.mackley.co/analytics/dashboard", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.DASHBOARD_SHARED_SECRET || getPassword()}`,
+        Authorization: `Bearer ${process.env.DASHBOARD_SHARED_SECRET}`,
       },
       body: JSON.stringify({ days }),
     });

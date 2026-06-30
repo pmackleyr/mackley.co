@@ -14,11 +14,11 @@
     intakeLink: "/intake/?next=payment",
     images: [
       {
-        src: "/public/product/inf-product-tight-01.png?v=20260626-mackley-primary-v1",
+        src: "/public/product/inf-product-tight-01.png?v=20260630-product-images-v1",
         alt: "INF intranasal formula bottle with copper applicator and MACKLEY cap"
       },
       {
-        src: "/public/product/inf-product-tight-02.png?v=20260626-mackley-primary-v1",
+        src: "/public/product/inf-product-tight-02.png?v=20260630-product-images-v1",
         alt: "INF intranasal formula kit packed in a black travel bag with copper neti pot"
       }
     ],

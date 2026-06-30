@@ -1,0 +1,15 @@
+{
+  "name": "mackley-site",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.mjs",
+    "test:ui": "playwright test tests/ui.spec.mjs",
+    "test:security": "node scripts/security-audit.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

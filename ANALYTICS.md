@@ -1,20 +1,10 @@
-# Analytics Dashboard
+# Operations Dashboard
 
-The private session dashboard lives at `/dashboard`.
+The private operator surface lives at `/dashboard/`.
 
-Access:
+- On localhost, it renders synthetic data from `dashboard/demo-data.js`.
+- In production, it requests `POST https://api.mackley.co/ops/dashboard` with Cloudflare Access credentials.
+- No shared password is accepted or stored by the dashboard.
+- The Worker returns a purpose-built read model with masked customer identity, review urgency, referral performance, and reliability checks.
 
-- Password: `DATA_DASHBOARD_PASSWORD`
-- Default local password: `BreatheDeeper`
-- Shared worker secret: `DASHBOARD_SHARED_SECRET` (defaults to the same value)
-
-Data flow:
-
-- Browser events are collected by `https://api.mackley.co/analytics/collect`
-- The dashboard reads aggregated data from `https://api.mackley.co/analytics/dashboard`
-- The dashboard UI is protected by a signed cookie and the dashboard API checks that session before returning data
-
-Notes:
-
-- The dashboard is intentionally `noindex`
-- `/data` redirects to `/dashboard` for backwards compatibility
+The browser event collector remains `POST /analytics/collect`. Metric names and ownership are defined in `docs/metrics.md`.

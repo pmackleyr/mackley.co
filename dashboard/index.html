@@ -3,140 +3,219 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MACKLEY Simple Analytics Dashboard</title>
+    <title>MACKLEY Operations</title>
     <meta name="robots" content="noindex,nofollow" />
     <link rel="canonical" href="https://mackley.co/dashboard/" />
-    <link rel="stylesheet" href="/dashboard/dashboard.css?v=20260616-ab-dashboard-v1" />
+    <link rel="stylesheet" href="/dashboard/dashboard.css?v=20260629-ops-v1" />
     <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   </head>
   <body>
-    <div class="dashboard-shell">
-      <header class="dashboard-header" id="dashboard-header" hidden>
-        <div class="hero-copy">
-          <p class="eyebrow">Protected analytics</p>
-          <h1>Simple Analytics Dashboard</h1>
-          <p class="lede">Access list, pages, clicks, time, source, device, and location.</p>
-        </div>
+    <div class="ops-shell">
+      <aside class="ops-sidebar">
+        <a class="ops-brand" href="/dashboard/" aria-label="MACKLEY Operations home">
+          <span class="ops-wordmark">MACKLEY</span>
+          <span>Operations</span>
+        </a>
 
-        <div class="header-actions" id="app-actions" hidden>
-          <button type="button" class="ghost-button" id="refresh-dashboard">Refresh</button>
-          <button type="button" class="ghost-button" id="logout-dashboard">Lock</button>
-        </div>
-      </header>
+        <nav class="ops-nav" aria-label="Operations sections">
+          <a href="#overview" class="is-active">Overview</a>
+          <a href="#reviews">Reviews <span class="nav-count" data-nav-review-count>0</span></a>
+          <a href="#people">People</a>
+          <a href="#growth">Growth</a>
+          <a href="#reliability">Reliability</a>
+        </nav>
 
-      <main class="dashboard-main">
-        <section class="auth-screen" id="auth-card">
-          <div class="auth-chrome" aria-hidden="true">
-            <div class="chrome-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <div class="chrome-address">mackley.co</div>
+        <div class="ops-sidebar-status">
+          <span class="status-dot" data-system-dot></span>
+          <span data-system-label>Loading system status</span>
+        </div>
+      </aside>
+
+      <main class="ops-main">
+        <header class="ops-header">
+          <div>
+            <p class="ops-kicker">Operating view</p>
+            <h1>Overview</h1>
           </div>
+          <div class="ops-header-actions">
+            <div class="viewer-chip">
+              <span data-viewer-role>Operator</span>
+              <strong data-viewer-email>Access protected</strong>
+            </div>
+            <label class="range-field">
+              <span>Period</span>
+              <select id="period-select">
+                <option value="7">7 days</option>
+                <option value="14" selected>14 days</option>
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+                <option value="90">90 days</option>
+              </select>
+            </label>
+            <button type="button" class="action-button" id="refresh-dashboard">Refresh</button>
+          </div>
+        </header>
 
-          <div class="auth-panel">
-            <div class="auth-icon" aria-hidden="true"></div>
-            <p class="auth-domain">mackley.co says:</p>
-            <h2>Enter dashboard password</h2>
+        <div class="ops-alert" id="ops-alert" hidden>
+          <span class="status-dot"></span>
+          <strong data-alert-title>Attention required</strong>
+          <span data-alert-copy></span>
+        </div>
 
-            <form id="login-form" class="auth-form">
-              <label class="field">
-                <span>Password</span>
-                <input type="password" name="password" autocomplete="current-password" required />
-              </label>
-              <div class="auth-actions">
-                <button type="submit" class="primary-button">OK</button>
-                <button type="button" class="secondary-button" id="auth-cancel">Cancel</button>
+        <section class="ops-section" id="overview">
+          <div class="metric-grid" id="metric-grid" aria-label="Key performance indicators"></div>
+
+          <div class="overview-grid">
+            <section class="surface funnel-surface">
+              <div class="section-heading">
+                <div>
+                  <p class="ops-kicker">Customer journey</p>
+                  <h2>Conversion funnel</h2>
+                </div>
+                <span class="section-meta" data-period-label>Count · % of sessions</span>
               </div>
-              <label class="remember-row">
-                <input type="checkbox" checked disabled />
-                <span>Don't ask again</span>
-              </label>
-              <p class="form-status" id="login-status" aria-live="polite"></p>
-            </form>
+              <div class="funnel-list" id="funnel-list"></div>
+            </section>
+
+            <section class="surface priorities-surface">
+              <div class="section-heading">
+                <div>
+                  <p class="ops-kicker">Today</p>
+                  <h2>Operating priorities</h2>
+                </div>
+              </div>
+              <div class="priority-list" id="priority-list"></div>
+            </section>
           </div>
         </section>
 
-        <section class="card setup-card" id="setup-card" hidden>
-          <div class="setup-copy">
-            <p class="eyebrow">Setup</p>
-            <h2>Analytics not connected yet</h2>
-            <p>The dashboard shell is live, but the analytics export cannot be queried until the service account is configured.</p>
-          </div>
-          <ul class="setup-list" id="setup-list"></ul>
-        </section>
-
-        <section class="card access-card" id="access-card" hidden>
-          <div class="chart-head">
+        <section class="ops-section" id="reviews">
+          <div class="section-heading section-heading--page">
             <div>
-              <p class="eyebrow">Site access</p>
-              <h2>Who entered the site</h2>
-              <p class="panel-copy">Name, email, where they entered from, and when the lockscreen was completed.</p>
+              <p class="ops-kicker">Clinical operations</p>
+              <h2>Provider review queue</h2>
             </div>
-            <p class="chart-meta" id="access-meta"></p>
+            <span class="section-meta" id="review-meta"></span>
           </div>
-
-          <div class="table-wrap">
-            <table class="access-table">
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Where</th>
-                  <th scope="col">When</th>
-                </tr>
-              </thead>
-              <tbody id="access-rows"></tbody>
-            </table>
+          <div class="table-surface">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Request</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Safety</th>
+                    <th scope="col">Authorization</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="review-rows"></tbody>
+              </table>
+            </div>
           </div>
         </section>
 
-        <section class="card experiment-card" id="experiment-card" hidden>
-          <div class="chart-head">
+        <section class="ops-section" id="people">
+          <div class="section-heading section-heading--page">
             <div>
-              <p class="eyebrow">Experiment optimizer</p>
-              <h2>Home hero A/B split</h2>
-              <p class="panel-copy">Variant traffic, CTA visibility, clicks/form starts, and the current bottleneck.</p>
+              <p class="ops-kicker">Customer state</p>
+              <h2>People</h2>
             </div>
-            <p class="chart-meta" id="experiment-meta"></p>
+            <label class="table-filter">
+              <span>Status</span>
+              <select id="people-filter">
+                <option value="all">All</option>
+                <option value="review">In review</option>
+                <option value="active">Active</option>
+                <option value="denied">Denied</option>
+              </select>
+            </label>
           </div>
-
-          <div class="experiment-grid" id="experiment-grid"></div>
-          <div class="insight-list" id="insight-list"></div>
+          <div class="table-surface">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Contact</th>
+                    <th scope="col">Where</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">Purchase</th>
+                  </tr>
+                </thead>
+                <tbody id="people-rows"></tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
-        <section class="card chart-card" id="chart-card" hidden>
-          <div class="chart-head">
+        <section class="ops-section" id="growth">
+          <div class="section-heading section-heading--page">
             <div>
-              <p class="eyebrow">Session table</p>
-              <h2>Who visited what, clicked what, and where they came from</h2>
-              <p class="panel-copy">Each session stays in one row so the whole visit reads left to right.</p>
+              <p class="ops-kicker">Acquisition</p>
+              <h2>Growth</h2>
             </div>
-            <p class="chart-meta" id="dashboard-meta"></p>
           </div>
+          <div class="growth-grid">
+            <section class="surface">
+              <div class="section-heading">
+                <h3>Referral loop</h3>
+                <span class="section-meta" id="referral-meta"></span>
+              </div>
+              <div class="referral-metrics" id="referral-metrics"></div>
+              <div class="compact-list" id="referral-list"></div>
+            </section>
+            <section class="surface">
+              <div class="section-heading">
+                <h3>Acquisition sources</h3>
+                <span class="section-meta">Survey conversion</span>
+              </div>
+              <div class="source-list" id="source-list"></div>
+            </section>
+          </div>
+        </section>
 
-          <div class="table-wrap">
-            <table class="session-table">
-              <thead>
-                <tr>
-                  <th scope="col">Session</th>
-                  <th scope="col">Pages</th>
-                  <th scope="col">Clicked</th>
-                  <th scope="col">From</th>
-                  <th scope="col">Device</th>
-                  <th scope="col">Location</th>
-                  <th scope="col">Time</th>
-                </tr>
-              </thead>
-              <tbody id="chart-rows"></tbody>
-            </table>
+        <section class="ops-section" id="reliability">
+          <div class="section-heading section-heading--page">
+            <div>
+              <p class="ops-kicker">Controls</p>
+              <h2>Reliability and audit</h2>
+            </div>
+            <span class="section-meta" id="generated-at"></span>
           </div>
+          <div class="reliability-grid">
+            <section class="surface">
+              <div class="section-heading">
+                <h3>System checks</h3>
+              </div>
+              <div class="check-list" id="check-list"></div>
+            </section>
+            <section class="surface">
+              <div class="section-heading">
+                <h3>Recent activity</h3>
+              </div>
+              <div class="activity-list" id="activity-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="empty-state" id="dashboard-error" hidden>
+          <p class="ops-kicker">Operator access</p>
+          <h2>Dashboard unavailable</h2>
+          <p data-error-copy>Confirm Cloudflare Access and try again.</p>
+          <form class="operator-login" id="operator-login" hidden>
+            <label for="operator-password">Dashboard password</label>
+            <input id="operator-password" name="password" type="password" autocomplete="current-password" required />
+            <button type="submit" class="action-button">Open dashboard</button>
+          </form>
+          <button type="button" class="action-button" id="retry-dashboard">Retry</button>
         </section>
       </main>
     </div>
 
-    <script src="/dashboard/dashboard.js?v=20260616-ab-dashboard-v1" defer></script>
-    <script src="/chrome-scroll.js?v=20260623-landmarks-v4"></script>
-</body>
+    <script src="/dashboard/demo-data.js?v=20260629-ops-v1" defer></script>
+    <script src="/dashboard/dashboard.js?v=20260629-ops-v1" defer></script>
+  </body>
 </html>

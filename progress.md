@@ -1,3 +1,13 @@
+Original prompt: restore the missing product images, make the operations dashboard show purchases, a click/count/percent conversion funnel, and people with name, contact, location, and status, then publish to GitHub Pages.
+
+Definition of Done: product images visibly render on the home and product pages at desktop and mobile widths; the dashboard reports purchases, each funnel stage's count and conversion percent, and authorized owner/provider views show customer name, contact, location, and status while analyst/support views remain masked; deterministic browser checks, automated tests, and live-domain verification pass before production is considered complete.
+
+2026-06-30: Confirmed both product PNGs are intact, byte-identical across worktrees, and return HTTP 200 with the correct image content type. Starting rendered-page and console/network diagnosis before changing product code.
+2026-06-30: Chromium QA confirmed both 1254px product images render at nonzero desktop/mobile dimensions and the homepage image renders when its section is active. Added purchases, captured value, Get Prescription click counts/percentages, and role-scoped name/contact/location/status to the operations dashboard. The first browser run passed both image scenarios; the dashboard scenario reached the correct data but required a more specific People-table selector because the same name also appears in the review queue.
+2026-06-30: Final deterministic run passed all three rendered scenarios. Added a product-image cache refresh, preserved the existing assets/layout, added full owner/provider contact visibility with masked analyst/support views, and kept the existing dashboard secret as an in-memory-only migration fallback until Cloudflare Access is configured.
+
+---
+
 Original prompt: make the CTA copper fill cover the full button with readable text while rotating, reduce the home scroll indicator to three states, keep product copy left aligned, add an eight-step provider intake with Stripe manual authorization and provider approve/deny processing, verify responsive behavior, and push live.
 
 Definition of Done: every primary CTA has a full-bleed copper base and a visibly rotating copper highlight with the label above both layers; the home page progress rail contains exactly three states while other scrollable routes retain the detailed rail; product prose stays left aligned at every viewport; the intake restricts sex to Male/Female and ends in a Stripe card authorization that is captured only through authenticated, idempotent provider approval; denial releases the authorization; responsive browser QA and syntax checks pass.

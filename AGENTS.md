@@ -5,6 +5,9 @@ This is a static site. Primary files are `index.html` and `styles.css`. Static a
 
 ## Build, Test, and Development Commands
 - No build step is required. Open `index.html` directly or serve the folder with any static file server.
+- `npm run dev` serves the static site on port 8000.
+- `npm test` runs order-lifecycle, operator-auth, read-model, and public-contract tests.
+- `npm run test:security` checks the repository's critical security invariants.
 - Production is `https://mackley.co`, served by GitHub Pages from the `main` branch and `CNAME`. Push live site changes to `origin main`; do not use `mackley.vercel.app` or Vercel as the production target.
 
 ## Coding Style & Naming Conventions

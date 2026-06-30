@@ -13,6 +13,51 @@ let latestPayload = null;
 let paymentInFlight = false;
 let embeddedCheckout = null;
 
+function buildIntakeReceipt(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  return {
+    version: 2,
+    requestId: String(payload.requestId || ""),
+    email: String(payload.email || ""),
+    fullName: String(payload.fullName || ""),
+    referralCode: normalizeReferralCode(payload.referralCode),
+    referral: payload.referral && typeof payload.referral === "object" ? payload.referral : null,
+    checkoutSessionId: String(payload.checkoutSessionId || ""),
+    paymentStatus: String(payload.paymentStatus || ""),
+    orderId: String(payload.orderId || ""),
+    verificationEmailSent: Boolean(payload.verificationEmailSent),
+    savedAt: new Date().toISOString()
+  };
+}
+
+function persistIntakeReceipt(payload) {
+  const receipt = buildIntakeReceipt(payload);
+  if (!receipt) return;
+  try {
+    window.sessionStorage.setItem(intakeStorageKey, JSON.stringify(receipt));
+    window.localStorage.removeItem(intakeStorageKey);
+  } catch (error) {
+    // Payment can continue in memory if storage is unavailable.
+  }
+}
+
+function readIntakeReceipt() {
+  try {
+    const current = JSON.parse(window.sessionStorage.getItem(intakeStorageKey) || "null");
+    if (current) return current;
+
+    // One-time migration removes legacy questionnaires from persistent storage.
+    const legacy = JSON.parse(window.localStorage.getItem(intakeStorageKey) || "null");
+    if (!legacy) return null;
+    const receipt = buildIntakeReceipt(legacy);
+    window.sessionStorage.setItem(intakeStorageKey, JSON.stringify(receipt));
+    window.localStorage.removeItem(intakeStorageKey);
+    return receipt;
+  } catch (error) {
+    return null;
+  }
+}
+
 function getProductName() {
   return product.name || "Intranasal Neuropeptide Formula";
 }
@@ -474,7 +519,7 @@ async function initializeEmbeddedCheckout() {
     if (!window.Stripe || !publishableKey || !mount) throw new Error("stripe_unavailable");
     latestPayload.referralCode = normalizeReferralCode(value("referralCode"));
     latestPayload.referral = await confirmReferralClaim(latestPayload);
-    localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
+    persistIntakeReceipt(latestPayload);
     const stripe = window.Stripe(publishableKey);
     embeddedCheckout = await stripe.initEmbeddedCheckout({
       fetchClientSecret: async () => {
@@ -496,7 +541,7 @@ async function initializeEmbeddedCheckout() {
         if (!response.ok || !data.clientSecret) throw new Error(data.error || "checkout_session_failed");
         latestPayload.checkoutSessionId = data.sessionId;
         latestPayload.paymentStatus = "authorization_started";
-        localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
+        persistIntakeReceipt(latestPayload);
         return data.clientSecret;
       }
     });
@@ -527,7 +572,7 @@ async function verifyCheckoutReturn(sessionId) {
     latestPayload.paymentStatus = "authorized_pending_provider_review";
     latestPayload.orderId = data.orderId;
     latestPayload.checkoutSessionId = data.sessionId;
-    localStorage.setItem(intakeStorageKey, JSON.stringify(latestPayload));
+    persistIntakeReceipt(latestPayload);
     updateCompletionState(latestPayload);
   }
   showStep(steps.findIndex((step) => step.dataset.step === "complete"));
@@ -605,7 +650,7 @@ function showReferralLink(share) {
 async function shareReferral() {
   if (!latestPayload) {
     try {
-      latestPayload = JSON.parse(localStorage.getItem(intakeStorageKey) || "null");
+      latestPayload = readIntakeReceipt();
     } catch (error) {
       latestPayload = null;
     }
@@ -722,7 +767,7 @@ if (form) {
       payload.requestId = providerRequest.requestId;
       payload.verificationEmailSent = Boolean(providerRequest.verificationEmailSent);
       latestPayload = payload;
-      localStorage.setItem(intakeStorageKey, JSON.stringify(payload));
+      persistIntakeReceipt(payload);
 
       if (window.MACKLEYAnalytics && typeof window.MACKLEYAnalytics.track === "function") {
         window.MACKLEYAnalytics.track("provider_survey_submitted", {
@@ -759,7 +804,7 @@ if (form) {
   syncConditionalFields();
   if (referralParams.get("checkout") === "canceled" || referralParams.get("checkout") === "return") {
     try {
-      latestPayload = JSON.parse(localStorage.getItem(intakeStorageKey) || "null");
+      latestPayload = readIntakeReceipt();
     } catch (error) {
       latestPayload = null;
     }
