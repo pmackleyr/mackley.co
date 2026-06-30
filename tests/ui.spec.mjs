@@ -57,6 +57,53 @@ test("home product image renders when the product section is active", async ({ p
   });
 });
 
+test("mobile pages expose one prescription CTA without scrolling", async ({ browser }, testInfo) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+    for (const route of ["/", "/product/"]) {
+      const page = await browser.newPage({ viewport });
+      await unlock(page);
+      await page.goto(route, { waitUntil: "networkidle" });
+
+      const ctas = page.getByRole("link", { name: "Get Prescription", exact: true });
+      const visibleBounds = await ctas.evaluateAll((nodes) => nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          documentWidth: document.documentElement.scrollWidth
+        };
+      }).filter((rect) => (
+        rect.width > 0
+        && rect.height > 0
+        && rect.bottom > 0
+        && rect.top < rect.viewportHeight
+        && rect.right > 0
+        && rect.left < rect.viewportWidth
+      )));
+      expect(visibleBounds).toHaveLength(1);
+      const [bounds] = visibleBounds;
+
+      expect(bounds.top).toBeGreaterThanOrEqual(0);
+      expect(bounds.left).toBeGreaterThanOrEqual(0);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportHeight);
+      expect(bounds.documentWidth).toBe(bounds.viewportWidth);
+
+      await testInfo.attach(`mobile-cta-${route === "/" ? "home" : "product"}-${viewport.width}.png`, {
+        body: await page.screenshot(),
+        contentType: "image/png"
+      });
+      await page.close();
+    }
+  }
+});
+
 test("dashboard exposes purchases, click conversion, and customer state", async ({ page }, testInfo) => {
   await page.goto("/dashboard/", { waitUntil: "networkidle" });
   await expect(page.getByText("Purchases", { exact: true }).first()).toBeVisible();

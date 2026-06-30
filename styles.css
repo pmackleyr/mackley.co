@@ -6437,3 +6437,51 @@ body.product-page .prose {
     min-height: 1120px !important;
   }
 }
+
+/* Keep the primary conversion action in the first mobile viewport. */
+@media (max-width: 720px) {
+  body:not(.product-page):not(.intake-page) .site-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body:not(.product-page):not(.intake-page) .site-header__action {
+    position: fixed;
+    right: var(--layout-gutter);
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: var(--layout-gutter);
+    z-index: 120;
+    width: auto;
+    max-width: none;
+  }
+
+  body:not(.product-page):not(.intake-page) .site-header__cta {
+    width: 100%;
+    min-width: 0;
+    min-height: 56px;
+  }
+
+  body:not(.product-page):not(.intake-page) .site-header__action .cta-hover-proof {
+    top: auto;
+    bottom: calc(100% + 10px);
+    transform: translate(50%, 10px) scale(0.98);
+  }
+
+  body:not(.product-page):not(.intake-page) .site-header__action:has(.ui-button--primary:hover) .cta-hover-proof,
+  body:not(.product-page):not(.intake-page) .site-header__action:has(.ui-button--primary:focus-visible) .cta-hover-proof {
+    transform: translate(50%, 0) scale(1);
+  }
+
+  body.product-page .site-header__action {
+    display: none;
+  }
+
+  body:not(.product-page):not(.intake-page) .page,
+  body:not(.product-page):not(.intake-page) .legal-document,
+  body:not(.product-page):not(.intake-page) .faq {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  body:not(.product-page):not(.intake-page) .swipe-hint {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
