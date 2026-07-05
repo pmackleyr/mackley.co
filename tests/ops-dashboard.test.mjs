@@ -34,6 +34,26 @@ test("owner read model exposes contact data and prioritizes expiring reviews", (
         prescriptionMedications: "No"
       },
       audit: []
+    }, {
+      order: {
+        orderId: "order_2",
+        requestId: "request_2",
+        status: "ACTIVE",
+        customerEmail: "active@example.com",
+        amountAuthorized: 9900,
+        includedItems: [{
+          sku: "NETI-ORIGINAL",
+          quantity: 1,
+          status: "ready_for_first_shipment"
+        }]
+      },
+      request: {
+        fullName: "Active Person",
+        state: "CA",
+        safetyDiagnoses: ["None"],
+        prescriptionMedications: "No"
+      },
+      audit: []
     }]
   });
 
@@ -44,12 +64,15 @@ test("owner read model exposes contact data and prioritizes expiring reviews", (
   assert.equal(result.reliability.expiringSoon, 1);
   assert.equal(result.people[0].safetySignals, 0);
   assert.equal(result.kpis.purchases, 1);
+  assert.equal(result.kpis.netiPotsIncluded, 1);
+  assert.equal(result.people.find((person) => person.orderId === "order_2").includedNetiPot, 1);
   assert.deepEqual(result.funnel.map((stage) => stage.label), [
     "Landing sessions",
     "Get Prescription clicks",
     "Survey submissions",
     "Purchases"
   ]);
+  assert.equal(result.funnel.some((stage) => /neti/i.test(stage.label)), false);
 });
 
 test("analyst read models omit clinical signal counts", () => {

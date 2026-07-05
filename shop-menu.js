@@ -7,6 +7,6 @@
     trigger.removeAttribute("aria-haspopup");
     trigger.removeAttribute("aria-expanded");
     trigger.removeAttribute("data-shop-trigger");
-    trigger.setAttribute("href", "/product/");
+    trigger.setAttribute("href", "/icanchange/");
   });
 })(document);

@@ -1,7 +1,7 @@
 /purpose /
 /purpose/ /
-/deeper /product/
-/deeper/ /product/
+/deeper /icanchange/
+/deeper/ /icanchange/
 /checkout /intake/?next=payment
 /checkout/ /intake/?next=payment
 /checkout.html /intake/?next=payment

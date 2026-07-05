@@ -7,6 +7,7 @@ const referralStorageKey = "mackley_referral_claim";
 const referralShareStorageKey = "mackley_referral_share";
 const referralApiBase = "https://api.mackley.co/referrals";
 const checkoutApiBase = "https://api.mackley.co";
+const netiOfferCode = "BREATHEDEEPER";
 const referralParams = new URLSearchParams(window.location.search);
 let currentStep = 0;
 let latestPayload = null;
@@ -96,6 +97,7 @@ function normalizeReferralCode(value) {
 
 function displayReferralCode(value) {
   const code = normalizeReferralCode(value);
+  if (code === netiOfferCode) return code;
   if (code.length <= 3) return code;
   return `${code.slice(0, 3)}-${code.slice(3)}`;
 }
@@ -169,6 +171,21 @@ function readStoredReferralClaim() {
 }
 
 const activeReferralClaim = applyReferralClaim() || readStoredReferralClaim();
+
+function applyNetiOfferCode() {
+  const offerCode = normalizeReferralCode(referralParams.get("offer"));
+  if (offerCode !== netiOfferCode) return;
+
+  const codeInput = form?.elements.referralCode;
+  const note = document.getElementById("referral-note");
+  if (codeInput) codeInput.value = netiOfferCode;
+  if (note) {
+    note.hidden = false;
+    note.textContent = "BREATHEDEEPER saved: one free Neti Pot after approval. Shipping & handling apply.";
+  }
+}
+
+applyNetiOfferCode();
 
 async function referralRequest(path, payload) {
   const response = await fetch(`${referralApiBase}/${path}`, {
@@ -413,11 +430,29 @@ function collectPayload() {
 async function confirmReferralClaim(payload) {
   const manualCode = normalizeReferralCode(payload.referralCode);
   const storedReferral = activeReferralClaim || readStoredReferralClaim();
+  const note = document.getElementById("referral-note");
+
+  if (manualCode === netiOfferCode) {
+    if (note) {
+      note.hidden = false;
+      note.textContent = "BREATHEDEEPER applied: one free Neti Pot after approval. Shipping & handling apply.";
+    }
+    trackLoopEvent("neti_offer_claimed", {
+      actor_user_id: buildActorId(payload),
+      offer_code: netiOfferCode,
+      product: "Original Copper Neti Pot"
+    });
+    return {
+      offerCode: netiOfferCode,
+      offerType: "first_approved_shipment_neti_pot",
+      status: "accepted"
+    };
+  }
+
   if (!manualCode && !storedReferral?.referrerUserId && !storedReferral?.referralCode) {
     return null;
   }
 
-  const note = document.getElementById("referral-note");
   try {
     const data = await referralRequest("claim", {
       referrerUserId: storedReferral?.referrerUserId || "",
@@ -534,6 +569,7 @@ async function initializeEmbeddedCheckout() {
             email: latestPayload.email,
             name: latestPayload.fullName,
             referral: latestPayload.referral || null,
+            offerCode: latestPayload.referral?.offerCode || "",
             embedded: true
           })
         });

@@ -45,6 +45,9 @@ function summarizeOrders(entries, options = {}) {
     const order = entry.order || {};
     const request = entry.request || {};
     const expiryHours = hoursUntil(order.authorizationExpiresAt);
+    const includedNetiPot = (Array.isArray(order.includedItems) ? order.includedItems : [])
+      .filter((item) => item?.sku === "NETI-ORIGINAL")
+      .reduce((total, item) => total + number(item.quantity), 0);
     return {
       orderId: order.orderId || "",
       requestId: order.requestId || "",
@@ -66,6 +69,10 @@ function summarizeOrders(entries, options = {}) {
       safetySignals: safetySignalCount(request),
       medicationDeclared: request.prescriptionMedications === "Yes",
       referralCode: order.referralCode || "",
+      offerCode: order.offerCode || "",
+      includedNetiPot,
+      includedNetiPotStatus: (Array.isArray(order.includedItems) ? order.includedItems : [])
+        .find((item) => item?.sku === "NETI-ORIGINAL")?.status || "",
       audit: Array.isArray(entry.audit) ? entry.audit.slice(0, 8) : []
     };
   });
@@ -144,6 +151,7 @@ export function buildOpsDashboard({ analytics, orderEntries, identity, days }) {
   const deniedOrders = orders.filter((order) => order.status === ORDER_STATUS.DENIED);
   const authorizedValue = reviews.reduce((sum, order) => sum + order.amountAuthorized, 0);
   const capturedValue = activeOrders.reduce((sum, order) => sum + order.amountAuthorized, 0);
+  const netiPotsIncluded = activeOrders.reduce((sum, order) => sum + order.includedNetiPot, 0);
   const metrics = analytics?.metrics || {};
   const purchases = number(metrics.purchaseSessions) || activeOrders.length;
   const sessions = number(metrics.landingSessions) || number(metrics.sessions);
@@ -167,6 +175,7 @@ export function buildOpsDashboard({ analytics, orderEntries, identity, days }) {
       activeSubscriptions: activeOrders.length,
       purchases,
       purchaseValue: capturedValue,
+      netiPotsIncluded,
       deniedRequests: deniedOrders.length,
       authorizedValue,
       surveyRate: number(metrics.providerSurveyRate),

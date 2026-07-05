@@ -41,6 +41,7 @@ Email lists are comma-separated. Unlisted identities are denied even when Cloudf
 ```sh
 wrangler secret put STRIPE_SECRET_KEY
 wrangler secret put STRIPE_WEBHOOK_SECRET
+wrangler secret put NETI_SHIPPING_RATE_ID
 wrangler secret put RESEND_API_KEY
 wrangler secret put CF_ACCESS_AUD
 ```

@@ -4,7 +4,7 @@
 
 | Metric | Definition | Owner |
 | --- | --- | --- |
-| Landing sessions | Unique sessions reaching `/` or `/product/` | Growth |
+| Landing sessions | Unique sessions reaching `/`, `/icanchange/`, or `/breathedeeper/` | Growth |
 | CTA seen | Sessions with a primary CTA impression | Growth |
 | Intake started | Sessions beginning the provider intake | Growth |
 | Survey submitted | Valid provider requests accepted server-side | Clinical operations |

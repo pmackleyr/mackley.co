@@ -28,3 +28,12 @@ Definition of Done: after login, the dashboard shows a single readable table of 
 
 2026-04-12: Starting implementation. Next steps are to replace the row-card layout with a single table, trim the gate copy/styles to match the reference screenshot, validate locally, and push main.
 2026-04-12: Completed the single-table dashboard pass. Verified the locked gate and unlocked table in Chromium with mocked analytics data, including page flow, click chips, source, device, location, and time columns.
+
+---
+
+Original prompt: publish the current two-product storefront preview, including the /icanchange and /breathedeeper routes, revised Neti Pot image and description, and BREATHEDEEPER checkout copy, to mackley.co.
+
+Definition of Done: the static storefront passes unit, security, and responsive Playwright checks; the full reviewed diff is committed and pushed to origin/main; GitHub Pages serves the new routes and copy; the Cloudflare Worker is not deployed until NETI_SHIPPING_RATE_ID is configured.
+
+2026-07-05: Confirmed origin/main remains at b24a32a, the local preview contains the reviewed two-product build, and the production Worker has Stripe credentials but no NETI_SHIPPING_RATE_ID. Proceeding with the GitHub Pages release while holding the Worker deployment closed.
+2026-07-05: Release validation passed: 11 unit/contract tests, the security audit, and 8 Playwright scenarios covering both product routes, mobile CTA visibility, legacy routing, offer-code prefill, product imagery, and dashboard state. No Worker deployment was attempted.

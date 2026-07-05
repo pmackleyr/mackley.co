@@ -57,6 +57,7 @@ cd worker
 npm i
 wrangler secret put STRIPE_SECRET_KEY
 wrangler secret put STRIPE_WEBHOOK_SECRET
+wrangler secret put NETI_SHIPPING_RATE_ID
 wrangler secret put CF_ACCESS_AUD
 wrangler deploy
 ```

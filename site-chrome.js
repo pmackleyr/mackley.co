@@ -1,12 +1,18 @@
 (function () {
-  const product = window.MACKLEYProduct || {};
-  const CTA_HREF = product.intakeLink || "/intake/?next=payment";
-  const CTA_LABEL = product.ctaLabel || "Get Prescription";
-  const PRODUCT_NAME = product.name || "Intranasal Neuropeptide Formula";
-  const PRODUCT_ID = product.stripeProductId || "prod_UgF2SFTaA6cCVy";
-  const PRODUCT_VALUE = product.value || "99";
+  const catalog = window.MACKLEYCatalog || {};
+  const currentProduct = window.MACKLEYProduct || {};
+  const prescriptionProduct = catalog.inf || currentProduct;
+  const CTA_HREF = prescriptionProduct.intakeLink || "/intake/?next=payment";
+  const CTA_LABEL = prescriptionProduct.ctaLabel || "Get Prescription";
+  const PRODUCT_NAME = prescriptionProduct.name || "Intranasal Neuropeptide Formula";
+  const PRODUCT_ID = prescriptionProduct.stripeProductId || "prod_UgF2SFTaA6cCVy";
+  const PRODUCT_VALUE = prescriptionProduct.value || "99";
   const DEFAULT_SCROLL_TICK_COUNT = 13;
-  const HOME_SCROLL_TICK_COUNT = 3;
+
+  function productForButton(button) {
+    const key = button?.dataset?.productKey || "inf";
+    return catalog[key] || prescriptionProduct;
+  }
 
   function ensureButtonLabel(button) {
     if (!button || button.querySelector(":scope > .ui-button__label")) return;
@@ -32,12 +38,12 @@
         <a class="site-title site-header__brand-link" href="/" aria-label="MACKLEY home">
           <span class="brand">MACKLEY</span>
         </a>
-        <a class="site-header__link blur-trigger" href="/product/">Formula</a>
+        <a class="site-header__link blur-trigger" href="/icanchange/">Formula</a>
         <a class="site-header__link blur-trigger" href="/support/">FAQ</a>
       </nav>
       <div class="cta-proof site-header__action">
         <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">0 people clicked recently</p>
-        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
+        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-product-key="inf" data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
       </div>
     `;
   }
@@ -57,13 +63,16 @@
 
   function decorateButtons() {
     document.querySelectorAll("[data-product-buy]").forEach((button) => {
-      button.textContent = CTA_LABEL;
-      button.setAttribute("href", CTA_HREF);
-      button.dataset.commerceAction = "request-prescription";
+      const buttonProduct = productForButton(button);
+      button.textContent = buttonProduct.ctaLabel || CTA_LABEL;
+      button.setAttribute("href", buttonProduct.intakeLink || CTA_HREF);
+      button.dataset.productKey = buttonProduct.key || "inf";
+      button.dataset.commerceAction = buttonProduct.commerceAction || "request-prescription";
       button.dataset.track = "get-started";
-      button.dataset.item = PRODUCT_NAME;
-      button.dataset.stripeProductId = PRODUCT_ID;
-      button.dataset.value = PRODUCT_VALUE;
+      button.dataset.item = buttonProduct.name || PRODUCT_NAME;
+      if (buttonProduct.stripeProductId) button.dataset.stripeProductId = buttonProduct.stripeProductId;
+      else delete button.dataset.stripeProductId;
+      button.dataset.value = buttonProduct.value ?? PRODUCT_VALUE;
     });
 
     document.querySelectorAll(".home-product__button").forEach((button) => {
@@ -85,8 +94,10 @@
 
   function renderScrollGuide() {
     if (document.body.classList.contains("intake-page") || document.querySelector(".scroll-guide")) return;
+    const activeNarrative = Array.from(document.querySelectorAll(".narrative"))
+      .find((element) => element.offsetParent !== null);
     const tickCount = document.body.classList.contains("purpose-page")
-      ? HOME_SCROLL_TICK_COUNT
+      ? Math.max(1, activeNarrative?.querySelectorAll(".paragraph").length || 1)
       : DEFAULT_SCROLL_TICK_COUNT;
     const guide = document.createElement("aside");
     guide.className = "scroll-guide";
@@ -188,7 +199,8 @@
   function isHomeProductInView() {
     if (!document.body.classList.contains("purpose-page")) return false;
     const scroller = getScrollContainer();
-    const product = scroller?.querySelector?.(".home-product");
+    const products = Array.from(scroller?.querySelectorAll?.(".home-product") || []);
+    const product = products.at(-1);
     if (!scroller || !product) return false;
     return scroller.scrollTop + scroller.clientHeight / 2 >= product.offsetTop - 24;
   }
@@ -241,9 +253,9 @@
     document.dispatchEvent(new CustomEvent("mackley:commerce-intent", {
       detail: {
         action: target.dataset.commerceAction,
-        item: target.dataset.item || PRODUCT_NAME,
-        stripeProductId: target.dataset.stripeProductId || PRODUCT_ID,
-        value: target.dataset.value || PRODUCT_VALUE
+        item: target.dataset.item || productForButton(target).name || PRODUCT_NAME,
+        stripeProductId: target.dataset.stripeProductId || productForButton(target).stripeProductId || "",
+        value: target.dataset.value || productForButton(target).value || PRODUCT_VALUE
       }
     }));
   });

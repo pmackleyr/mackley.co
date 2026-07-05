@@ -4,18 +4,18 @@
   const daysAgo = (days) => new Date(now - days * 86_400_000).toISOString();
 
   const orders = [
-    ["MK-1842", "Avery Reed", "avery@example.test", "CO", "PENDING_PROVIDER_REVIEW", 18, 1, true, "REF8Q2"],
-    ["MK-1841", "Jordan Miller", "jordan@example.test", "CA", "PENDING_PROVIDER_REVIEW", 31, 0, false, ""],
-    ["MK-1839", "Sam Lee", "sam@example.test", "NY", "APPROVAL_PROCESSING", 42, 2, true, "INF4D7"],
-    ["MK-1837", "Devon King", "devon@example.test", "TX", "ACTIVE", 96, 0, false, ""],
-    ["MK-1835", "Morgan Cole", "morgan@example.test", "WA", "ACTIVE", 112, 1, false, "REF6P1"],
-    ["MK-1833", "Taylor Nash", "taylor@example.test", "FL", "DENIED", 0, 3, true, ""],
-    ["MK-1831", "Riley Brooks", "riley@example.test", "UT", "ACTIVE", 144, 0, false, ""],
-    ["MK-1828", "Kai Lane", "kai@example.test", "OR", "ACTIVE", 156, 0, true, "REF2A9"],
-    ["MK-1825", "Casey Park", "casey@example.test", "IL", "DENIED", 0, 2, true, ""],
-    ["MK-1821", "Noah Wells", "noah@example.test", "MA", "ACTIVE", 170, 0, false, ""],
-    ["MK-1817", "Blair Hall", "blair@example.test", "AZ", "ACTIVE", 190, 0, false, "REF7K3"],
-    ["MK-1812", "Elliot Stone", "elliot@example.test", "CO", "ACTIVE", 210, 0, false, ""]
+    ["MK-1842", "Avery Reed", "avery@example.test", "CO", "PENDING_PROVIDER_REVIEW", 18, 1, true, "REF8Q2", "BREATHEDEEPER"],
+    ["MK-1841", "Jordan Miller", "jordan@example.test", "CA", "PENDING_PROVIDER_REVIEW", 31, 0, false, "", ""],
+    ["MK-1839", "Sam Lee", "sam@example.test", "NY", "APPROVAL_PROCESSING", 42, 2, true, "INF4D7", ""],
+    ["MK-1837", "Devon King", "devon@example.test", "TX", "ACTIVE", 96, 0, false, "", ""],
+    ["MK-1835", "Morgan Cole", "morgan@example.test", "WA", "ACTIVE", 112, 1, false, "REF6P1", "BREATHEDEEPER"],
+    ["MK-1833", "Taylor Nash", "taylor@example.test", "FL", "DENIED", 0, 3, true, "", "BREATHEDEEPER"],
+    ["MK-1831", "Riley Brooks", "riley@example.test", "UT", "ACTIVE", 144, 0, false, "", ""],
+    ["MK-1828", "Kai Lane", "kai@example.test", "OR", "ACTIVE", 156, 0, true, "REF2A9", "BREATHEDEEPER"],
+    ["MK-1825", "Casey Park", "casey@example.test", "IL", "DENIED", 0, 2, true, "", ""],
+    ["MK-1821", "Noah Wells", "noah@example.test", "MA", "ACTIVE", 170, 0, false, "", ""],
+    ["MK-1817", "Blair Hall", "blair@example.test", "AZ", "ACTIVE", 190, 0, false, "REF7K3", ""],
+    ["MK-1812", "Elliot Stone", "elliot@example.test", "CO", "ACTIVE", 210, 0, false, "", ""]
   ].map((row, index) => ({
     orderId: row[0],
     requestId: `REQ-${row[0].slice(3)}`,
@@ -33,6 +33,11 @@
     safetySignals: row[6],
     medicationDeclared: row[7],
     referralCode: row[8],
+    offerCode: row[9],
+    includedNetiPot: row[4] === "ACTIVE" && row[9] === "BREATHEDEEPER" ? 1 : 0,
+    includedNetiPotStatus: row[9] === "BREATHEDEEPER"
+      ? (row[4] === "ACTIVE" ? "ready_for_first_shipment" : "pending_provider_approval")
+      : "",
     audit: [{
       id: `audit-${index}`,
       at: daysAgo(index / 3),
@@ -61,6 +66,7 @@
       activeSubscriptions: 7,
       purchases: 61,
       purchaseValue: 603900,
+      netiPotsIncluded: orders.reduce((sum, order) => sum + order.includedNetiPot, 0),
       deniedRequests: 2,
       authorizedValue: reviews.reduce((sum, order) => sum + order.amountAuthorized, 0),
       surveyRate: 8.4,

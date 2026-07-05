@@ -1,5 +1,8 @@
 (function (win) {
-  win.MACKLEYProduct = {
+  const inf = {
+    key: "inf",
+    slug: "icanchange",
+    type: "prescription",
     name: "Intranasal Neuropeptide Formula",
     code: "INF\u2122",
     codeHtml: "INF&trade;",
@@ -12,6 +15,17 @@
     currency: "USD",
     stripeProductId: "prod_UgF2SFTaA6cCVy",
     intakeLink: "/intake/?next=payment",
+    commerceAction: "request-prescription",
+    includedItems: [
+      {
+        key: "netiPot",
+        sku: "NETI-ORIGINAL",
+        quantity: 1,
+        fulfillment: "first-approved-shipment",
+        requiredCode: "BREATHEDEEPER",
+        shippingHandlingPaidByCustomer: true
+      }
+    ],
     images: [
       {
         src: "/public/product/inf-product-tight-01.png?v=20260630-product-images-v1",
@@ -61,5 +75,61 @@
       }
     ]
   };
+
+  const netiPot = {
+    key: "netiPot",
+    slug: "breathedeeper",
+    type: "retail",
+    name: "Original Copper Neti Pot\u2122",
+    code: "Original",
+    codeHtml: "Original",
+    fullNameHtml: "<span class=\"home-product__code\">Original Copper</span> Neti Pot&trade;",
+    audience: "Breathe deeper.",
+    formula: "solid copper",
+    purpose: "Use code BREATHEDEEPER during checkout for free neti pot.",
+    ctaLabel: "Get it free with INF",
+    value: "0",
+    currency: "USD",
+    stripeProductId: "",
+    intakeLink: "/intake/?next=payment&offer=BREATHEDEEPER",
+    commerceAction: "request-prescription",
+    images: [
+      {
+        src: "/public/product/neti-pot-01.png?v=20260702-neti-offer-v2",
+        alt: "Original Copper Neti Pot with MACKLEY wordmark"
+      },
+      {
+        src: "/public/product/neti-pot-02.png?v=20260701-neti-preview-v1",
+        alt: "Original Copper Neti Pot and INF formula packed together in a black travel bag"
+      }
+    ],
+    story: [
+      {
+        html: `<p>You enter this world on a breath. You leave when breathing stops. Everything in between is shaped by the breaths you take.</p>
+
+        <p>You can survive for months without food and days without water, but only minutes without air. Breathing is the one thing you have been doing every moment of your life, yet most people rarely think about it until something gets in the way.</p>
+
+        <p>The majority of us brush our teeth every morning, many filter the water we drink, but very few clean the passage that every breath travels through. Crazy!&mdash;when you consider how much attention we give to every other part of daily hygiene.</p>
+
+        <p>Your nose is your body's primary airway. Before air reaches your lungs, it is filtered, warmed, and humidified inside your nasal passage. Throughout the day, dust, pollen, and other airborne particles become trapped in mucus instead of traveling deeper into your respiratory system. Like every filter, it works best when it is cleaned regularly.</p>
+
+        <p>A neti pot is a simple way to do just that. Warm saline flows gently through one nostril and out the other, carrying away mucus and accumulated debris as it passes. The practice takes only a few minutes and requires nothing more than water, salt, and gravity.</p>
+
+        <p>This practice has been part of daily life for thousands of years. In the yogic tradition it is known as "jala neti" and is commonly performed before breathwork, meditation, or physical exercise. The idea is that if you can clear your airways first, then everything that follows begins with a better breath.</p>
+
+        <p>This Original Copper Neti Pot&trade; is made of pure copper, which is the material traditionally used for jala neti because of its antimicrobial and healing properties. It is hand-shaped, built to last, and designed for daily routine.</p>
+
+        <p>We believe nasal hygiene belongs alongside brushing your teeth and washing your hands. It is one of the simplest habits you can build, and one of the easiest to overlook.</p>
+
+        <p><strong>Includes:</strong><br />Original Copper Neti Pot&trade;<br />Copper salt scoop<br />Premium microfiber towel</p>
+
+        <p>Receive one free with any approved INF&trade; prescription using referral code <strong>BREATHEDEEPER</strong>.<br />You cover shipping &amp; handling.</p>`
+      }
+    ]
+  };
+
+  win.MACKLEYCatalog = { inf, netiPot };
+  const selectedKey = win.document.body?.dataset.productKey || "inf";
+  win.MACKLEYProduct = win.MACKLEYCatalog[selectedKey] || inf;
   win.document.documentElement.dataset.productConfig = win.MACKLEYProduct.name;
 })(window);

@@ -120,6 +120,7 @@
       ["Pending reviews", formatInteger(kpis.pendingReviews), "Licensed provider queue"],
       ["Authorized value", formatCurrency(kpis.authorizedValue), "Not yet captured"],
       ["Purchases", formatInteger(kpis.purchases), `${formatCurrency(kpis.purchaseValue)} captured`],
+      ["Neti Pots included", formatInteger(kpis.netiPotsIncluded), "First approved shipments"],
       ["Denied requests", formatInteger(kpis.deniedRequests), "No charge captured"]
     ];
     replaceChildren(elements.metricGrid, metrics.map(([label, value, note]) => {
@@ -209,7 +210,10 @@
         tableCell(person.location || person.state || "--"),
         tableCell(statusPill(person.status, person.authorizationHoursRemaining)),
         tableCell(formatDate(person.submittedAt, { time: true })),
-        tableCell(cell(formatCurrency(person.amountAuthorized), person.referralCode || "Direct"))
+        tableCell(cell(
+          formatCurrency(person.amountAuthorized),
+          person.includedNetiPot ? `INF + ${formatInteger(person.includedNetiPot)} Neti Pot` : (person.referralCode || "Direct")
+        ))
       );
       return row;
     });

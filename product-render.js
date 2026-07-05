@@ -32,11 +32,14 @@
 
   function renderBuyLinks() {
     doc.querySelectorAll("[data-product-buy]").forEach((link) => {
+      if (link.dataset.productKey && link.dataset.productKey !== product.key) return;
       link.href = product.intakeLink || "/intake/?next=payment";
       link.textContent = product.ctaLabel || "Get Prescription";
+      link.dataset.productKey = product.key || "inf";
+      link.dataset.commerceAction = product.commerceAction || "request-prescription";
       link.dataset.track = "get-started";
       link.dataset.item = product.name;
-      link.dataset.stripeProductId = product.stripeProductId;
+      if (product.stripeProductId) link.dataset.stripeProductId = product.stripeProductId;
       link.dataset.value = product.value;
     });
   }

@@ -6,6 +6,7 @@
   const detailsTotal = document.getElementById("thank-you-total");
   const detailsEmail = document.getElementById("thank-you-email");
   const detailsOrder = document.getElementById("thank-you-order");
+  const detailsNeti = document.getElementById("thank-you-neti");
   const referralCard = document.getElementById("thank-you-referral");
   const referralButton = document.getElementById("thank-you-share");
   const referralStatus = document.getElementById("thank-you-share-status");
@@ -159,6 +160,9 @@
     }
     if (detailsOrder) {
       detailsOrder.textContent = transactionId;
+    }
+    if (detailsNeti && data.offerCode === "BREATHEDEEPER") {
+      detailsNeti.hidden = false;
     }
     if (referralCard && intakePayload()) referralCard.hidden = false;
 

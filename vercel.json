@@ -12,12 +12,12 @@
     },
     {
       "source": "/deeper",
-      "destination": "/product/",
+      "destination": "/icanchange/",
       "permanent": true
     },
     {
       "source": "/deeper/",
-      "destination": "/product/",
+      "destination": "/icanchange/",
       "permanent": true
     },
     {

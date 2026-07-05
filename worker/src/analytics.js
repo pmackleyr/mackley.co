@@ -867,7 +867,14 @@ function buildDashboardFromData(days, dailyRows, sourceRows, clickRows, pageRows
 }
 
 function isLandingPath(path) {
-  return path === "/" || path === "/index.html" || path === "/product/" || path === "/product";
+  return path === "/"
+    || path === "/index.html"
+    || path === "/icanchange/"
+    || path === "/icanchange"
+    || path === "/breathedeeper/"
+    || path === "/breathedeeper"
+    || path === "/product/"
+    || path === "/product";
 }
 
 export class AnalyticsStore {

@@ -42,6 +42,11 @@ const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
 const PRODUCT_PRICE_ID = "price_1Tn1iaH2VzsYlSl5EgIJwOwV";
 const PRODUCT_SKU = "INF-01";
 const PRODUCT_UNIT_AMOUNT = 9900;
+const INCLUDED_NETI_NAME = "Original Copper Neti Pot";
+const INCLUDED_NETI_SKU = "NETI-ORIGINAL";
+const INCLUDED_NETI_QUANTITY = 1;
+const INCLUDED_NETI_FULFILLMENT = "first_approved_shipment";
+const INCLUDED_NETI_OFFER_CODE = "BREATHEDEEPER";
 const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 300;
 
 function originFromHeader(value) {
@@ -236,6 +241,39 @@ function attachReferralMetadata(params, payload, options = {}) {
       params.set("payment_intent_data[metadata][referral_loop_id]", loopId);
     }
   }
+}
+
+function getNetiOfferCode(payload) {
+  const referral = payload && typeof payload.referral === "object" ? payload.referral : null;
+  const code = normalizeReferralCode(
+    payload?.offerCode
+    || referral?.offerCode
+    || payload?.referralCode
+    || ""
+  );
+  return code === INCLUDED_NETI_OFFER_CODE ? code : "";
+}
+
+function attachNetiOfferMetadata(params, payload, options = {}) {
+  const offerCode = getNetiOfferCode(payload);
+  if (!offerCode) return false;
+
+  const values = {
+    offer_code: offerCode,
+    included_item_name: INCLUDED_NETI_NAME,
+    included_item_sku: INCLUDED_NETI_SKU,
+    included_item_quantity: String(INCLUDED_NETI_QUANTITY),
+    included_item_fulfillment: INCLUDED_NETI_FULFILLMENT,
+    shipping_handling_paid_by_customer: "true"
+  };
+
+  Object.entries(values).forEach(([key, value]) => {
+    params.set(`metadata[${key}]`, value);
+    if (options.checkoutSession) {
+      params.set(`payment_intent_data[metadata][${key}]`, value);
+    }
+  });
+  return true;
 }
 
 function escapeHtml(value) {
@@ -440,11 +478,12 @@ function buildPaymentIntentParams(payload) {
   }
 
   attachReferralMetadata(params, payload);
+  attachNetiOfferMetadata(params, payload);
 
   return params;
 }
 
-function buildCheckoutSessionParams(payload) {
+function buildCheckoutSessionParams(payload, env = {}) {
   const quantity = normalizeQuantity(payload.quantity);
   const tracking = normalizeTracking(payload);
   const params = new URLSearchParams();
@@ -468,6 +507,9 @@ function buildCheckoutSessionParams(payload) {
   params.set("line_items[0][quantity]", String(quantity));
   params.set("billing_address_collection", "auto");
   params.set("shipping_address_collection[allowed_countries][0]", "US");
+  if (getNetiOfferCode(payload) && isNonEmpty(env.NETI_SHIPPING_RATE_ID)) {
+    params.set("shipping_options[0][shipping_rate]", String(env.NETI_SHIPPING_RATE_ID).trim());
+  }
   params.set("custom_text[submit][message]", "Your payment method will be authorized today. You will only be charged after approval by a licensed provider.");
   params.set("payment_intent_data[capture_method]", "manual");
   params.set("payment_intent_data[setup_future_usage]", "off_session");
@@ -492,6 +534,7 @@ function buildCheckoutSessionParams(payload) {
   });
 
   attachReferralMetadata(params, payload, { checkoutSession: true });
+  attachNetiOfferMetadata(params, payload, { checkoutSession: true });
 
   return params;
 }
@@ -604,6 +647,7 @@ async function persistCheckoutOrder(session, env) {
   const orderId = sanitizeTrackingValue(metadata.order_id || session?.client_reference_id || "");
   const requestId = sanitizeTrackingValue(metadata.provider_request_id || "");
   if (!orderId || !requestId || !paymentIntent?.id) throw new Error("incomplete_checkout_order");
+  const includedQuantity = Math.max(0, Number.parseInt(metadata.included_item_quantity || "0", 10) || 0);
 
   const order = {
     orderId,
@@ -621,6 +665,15 @@ async function persistCheckoutOrder(session, env) {
     status: ORDER_STATUS.PENDING,
     referralClaimId: sanitizeTrackingValue(metadata.referral_claim_id || ""),
     referralCode: normalizeReferralCode(metadata.referral_code || ""),
+    offerCode: normalizeReferralCode(metadata.offer_code || ""),
+    shippingHandlingPaidByCustomer: metadata.shipping_handling_paid_by_customer === "true",
+    includedItems: includedQuantity ? [{
+      name: sanitizeTrackingValue(metadata.included_item_name || INCLUDED_NETI_NAME),
+      sku: sanitizeTrackingValue(metadata.included_item_sku || INCLUDED_NETI_SKU),
+      quantity: includedQuantity,
+      fulfillment: sanitizeTrackingValue(metadata.included_item_fulfillment || INCLUDED_NETI_FULFILLMENT),
+      status: "pending_provider_approval"
+    }] : [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -641,8 +694,15 @@ async function sendOrderStatusEmail(order, type, env) {
   if (!apiKey || !isValidEmail(email)) return { ok: false, error: "email_not_configured" };
   const approved = type === "approved";
   const subject = approved ? "Your MACKLEY prescription was approved" : "Your MACKLEY prescription request update";
+  const includedNetiPot = Array.isArray(order?.includedItems)
+    && order.includedItems.some((item) => item.sku === INCLUDED_NETI_SKU && Number(item.quantity) > 0);
   const lines = approved
-    ? ["Your prescription has been approved.", "Your payment has now been processed.", "Your monthly INF subscription is active."]
+    ? [
+      "Your prescription has been approved.",
+      "Your payment has now been processed.",
+      "Your monthly INF subscription is active.",
+      ...(includedNetiPot ? ["Code BREATHEDEEPER added one free Original Copper Neti Pot to your first shipment. Shipping and handling apply."] : [])
+    ]
     : ["Your prescription was not approved.", "Your authorization has been released.", "You have not been charged."];
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -741,7 +801,12 @@ async function approveProviderOrder(orderId, env, actor) {
         status: ORDER_STATUS.ACTIVE,
         subscriptionId: order.subscriptionId,
         paymentMethodId,
-        activatedAt: new Date().toISOString()
+        activatedAt: new Date().toISOString(),
+        includedItems: Array.isArray(order.includedItems) ? order.includedItems.map((item) => ({
+          ...item,
+          status: "ready_for_first_shipment",
+          eligibleAt: new Date().toISOString()
+        })) : []
       },
       actor,
       reason: "subscription_activated"
@@ -784,7 +849,14 @@ async function denyProviderOrder(orderId, env, actor) {
     }
     await orderStoreRequest(env, "/orders/update", {
       orderId,
-      patch: { status: ORDER_STATUS.DENIED, deniedAt: new Date().toISOString() },
+      patch: {
+        status: ORDER_STATUS.DENIED,
+        deniedAt: new Date().toISOString(),
+        includedItems: Array.isArray(order.includedItems) ? order.includedItems.map((item) => ({
+          ...item,
+          status: "cancelled"
+        })) : []
+      },
       actor,
       reason: "provider_denied"
     });
@@ -1307,6 +1379,9 @@ export default {
       }
 
       try {
+        if (getNetiOfferCode(payload) && !isNonEmpty(env.NETI_SHIPPING_RATE_ID)) {
+          return jsonResponse(503, { error: "Neti Pot shipping and handling is not configured." }, effectiveOrigin);
+        }
         const requestId = sanitizeTrackingValue(payload.requestId);
         const stored = await orderStoreRequest(env, "/requests/get", { requestId });
         if (!stored.request || normalizeEmail(stored.request.email) !== normalizeEmail(payload.email)) {
@@ -1316,7 +1391,7 @@ export default {
         const checkoutPayload = { ...payload, orderId, requestId };
         const response = await stripePost(
           "checkout/sessions",
-          buildCheckoutSessionParams(checkoutPayload),
+          buildCheckoutSessionParams(checkoutPayload, env),
           env,
           `mackley-checkout-${orderId}`
         );
@@ -1374,6 +1449,7 @@ export default {
           paymentIntentId,
           orderId: stored.order?.orderId || null,
           orderStatus: stored.order?.status || ORDER_STATUS.PENDING,
+          offerCode: stored.order?.offerCode || "",
           paymentStatus: data.payment_status || null,
           sessionId: data.id,
           status: data.status || null,
