@@ -38,12 +38,12 @@
         <a class="site-title site-header__brand-link" href="/" aria-label="MACKLEY home">
           <span class="brand">MACKLEY</span>
         </a>
-        <a class="site-header__link blur-trigger" href="/icanchange/">Formula</a>
-        <a class="site-header__link blur-trigger" href="/support/">FAQ</a>
+        <a class="site-header__link" href="/icanchange/">Formula</a>
+        <a class="site-header__link" href="/support/">FAQ</a>
       </nav>
       <div class="cta-proof site-header__action">
         <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">0 people clicked recently</p>
-        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-product-key="inf" data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
+        <a class="ui-button ui-button--primary site-header__cta" href="${CTA_HREF}" data-product-buy data-product-key="inf" data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
       </div>
     `;
   }
@@ -55,8 +55,8 @@
     footer.innerHTML = `
       <span class="site-footer__copy">@MACKLEY 2026</span>
       <nav class="site-footer__legal" aria-label="Legal">
-        <a class="site-footer__link blur-trigger" href="/legal/">Privacy</a>
-        <a class="site-footer__link blur-trigger" href="/terms/">Terms</a>
+        <a class="site-footer__link" href="/legal/">Privacy</a>
+        <a class="site-footer__link" href="/terms/">Terms</a>
       </nav>
     `;
   }
@@ -77,12 +77,10 @@
 
     document.querySelectorAll(".home-product__button").forEach((button) => {
       decorateButton(button, button.matches("[data-product-buy]") ? "primary" : "secondary");
-      button.classList.add("blur-trigger");
     });
 
     document.querySelectorAll(".cta, .product-block__cta, .modal__button, .access-lock__button").forEach((button) => {
       decorateButton(button, button.classList.contains("cta--primary") || button.matches("[data-product-buy]") ? "primary" : "secondary");
-      if (!button.classList.contains("access-lock__button")) button.classList.add("blur-trigger");
     });
 
     document.querySelectorAll(".intake-button").forEach((button) => {

@@ -32,7 +32,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/styles.css?v=20260702-neti-offer-v2" />
+  <link rel="stylesheet" href="/styles.css?v=20260707-neti-polish-v5" />
   <script src="/domain-redirect.js?v=20260626-mackley-primary-v1"></script>
   <link rel="icon" href="/public/assets/logo_dark_16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/public/assets/logo_dark_32.png" type="image/png" sizes="32x32" />
@@ -120,8 +120,20 @@
       </div>
     </section>
     <section class="paragraph home-product home-neti" id="breathe-deeper" aria-label="Original Copper Neti Pot">
-      <div class="home-product__statement home-neti__statement">
-        <p>But first:<br /><em>Breathe Deeper.</em></p>
+      <div class="home-neti__signup">
+        <form class="neti-lead" data-neti-lead-form>
+          <label class="neti-lead__title" for="neti-email-a">
+            <span>But first, breathe deeper.</span>
+            <span>One email each week to help you breathe deeper, think clearer, and keep evolving. Join today and receive a free copper neti pot.*</span>
+          </label>
+          <div class="neti-lead__row">
+            <input class="neti-lead__input" id="neti-email-a" name="email" type="email" autocomplete="email" placeholder="Email" required />
+            <button class="cta cta--primary neti-lead__button" type="submit">Enter</button>
+          </div>
+          <input class="neti-lead__trap" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <p class="neti-lead__fine">*You cover shipping and handling.</p>
+          <p class="neti-lead__status" data-neti-lead-status role="status" aria-live="polite"></p>
+        </form>
       </div>
       <div class="home-product__gallery" aria-label="Original Copper Neti Pot gallery">
         <section class="carousel" aria-label="Original Copper Neti Pot images">
@@ -139,18 +151,6 @@
           <button class="carousel-button carousel-button--next" type="button" aria-label="Next Neti Pot image">›</button>
           <div class="carousel-dots" aria-label="Neti Pot carousel slides"></div>
         </section>
-      </div>
-      <div class="home-product__copy">
-        <p class="home-neti__eyebrow">Free with approved INF&trade;</p>
-        <h2 class="home-product__title"><span class="home-product__code">Original Copper</span> Neti Pot&trade;</h2>
-        <p class="home-product__subtext">
-          <span>Solid copper.</span>
-          <span>Use code BREATHEDEEPER during checkout for free neti pot.</span>
-        </p>
-        <div class="home-product__actions">
-          <a class="home-product__button" href="/breathedeeper/">Learn more</a>
-          <a class="home-product__button" href="/intake/?next=payment&amp;offer=BREATHEDEEPER" data-product-buy data-product-key="netiPot" data-track="get-started" data-item="Original Copper Neti Pot" data-value="0">Get it free with INF</a>
-        </div>
       </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
@@ -201,8 +201,20 @@
       </div>
     </section>
     <section class="paragraph home-product home-neti" id="breathe-deeper-b" aria-label="Original Copper Neti Pot">
-      <div class="home-product__statement home-neti__statement">
-        <p>But first:<br /><em>Breathe Deeper.</em></p>
+      <div class="home-neti__signup">
+        <form class="neti-lead" data-neti-lead-form>
+          <label class="neti-lead__title" for="neti-email-b">
+            <span>But first, breathe deeper.</span>
+            <span>One email each week to help you breathe deeper, think clearer, and keep evolving. Join today and receive a free copper neti pot.*</span>
+          </label>
+          <div class="neti-lead__row">
+            <input class="neti-lead__input" id="neti-email-b" name="email" type="email" autocomplete="email" placeholder="Email" required />
+            <button class="cta cta--primary neti-lead__button" type="submit">Enter</button>
+          </div>
+          <input class="neti-lead__trap" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <p class="neti-lead__fine">*You cover shipping and handling.</p>
+          <p class="neti-lead__status" data-neti-lead-status role="status" aria-live="polite"></p>
+        </form>
       </div>
       <div class="home-product__gallery" aria-label="Original Copper Neti Pot gallery">
         <section class="carousel" aria-label="Original Copper Neti Pot images">
@@ -221,18 +233,6 @@
           <div class="carousel-dots" aria-label="Neti Pot carousel slides"></div>
         </section>
       </div>
-      <div class="home-product__copy">
-        <p class="home-neti__eyebrow">Free with approved INF&trade;</p>
-        <h2 class="home-product__title"><span class="home-product__code">Original Copper</span> Neti Pot&trade;</h2>
-        <p class="home-product__subtext">
-          <span>Solid copper.</span>
-          <span>Use code BREATHEDEEPER during checkout for free neti pot.</span>
-        </p>
-        <div class="home-product__actions">
-          <a class="home-product__button" href="/breathedeeper/">Learn more</a>
-          <a class="home-product__button" href="/intake/?next=payment&amp;offer=BREATHEDEEPER" data-product-buy data-product-key="netiPot" data-track="get-started" data-item="Original Copper Neti Pot" data-value="0">Get it free with INF</a>
-        </div>
-      </div>
     </section>
     <div class="snap-spacer" aria-hidden="true"></div>
   </main>
@@ -250,7 +250,7 @@
     </div>
   </footer>
 
-  <script src="/product-data.js?v=20260705-neti-copy-v3"></script>
+  <script src="/product-data.js?v=20260707-neti-polish-v5"></script>
   <script src="/product-render.js?v=20260701-two-product-preview-v1"></script>
   <script src="/ads.js?v=20260617-product-click-proof-v1"></script>
   <script>
@@ -634,7 +634,8 @@
     narrative.addEventListener("scroll", onScroll, { passive: true });
   </script>
   <script type="module" src="/carousel.js?v=20260610-get-started"></script>
-  <script src="/site-chrome.js?v=20260701-two-product-preview-v1"></script>
+  <script src="/site-chrome.js?v=20260707-neti-polish-v5"></script>
+  <script src="/neti-lead.js?v=20260707-neti-polish-v5"></script>
   <script type="module" src="/social-proof.js?v=20260628-live-count-v1"></script>
   <script src="/access-lock.js?v=20260618-password-icanchange-v1"></script>
 </body>

@@ -83,16 +83,16 @@
     name: "Original Copper Neti Pot\u2122",
     code: "Original",
     codeHtml: "Original",
-    fullNameHtml: "<span class=\"home-product__code\">Original Copper</span> Neti Pot&trade;",
-    audience: "Breathe deeper.",
-    formula: "solid copper",
-    purpose: "Use code BREATHEDEEPER during checkout for free neti pot.",
-    ctaLabel: "Get it free with INF",
+    fullNameHtml: "Original Copper Neti Pot&trade;",
+    audience: "Best possible tool for the most important hygienic habit.",
+    formula: "",
+    purpose: "Enter your email to receive the shipping and payment verification step.",
+    ctaLabel: "Enter email",
     value: "0",
     currency: "USD",
     stripeProductId: "",
-    intakeLink: "/intake/?next=payment&offer=BREATHEDEEPER",
-    commerceAction: "request-prescription",
+    intakeLink: "/breathedeeper/#neti-email-page",
+    commerceAction: "neti-email-capture",
     images: [
       {
         src: "/public/product/neti-pot-01.png?v=20260702-neti-offer-v2",
@@ -123,7 +123,7 @@
 
         <p><strong>Includes:</strong><br />Original Copper Neti Pot&trade;<br />Copper salt scoop<br />Premium microfiber towel</p>
 
-        <p>Receive one free with any approved INF&trade; prescription using referral code <strong>BREATHEDEEPER</strong>.<br />You cover shipping &amp; handling.</p>`
+        <p>Enter your email below to receive the next step for shipping information and payment verification.</p>`
       }
     ]
   };

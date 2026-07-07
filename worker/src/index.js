@@ -29,6 +29,7 @@ const ALLOWED_HOSTS = new Set([
   "localhost:8000",
   "localhost:5173",
   "127.0.0.1:8000",
+  "127.0.0.1:8010",
   "127.0.0.1:8017",
   "127.0.0.1:8011",
   "127.0.0.1:5500"
@@ -339,6 +340,62 @@ async function sendAccessRequestEmail(profile, requestInfo, env) {
           <li><strong>Timezone:</strong> ${htmlTimezone}</li>
         </ul>
         <p>Reply to ${htmlEmail} when you want to share access.</p>
+      `
+    })
+  });
+
+  if (!response.ok) {
+    return { ok: false, error: "email_send_failed" };
+  }
+
+  return { ok: true };
+}
+
+async function sendNetiLeadEmail(profile, requestInfo, env) {
+  const apiKey = String(env.RESEND_API_KEY || "").trim();
+  if (!apiKey || !isValidEmail(profile.email)) {
+    return { ok: false, error: "email_not_configured" };
+  }
+
+  const from = String(env.PAYMENTS_EMAIL_FROM || env.ACCESS_EMAIL_FROM || "MACKLEY <contact@mackley.co>").trim();
+  const notifyTo = String(env.NETI_LEAD_NOTIFY_TO || env.ACCESS_REQUEST_NOTIFY_TO || "contact@mackley.co").trim();
+  const pageUrl = String(requestInfo.page_url || "").slice(0, 260);
+  const referrer = String(requestInfo.referrer || "").slice(0, 260);
+  const language = String(requestInfo.language || "-").slice(0, 40);
+  const timezone = String(requestInfo.timezone || "-").slice(0, 80);
+  const safeEmail = escapeHtml(profile.email);
+  const safePageUrl = escapeHtml(pageUrl || "/");
+  const safeReferrer = escapeHtml(referrer || "-");
+  const safeLanguage = escapeHtml(language);
+  const safeTimezone = escapeHtml(timezone);
+  const text = [
+    "Your Original Copper Neti Pot request is in.",
+    "",
+    "Next, we will verify your shipping information and the shipping-and-handling payment step for your free, solid copper neti pot.",
+    "Shipping and handling are not included.",
+    "",
+    "We will send the secure checkout step as soon as it is ready."
+  ].join("\n");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to: [profile.email],
+      bcc: [notifyTo],
+      subject: "Verify shipping for your MACKLEY Neti Pot",
+      text,
+      html: `
+        <p>Your Original Copper Neti Pot request is in.</p>
+        <p>Next, we will verify your shipping information and the shipping-and-handling payment step for your free, solid copper neti pot.</p>
+        <p>Shipping and handling are not included.</p>
+        <p>We will send the secure checkout step as soon as it is ready.</p>
+        <hr />
+        <p style="color:#777;font-size:13px;">Lead: ${safeEmail}<br />Page: ${safePageUrl}<br />Referrer: ${safeReferrer}<br />Language: ${safeLanguage}<br />Timezone: ${safeTimezone}</p>
       `
     })
   });
@@ -1218,6 +1275,40 @@ export default {
       }
 
       const emailResult = await sendAccessRequestEmail({ name, email }, payload || {}, env);
+      if (!emailResult.ok) {
+        return jsonResponse(500, { ok: false, error: emailResult.error }, effectiveOrigin);
+      }
+
+      return jsonResponse(202, { ok: true }, effectiveOrigin);
+    }
+
+    if (url.pathname === "/neti-pot/leads") {
+      if (!effectiveOrigin) {
+        return jsonResponse(403, { error: "Origin not allowed." }, originFromHeader(origin));
+      }
+
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: analyticsCorsHeaders(new Headers(), effectiveOrigin)
+        });
+      }
+
+      if (request.method !== "POST") {
+        return jsonResponse(405, { error: "Method not allowed." }, effectiveOrigin);
+      }
+
+      const payload = await request.json().catch(() => ({}));
+      if (String(payload?.website || "").trim()) {
+        return jsonResponse(202, { ok: true }, effectiveOrigin);
+      }
+
+      const email = normalizeEmail(payload?.email);
+      if (!isValidEmail(email)) {
+        return jsonResponse(400, { ok: false, error: "invalid_email" }, effectiveOrigin);
+      }
+
+      const emailResult = await sendNetiLeadEmail({ email }, payload || {}, env);
       if (!emailResult.ok) {
         return jsonResponse(500, { ok: false, error: emailResult.error }, effectiveOrigin);
       }

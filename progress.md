@@ -1,3 +1,13 @@
+Original prompt: update the Neti Pot offer into an email-first free Neti Pot capture on the home page and /breathedeeper, keep the existing carousel images, send a verification/shipping-payment email after submission, preserve the premium site-wide visual language, and publish to GitHub Pages.
+
+Definition of Done: both homepage Neti Pot sections use a three-column email/carousel/copy layout with "Learn more" and "Enter email"; the /breathedeeper product page makes email entry the main CTA; successful submissions call a CORS-locked Worker endpoint that emails the next verification step; local static, syntax, Worker route, and live-domain checks pass before the GitHub Pages release is complete.
+
+2026-07-06: Started from the clean production-aligned worktree at origin/main 8417050. The existing Neti product assets and two-product routes are intact; applying the email capture as the smallest shared component change across the homepage and Neti page.
+2026-07-07: Preview pass updated per review: homepage Neti email copy now matches the product title size, the right-side Enter Email CTA is removed, the product page uses only the pinned email form, the "But first" product subtitle is gone, Neti product prose uses uniform paragraph sizing, and the email form remains above the hover blur. Syntax checks, local static checks, and mocked Worker lead-route checks passed.
+2026-07-07: Added the dark closing treatment for the homepage Neti section: black section background, white/soft-white text, dark glass header state, transparent dark-footer treatment, and a fade plus down-arrow cue from the INF section into the Neti section. Browser computed-color checks passed on the active Neti section.
+
+---
+
 Original prompt: restore the missing product images, make the operations dashboard show purchases, a click/count/percent conversion funnel, and people with name, contact, location, and status, then publish to GitHub Pages.
 
 Definition of Done: product images visibly render on the home and product pages at desktop and mobile widths; the dashboard reports purchases, each funnel stage's count and conversion percent, and authorized owner/provider views show customer name, contact, location, and status while analyst/support views remain masked; deterministic browser checks, automated tests, and live-domain verification pass before production is considered complete.
