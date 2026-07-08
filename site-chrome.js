@@ -58,7 +58,7 @@
     header.innerHTML = `
       <nav class="site-header__nav" aria-label="Primary">
         <a class="site-title site-header__brand-link blur-trigger" href="/" aria-label="MACKLEY home">
-          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-logo-hover-v2" alt="MACKLEY" />
+          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-logo-hover-v3" alt="MACKLEY" />
         </a>
         <a class="site-header__link blur-trigger" href="/icanchange/">Formula</a>
         <a class="site-header__link blur-trigger" href="/support/">FAQ</a>
