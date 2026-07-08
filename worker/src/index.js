@@ -43,6 +43,7 @@ const PRODUCT_ID = "prod_UgF2SFTaA6cCVy";
 const PRODUCT_PRICE_ID = "price_1Tn1iaH2VzsYlSl5EgIJwOwV";
 const PRODUCT_SKU = "INF-01";
 const PRODUCT_UNIT_AMOUNT = 9900;
+const NETI_POT_PAYMENT_LINK = "https://buy.stripe.com/bJe4gzdzj3su5KAaqCdwc04";
 const INCLUDED_NETI_NAME = "Original Copper Neti Pot";
 const INCLUDED_NETI_SKU = "NETI-ORIGINAL";
 const INCLUDED_NETI_QUANTITY = 1;
@@ -245,14 +246,7 @@ function attachReferralMetadata(params, payload, options = {}) {
 }
 
 function getNetiOfferCode(payload) {
-  const referral = payload && typeof payload.referral === "object" ? payload.referral : null;
-  const code = normalizeReferralCode(
-    payload?.offerCode
-    || referral?.offerCode
-    || payload?.referralCode
-    || ""
-  );
-  return code === INCLUDED_NETI_OFFER_CODE ? code : "";
+  return payload ? INCLUDED_NETI_OFFER_CODE : "";
 }
 
 function attachNetiOfferMetadata(params, payload, options = {}) {
@@ -265,7 +259,7 @@ function attachNetiOfferMetadata(params, payload, options = {}) {
     included_item_sku: INCLUDED_NETI_SKU,
     included_item_quantity: String(INCLUDED_NETI_QUANTITY),
     included_item_fulfillment: INCLUDED_NETI_FULFILLMENT,
-    shipping_handling_paid_by_customer: "true"
+    shipping_handling_paid_by_customer: "false"
   };
 
   Object.entries(values).forEach(([key, value]) => {
@@ -368,13 +362,15 @@ async function sendNetiLeadEmail(profile, requestInfo, env) {
   const safeReferrer = escapeHtml(referrer || "-");
   const safeLanguage = escapeHtml(language);
   const safeTimezone = escapeHtml(timezone);
+  const safePaymentLink = escapeHtml(NETI_POT_PAYMENT_LINK);
   const text = [
-    "Your Original Copper Neti Pot request is in.",
+    "hey, thanks for signing up on mackley.co.",
     "",
-    "Next, we will verify your shipping information and the shipping-and-handling payment step for your free, solid copper neti pot.",
-    "Shipping and handling are not included.",
+    `Here's the link to your neti pot: ${NETI_POT_PAYMENT_LINK}`,
     "",
-    "We will send the secure checkout step as soon as it is ready."
+    "You cover shipping and handling.",
+    "",
+    "And keep an eye out--each week we'll email you about ways to breathe deeper, think more clearly, and evolve."
   ].join("\n");
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -387,13 +383,13 @@ async function sendNetiLeadEmail(profile, requestInfo, env) {
       from,
       to: [profile.email],
       bcc: [notifyTo],
-      subject: "Verify shipping for your MACKLEY Neti Pot",
+      subject: "Your MACKLEY Neti Pot link",
       text,
       html: `
-        <p>Your Original Copper Neti Pot request is in.</p>
-        <p>Next, we will verify your shipping information and the shipping-and-handling payment step for your free, solid copper neti pot.</p>
-        <p>Shipping and handling are not included.</p>
-        <p>We will send the secure checkout step as soon as it is ready.</p>
+        <p>hey, thanks for signing up on mackley.co.</p>
+        <p>Here's the link to your neti pot: <a href="${safePaymentLink}">${safePaymentLink}</a></p>
+        <p>You cover shipping and handling.</p>
+        <p>And keep an eye out--each week we'll email you about ways to breathe deeper, think more clearly, and evolve.</p>
         <hr />
         <p style="color:#777;font-size:13px;">Lead: ${safeEmail}<br />Page: ${safePageUrl}<br />Referrer: ${safeReferrer}<br />Language: ${safeLanguage}<br />Timezone: ${safeTimezone}</p>
       `
@@ -564,9 +560,6 @@ function buildCheckoutSessionParams(payload, env = {}) {
   params.set("line_items[0][quantity]", String(quantity));
   params.set("billing_address_collection", "auto");
   params.set("shipping_address_collection[allowed_countries][0]", "US");
-  if (getNetiOfferCode(payload) && isNonEmpty(env.NETI_SHIPPING_RATE_ID)) {
-    params.set("shipping_options[0][shipping_rate]", String(env.NETI_SHIPPING_RATE_ID).trim());
-  }
   params.set("custom_text[submit][message]", "Your payment method will be authorized today. You will only be charged after approval by a licensed provider.");
   params.set("payment_intent_data[capture_method]", "manual");
   params.set("payment_intent_data[setup_future_usage]", "off_session");
@@ -758,7 +751,7 @@ async function sendOrderStatusEmail(order, type, env) {
       "Your prescription has been approved.",
       "Your payment has now been processed.",
       "Your monthly INF subscription is active.",
-      ...(includedNetiPot ? ["Code BREATHEDEEPER added one free Original Copper Neti Pot to your first shipment. Shipping and handling apply."] : [])
+      ...(includedNetiPot ? ["One free Original Copper Neti Pot has been added to your first shipment."] : [])
     ]
     : ["Your prescription was not approved.", "Your authorization has been released.", "You have not been charged."];
   const response = await fetch("https://api.resend.com/emails", {
@@ -1470,9 +1463,6 @@ export default {
       }
 
       try {
-        if (getNetiOfferCode(payload) && !isNonEmpty(env.NETI_SHIPPING_RATE_ID)) {
-          return jsonResponse(503, { error: "Neti Pot shipping and handling is not configured." }, effectiveOrigin);
-        }
         const requestId = sanitizeTrackingValue(payload.requestId);
         const stored = await orderStoreRequest(env, "/requests/get", { requestId });
         if (!stored.request || normalizeEmail(stored.request.email) !== normalizeEmail(payload.email)) {

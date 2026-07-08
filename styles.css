@@ -7191,3 +7191,49 @@ body:not(.product-page):not(.intake-page) .swipe-hint {
 .home-neti .neti-lead__row {
   width: min(100%, 500px);
 }
+
+/* 2026-07 customer-ready Neti checkout polish. */
+body.is-neti-active .swipe-hint {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+body.is-neti-active .scroll-guide {
+  display: none !important;
+}
+
+.home-neti .neti-lead,
+.home-neti .neti-lead__title,
+.home-neti .neti-lead__title span:first-child,
+.home-neti .neti-lead__title span + span,
+.home-neti .neti-lead__row,
+.home-neti .neti-lead__fine,
+.home-neti .neti-lead__status,
+.home-neti .neti-lead__input {
+  text-align: left !important;
+}
+
+.home-neti .neti-lead {
+  justify-items: start;
+}
+
+.home-neti .neti-lead__row,
+.home-neti .neti-lead__fine,
+.home-neti .neti-lead__status {
+  justify-self: stretch;
+}
+
+.neti-page .page-hero,
+.neti-page .page-title,
+.neti-page .page-subhead,
+.neti-page .prose {
+  text-align: left !important;
+}
+
+.home-product__actions:has(.home-product__button:hover) .home-product__button:not(:hover),
+.home-product__actions:has(.home-product__button:focus-visible) .home-product__button:not(:focus-visible),
+.home-product__actions:has(.home-product__button:hover) .cta-proof:not(:hover),
+.home-product__actions:has(.home-product__button:focus-visible) .cta-proof:not(:focus-within) {
+  filter: none !important;
+  opacity: 1 !important;
+}

@@ -181,7 +181,7 @@ function applyNetiOfferCode() {
   if (codeInput) codeInput.value = netiOfferCode;
   if (note) {
     note.hidden = false;
-    note.textContent = "BREATHEDEEPER saved: one free Neti Pot after approval. Shipping & handling apply.";
+    note.textContent = "One free Neti Pot is included after approval.";
   }
 }
 
@@ -435,7 +435,7 @@ async function confirmReferralClaim(payload) {
   if (manualCode === netiOfferCode) {
     if (note) {
       note.hidden = false;
-      note.textContent = "BREATHEDEEPER applied: one free Neti Pot after approval. Shipping & handling apply.";
+      note.textContent = "One free Neti Pot is included after approval.";
     }
     trackLoopEvent("neti_offer_claimed", {
       actor_user_id: buildActorId(payload),

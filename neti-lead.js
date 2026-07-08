@@ -45,7 +45,7 @@
     }
 
     saveLead(email);
-    setStatus(form, "Sending the verification step...", "pending");
+    setStatus(form, "Sending your checkout link...", "pending");
     form.classList.add("is-submitting");
 
     try {
@@ -68,7 +68,7 @@
         throw new Error(data.error || "neti_lead_failed");
       }
 
-      setStatus(form, "Check your email for the next step to verify shipping information and payment.", "success");
+      setStatus(form, "Check your email for the neti pot checkout link.", "success");
       form.classList.add("is-complete");
     } catch (error) {
       setStatus(form, "We could not send the email yet. Please try again in a moment.", "error");
