@@ -7213,6 +7213,67 @@ body.is-neti-active .scroll-guide {
   text-align: left !important;
 }
 
+/* 2026-07 Neti terminal centering and cue suppression. */
+body.is-neti-terminal .swipe-hint,
+body.is-neti-terminal .scroll-guide {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.home-neti .home-neti__signup {
+  align-self: center !important;
+  justify-self: center !important;
+  display: grid !important;
+  width: min(100%, 560px) !important;
+  place-items: center !important;
+}
+
+.home-neti .neti-lead {
+  align-content: center !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  width: min(100%, 560px) !important;
+  margin-inline: auto !important;
+  text-align: center !important;
+}
+
+.home-neti .neti-lead__title {
+  justify-items: center !important;
+  width: min(100%, 500px) !important;
+  max-width: 500px !important;
+  margin-inline: auto !important;
+  text-align: center !important;
+}
+
+.home-neti .neti-lead__title span:first-child,
+.home-neti .neti-lead__title span + span {
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: center !important;
+}
+
+.home-neti .neti-lead__row,
+.home-neti .neti-lead__fine,
+.home-neti .neti-lead__status {
+  justify-self: center !important;
+  width: min(100%, 500px) !important;
+  margin-inline: auto !important;
+  text-align: center !important;
+}
+
+.home-neti .neti-lead__input {
+  text-align: left !important;
+}
+
+@media (max-width: 900px) {
+  .home-neti .home-neti__signup,
+  .home-neti .neti-lead {
+    width: min(100%, 640px) !important;
+  }
+}
+
 .home-neti .neti-lead {
   justify-items: start;
 }

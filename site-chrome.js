@@ -166,6 +166,7 @@
     const scroller = getScrollContainer();
     const { max, progress: scrollProgress } = scrollMetrics(scroller);
     const netiActive = document.body.classList.contains("is-neti-active")
+      || document.body.classList.contains("is-neti-terminal")
       || Boolean(scroller?.querySelector?.(".home-neti.active"));
     const homeSections = document.body.classList.contains("purpose-page")
       ? Array.from(scroller?.querySelectorAll?.(".paragraph") || []).filter((section) => {
