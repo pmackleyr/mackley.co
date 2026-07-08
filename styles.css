@@ -7320,6 +7320,110 @@ body:has(.blur-trigger:focus-visible) :where(.blur-trigger:focus-visible, .blur-
   opacity: 1 !important;
 }
 
+/* v_FINAL viewport and interaction guardrails. */
+.carousel {
+  display: grid !important;
+  grid-template-areas:
+    "stage"
+    "dots" !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  justify-items: center !important;
+  overflow: visible !important;
+}
+
+.carousel-viewport {
+  grid-area: stage !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.carousel-button,
+.carousel-button.blur-trigger {
+  grid-area: stage !important;
+  position: relative !important;
+  z-index: 7 !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  align-self: center !important;
+  width: clamp(38px, 4vw, 48px) !important;
+  height: clamp(38px, 4vw, 48px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  filter: none !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.carousel-button--prev {
+  justify-self: start !important;
+  margin-left: clamp(10px, 2vw, 18px) !important;
+}
+
+.carousel-button--next {
+  justify-self: end !important;
+  margin-right: clamp(10px, 2vw, 18px) !important;
+}
+
+.carousel:hover .carousel-button,
+.carousel:focus-within .carousel-button {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+.carousel-button:hover,
+.carousel-button:focus-visible {
+  filter: none !important;
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+}
+
+.carousel-dots {
+  grid-area: dots !important;
+}
+
+@media (min-width: 901px) {
+  .home-product:not(.home-neti) .home-product__copy {
+    min-width: min(100%, 360px) !important;
+  }
+
+  .home-product:not(.home-neti) .home-product__actions {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: none !important;
+    gap: clamp(10px, 1.1vw, 16px) !important;
+  }
+
+  .home-product:not(.home-neti) .home-product__actions .cta-proof,
+  .home-product:not(.home-neti) .home-product__button {
+    flex: 0 0 clamp(158px, 13vw, 220px) !important;
+    width: clamp(158px, 13vw, 220px) !important;
+    min-width: 0 !important;
+    max-width: 220px !important;
+  }
+
+  .home-product:not(.home-neti) .home-product__actions .cta-proof {
+    align-self: center !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .home-product:not(.home-neti) .home-product__actions .home-product__button {
+    aspect-ratio: auto !important;
+    height: var(--button-min-h) !important;
+    min-height: var(--button-min-h) !important;
+    max-height: var(--button-min-h) !important;
+    padding-block: 0 !important;
+  }
+}
+
 .ui-button,
 .product-block__cta,
 .cta,
