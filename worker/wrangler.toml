@@ -24,5 +24,6 @@ migrations = [
 
 [vars]
 PAYMENTS_EMAIL_FROM = "MACKLEY <contact@mackley.co>"
+PROVIDER_REQUEST_NOTIFY_TO = "contact@mackley.co"
 # Temporary fallback until the Cloudflare Access application is configured.
 ALLOW_LEGACY_ADMIN_SECRET = "true"

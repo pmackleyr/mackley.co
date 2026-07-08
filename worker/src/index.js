@@ -443,6 +443,89 @@ async function sendEmailVerification(profile, requestId, token, env) {
   return response.ok ? { ok: true } : { ok: false, error: "email_send_failed" };
 }
 
+function summarizeList(value, fallback = "None provided") {
+  if (Array.isArray(value)) {
+    const filtered = value.map((item) => String(item || "").trim()).filter(Boolean);
+    return filtered.length ? filtered.join(", ") : fallback;
+  }
+  const text = String(value || "").trim();
+  return text || fallback;
+}
+
+async function sendProviderRequestNotificationEmail(payload, requestId, env) {
+  const apiKey = String(env.RESEND_API_KEY || "").trim();
+  const customerEmail = normalizeEmail(payload?.email || "");
+  if (!apiKey || !isValidEmail(customerEmail)) return { ok: false, error: "email_not_configured" };
+
+  const from = String(env.PAYMENTS_EMAIL_FROM || env.ACCESS_EMAIL_FROM || "MACKLEY <contact@mackley.co>").trim();
+  const notifyTo = String(env.PROVIDER_REQUEST_NOTIFY_TO || env.PAYMENTS_NOTIFY_TO || env.ACCESS_REQUEST_NOTIFY_TO || "contact@mackley.co").trim();
+  const fullName = String(payload.fullName || "").trim();
+  const state = String(payload.state || "").trim();
+  const goals = summarizeList(payload.goals || payload.hopingChanges);
+  const safety = summarizeList(payload.safety || payload.conditions);
+  const medications = summarizeList(payload.currentMedications || payload.medications);
+  const clinicianNote = String(payload.clinicianNote || payload.providerNote || "").trim() || "None provided";
+  const createdAt = new Date().toISOString();
+  const safeRequestId = escapeHtml(requestId);
+  const safeName = escapeHtml(fullName || "Unknown");
+  const safeEmail = escapeHtml(customerEmail);
+  const safeState = escapeHtml(state || "-");
+  const safeGoals = escapeHtml(goals);
+  const safeSafety = escapeHtml(safety);
+  const safeMedications = escapeHtml(medications);
+  const safeClinicianNote = escapeHtml(clinicianNote);
+  const text = [
+    "New MACKLEY provider request",
+    "",
+    `Request ID: ${requestId}`,
+    `Name: ${fullName || "Unknown"}`,
+    `Email: ${customerEmail}`,
+    `State: ${state || "-"}`,
+    `Goals: ${goals}`,
+    `Safety screen: ${safety}`,
+    `Medications: ${medications}`,
+    `Clinician note: ${clinicianNote}`,
+    `Submitted: ${createdAt}`
+  ].join("\n");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to: [notifyTo],
+      reply_to: customerEmail,
+      subject: `MACKLEY provider request from ${fullName || customerEmail}`,
+      text,
+      html: `
+        <p>New MACKLEY provider request.</p>
+        <ul>
+          <li><strong>Request ID:</strong> ${safeRequestId}</li>
+          <li><strong>Name:</strong> ${safeName}</li>
+          <li><strong>Email:</strong> ${safeEmail}</li>
+          <li><strong>State:</strong> ${safeState}</li>
+          <li><strong>Goals:</strong> ${safeGoals}</li>
+          <li><strong>Safety screen:</strong> ${safeSafety}</li>
+          <li><strong>Medications:</strong> ${safeMedications}</li>
+          <li><strong>Clinician note:</strong> ${safeClinicianNote}</li>
+        </ul>
+        <p>Submitted: ${escapeHtml(createdAt)}</p>
+      `
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error("provider_request_notification_failed", response.status, detail.slice(0, 500));
+    return { ok: false, error: "email_send_failed" };
+  }
+
+  return { ok: true };
+}
+
 function sanitizeTrackingValue(value) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, 255);
@@ -1450,9 +1533,11 @@ export default {
           name: payload.fullName,
           email: payload.email
         }, requestId, verificationToken, env);
+        const notificationEmail = await sendProviderRequestNotificationEmail(payload, requestId, env);
         return jsonResponse(201, {
           ...result,
-          verificationEmailSent: verificationEmail.ok
+          verificationEmailSent: verificationEmail.ok,
+          notificationEmailSent: notificationEmail.ok
         }, effectiveOrigin);
       } catch (error) {
         return jsonResponse(500, { error: "provider_request_failed" }, effectiveOrigin);

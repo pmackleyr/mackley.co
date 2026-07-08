@@ -25,6 +25,9 @@
   function decorateButton(button, variant) {
     if (!button) return;
     button.classList.add("ui-button", variant === "primary" ? "ui-button--primary" : "ui-button--secondary");
+    if (!button.closest(".neti-lead") && !button.closest(".intake-form") && !button.closest(".access-lock")) {
+      button.classList.add("blur-trigger");
+    }
     button.dataset.uiButton = variant;
     ensureButtonLabel(button);
   }
@@ -36,14 +39,14 @@
     header.innerHTML = `
       <nav class="site-header__nav" aria-label="Primary">
         <a class="site-title site-header__brand-link" href="/" aria-label="MACKLEY home">
-          <span class="brand">MACKLEY</span>
+          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-brand-email-v1" alt="MACKLEY" />
         </a>
         <a class="site-header__link" href="/icanchange/">Formula</a>
         <a class="site-header__link" href="/support/">FAQ</a>
       </nav>
       <div class="cta-proof site-header__action">
         <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">0 people clicked recently</p>
-        <a class="ui-button ui-button--primary site-header__cta" href="${CTA_HREF}" data-product-buy data-product-key="inf" data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
+        <a class="ui-button ui-button--primary site-header__cta blur-trigger" href="${CTA_HREF}" data-product-buy data-product-key="inf" data-commerce-action="request-prescription" data-track="get-started" data-item="${PRODUCT_NAME}" data-stripe-product-id="${PRODUCT_ID}" data-value="${PRODUCT_VALUE}"><span class="ui-button__label">${CTA_LABEL}</span></a>
       </div>
     `;
   }
