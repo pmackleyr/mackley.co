@@ -351,7 +351,8 @@ async function sendNetiLeadEmail(profile, requestInfo, env) {
     return { ok: false, error: "email_not_configured" };
   }
 
-  const from = String(env.PAYMENTS_EMAIL_FROM || env.ACCESS_EMAIL_FROM || "MACKLEY <contact@mackley.co>").trim();
+  const from = String(env.NETI_EMAIL_FROM || env.PAYMENTS_EMAIL_FROM || env.ACCESS_EMAIL_FROM || "MACKLEY <onboarding@resend.dev>").trim();
+  const replyTo = String(env.NETI_EMAIL_REPLY_TO || env.PAYMENTS_EMAIL_REPLY_TO || "contact@mackley.co").trim();
   const notifyTo = String(env.NETI_LEAD_NOTIFY_TO || env.ACCESS_REQUEST_NOTIFY_TO || "contact@mackley.co").trim();
   const pageUrl = String(requestInfo.page_url || "").slice(0, 260);
   const referrer = String(requestInfo.referrer || "").slice(0, 260);
@@ -373,30 +374,44 @@ async function sendNetiLeadEmail(profile, requestInfo, env) {
     "And keep an eye out--each week we'll email you about ways to breathe deeper, think more clearly, and evolve."
   ].join("\n");
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to: [profile.email],
-      bcc: [notifyTo],
-      subject: "Your MACKLEY Neti Pot link",
-      text,
-      html: `
-        <p>hey, thanks for signing up on mackley.co.</p>
-        <p>Here's the link to your neti pot: <a href="${safePaymentLink}">${safePaymentLink}</a></p>
-        <p>You cover shipping and handling.</p>
-        <p>And keep an eye out--each week we'll email you about ways to breathe deeper, think more clearly, and evolve.</p>
-        <hr />
-        <p style="color:#777;font-size:13px;">Lead: ${safeEmail}<br />Page: ${safePageUrl}<br />Referrer: ${safeReferrer}<br />Language: ${safeLanguage}<br />Timezone: ${safeTimezone}</p>
-      `
-    })
-  });
+  const emailPayload = {
+    from,
+    to: [profile.email],
+    bcc: [notifyTo],
+    reply_to: replyTo,
+    subject: "Your MACKLEY Neti Pot link",
+    text,
+    html: `
+      <p>hey, thanks for signing up on mackley.co.</p>
+      <p>Here's the link to your neti pot: <a href="${safePaymentLink}">${safePaymentLink}</a></p>
+      <p>You cover shipping and handling.</p>
+      <p>And keep an eye out--each week we'll email you about ways to breathe deeper, think more clearly, and evolve.</p>
+      <hr />
+      <p style="color:#777;font-size:13px;">Lead: ${safeEmail}<br />Page: ${safePageUrl}<br />Referrer: ${safeReferrer}<br />Language: ${safeLanguage}<br />Timezone: ${safeTimezone}</p>
+    `
+  };
+
+  async function postEmail(payload) {
+    return fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  let response = await postEmail(emailPayload);
+  if (!response.ok && from !== "MACKLEY <onboarding@resend.dev>") {
+    const detail = await response.text().catch(() => "");
+    console.error("neti_lead_email_send_failed", response.status, detail.slice(0, 500));
+    response = await postEmail({ ...emailPayload, from: "MACKLEY <onboarding@resend.dev>" });
+  }
 
   if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error("neti_lead_email_send_failed", response.status, detail.slice(0, 500));
     return { ok: false, error: "email_send_failed" };
   }
 

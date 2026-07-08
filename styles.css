@@ -7237,3 +7237,56 @@ body.is-neti-active .scroll-guide {
   filter: none !important;
   opacity: 1 !important;
 }
+
+/* 2026-07 final Neti/home interaction polish. */
+.home-product__actions:has(.home-product__button:hover) :is(.home-product__button, .home-product__proof-wrap, .cta-proof, .ui-button, .ui-button__label),
+.home-product__actions:has(.home-product__button:focus-visible) :is(.home-product__button, .home-product__proof-wrap, .cta-proof, .ui-button, .ui-button__label),
+.home-product__actions:has(.ui-button:hover) :is(.home-product__button, .home-product__proof-wrap, .cta-proof, .ui-button, .ui-button__label),
+.home-product__actions:has(.ui-button:focus-visible) :is(.home-product__button, .home-product__proof-wrap, .cta-proof, .ui-button, .ui-button__label) {
+  filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.home-product__actions:has(.home-product__button:hover) .home-product__proof-wrap:not(:has(.home-product__button:hover)) .cta-hover-proof,
+.home-product__actions:has(.home-product__button:focus-visible) .home-product__proof-wrap:not(:has(.home-product__button:focus-visible)) .cta-hover-proof {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+body:has(.home-neti.active) .swipe-hint,
+body:has(.home-neti.active) .scroll-guide,
+body.is-neti-active .swipe-hint,
+body.is-neti-active .scroll-guide {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body:has(.home-neti.active) .scroll-guide,
+body.is-neti-active .scroll-guide {
+  display: none !important;
+}
+
+.home-neti .neti-lead,
+.home-neti .neti-lead__title,
+.home-neti .neti-lead__title span:first-child,
+.home-neti .neti-lead__title span + span,
+.home-neti .neti-lead__fine,
+.home-neti .neti-lead__status {
+  text-align: center !important;
+}
+
+.home-neti .neti-lead {
+  justify-items: center !important;
+}
+
+.home-neti .neti-lead__row,
+.home-neti .neti-lead__fine,
+.home-neti .neti-lead__status {
+  justify-self: center !important;
+}
+
+.home-neti .neti-lead__input {
+  text-align: left !important;
+}

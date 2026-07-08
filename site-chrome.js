@@ -165,6 +165,8 @@
     if (!guide) return;
     const scroller = getScrollContainer();
     const { max, progress: scrollProgress } = scrollMetrics(scroller);
+    const netiActive = document.body.classList.contains("is-neti-active")
+      || Boolean(scroller?.querySelector?.(".home-neti.active"));
     const homeSections = document.body.classList.contains("purpose-page")
       ? Array.from(scroller?.querySelectorAll?.(".paragraph") || []).filter((section) => {
         const narrative = section.closest(".narrative");
@@ -184,7 +186,7 @@
       progress = currentIndex / (homeSections.length - 1);
     }
 
-    guide.hidden = max < 80;
+    guide.hidden = max < 80 || netiActive;
     guide.style.setProperty("--scroll-progress", progress.toFixed(4));
     const ticks = Array.from(guide.querySelectorAll(".scroll-guide__tick"));
     const current = Math.round(progress * Math.max(0, ticks.length - 1));
