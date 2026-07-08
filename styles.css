@@ -7535,3 +7535,117 @@ body.product-page .page-title {
     font-size: clamp(0.72rem, 3.5vw, 1rem) !important;
   }
 }
+
+/* 2026-07 logo hover and global subtle focus blur. */
+:root {
+  --hover-blur-subtle: blur(0.9px) saturate(1.01);
+}
+
+.site-header__nav {
+  align-items: center !important;
+}
+
+.site-title,
+.site-header__brand-link {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  overflow: hidden;
+  flex: 0 0 auto;
+  line-height: 0 !important;
+}
+
+.site-logo {
+  display: block;
+  width: auto;
+  height: clamp(34px, 3.8vw, 48px) !important;
+  max-width: min(50vw, 226px) !important;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%);
+  transform: translateZ(0);
+  transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+.site-title::after,
+.site-header__brand-link::after {
+  content: "";
+  position: absolute;
+  inset: -18% -32%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(242, 160, 107, 0) 34%,
+    rgba(255, 229, 196, 0.78) 48%,
+    rgba(217, 122, 66, 0.34) 56%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  transform: translateX(-135%) skewX(-18deg);
+}
+
+.site-title:hover .site-logo,
+.site-title:focus-visible .site-logo,
+.site-header__brand-link:hover .site-logo,
+.site-header__brand-link:focus-visible .site-logo {
+  filter: none;
+  transform: translateZ(0) scale(1.012);
+}
+
+.site-title:hover::after,
+.site-title:focus-visible::after,
+.site-header__brand-link:hover::after,
+.site-header__brand-link:focus-visible::after {
+  animation: logoCopperSweep 900ms ease both;
+}
+
+@keyframes logoCopperSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-135%) skewX(-18deg);
+  }
+
+  18%,
+  62% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(135%) skewX(-18deg);
+  }
+}
+
+@media (max-width: 540px) {
+  .site-logo {
+    height: clamp(28px, 7.4vw, 36px) !important;
+    max-width: min(46vw, 168px) !important;
+  }
+}
+
+body:has(.blur-trigger:hover)::after,
+body:has(.blur-trigger:focus-visible)::after {
+  display: block !important;
+  z-index: 94 !important;
+  opacity: 0.065 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: var(--hover-blur-subtle) !important;
+  -webkit-backdrop-filter: var(--hover-blur-subtle) !important;
+}
+
+body:has(.blur-trigger:hover) :where(.blur-trigger, #bg-layer, .swipe-hint, .site-header__brand-link, .site-header__link, .site-header__cta, .home-product__statement, .home-product__gallery, .home-product__title, .home-product__subtext, .home-product__button, .page-gallery, .page-hero, .prose, .faq, .legal-document__header, .legal-document__section, .policy-grid, .note-panel, .site-footer__copy, .site-footer__link, .product-footer-cta, .neti-lead, .neti-lead__row, .neti-lead__button),
+body:has(.blur-trigger:focus-visible) :where(.blur-trigger, #bg-layer, .swipe-hint, .site-header__brand-link, .site-header__link, .site-header__cta, .home-product__statement, .home-product__gallery, .home-product__title, .home-product__subtext, .home-product__button, .page-gallery, .page-hero, .prose, .faq, .legal-document__header, .legal-document__section, .policy-grid, .note-panel, .site-footer__copy, .site-footer__link, .product-footer-cta, .neti-lead, .neti-lead__row, .neti-lead__button) {
+  filter: var(--hover-blur-subtle) !important;
+  opacity: 0.86 !important;
+  transition: filter 150ms ease, opacity 150ms ease !important;
+}
+
+body:has(.blur-trigger:hover) :where(.blur-trigger:hover, .blur-trigger:hover *, .cta-proof:has(.blur-trigger:hover), .cta-proof:has(.blur-trigger:hover) *, .home-product__proof-wrap:has(.blur-trigger:hover), .home-product__proof-wrap:has(.blur-trigger:hover) *, .product-footer-cta:has(.blur-trigger:hover), .product-footer-cta:has(.blur-trigger:hover) *),
+body:has(.blur-trigger:focus-visible) :where(.blur-trigger:focus-visible, .blur-trigger:focus-visible *, .cta-proof:has(.blur-trigger:focus-visible), .cta-proof:has(.blur-trigger:focus-visible) *, .home-product__proof-wrap:has(.blur-trigger:focus-visible), .home-product__proof-wrap:has(.blur-trigger:focus-visible) *, .product-footer-cta:has(.blur-trigger:focus-visible), .product-footer-cta:has(.blur-trigger:focus-visible) *) {
+  filter: none !important;
+  opacity: 1 !important;
+}

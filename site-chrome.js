@@ -25,11 +25,30 @@
   function decorateButton(button, variant) {
     if (!button) return;
     button.classList.add("ui-button", variant === "primary" ? "ui-button--primary" : "ui-button--secondary");
-    if (!button.closest(".neti-lead") && !button.closest(".intake-form") && !button.closest(".access-lock")) {
-      button.classList.add("blur-trigger");
-    }
+    button.classList.add("blur-trigger");
     button.dataset.uiButton = variant;
     ensureButtonLabel(button);
+  }
+
+  function decorateFocusTriggers() {
+    document.querySelectorAll([
+      "button",
+      ".cta",
+      ".ui-button",
+      ".home-product__button",
+      ".product-block__cta",
+      ".modal__button",
+      ".intake-button",
+      ".access-lock__button",
+      ".site-title",
+      ".site-header__brand-link",
+      ".site-header__link",
+      ".site-header__cta",
+      ".site-footer__link",
+      ".neti-lead__button"
+    ].join(",")).forEach((element) => {
+      element.classList.add("blur-trigger");
+    });
   }
 
   function renderHeader() {
@@ -38,11 +57,11 @@
 
     header.innerHTML = `
       <nav class="site-header__nav" aria-label="Primary">
-        <a class="site-title site-header__brand-link" href="/" aria-label="MACKLEY home">
-          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-brand-email-v1" alt="MACKLEY" />
+        <a class="site-title site-header__brand-link blur-trigger" href="/" aria-label="MACKLEY home">
+          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-logo-hover-v2" alt="MACKLEY" />
         </a>
-        <a class="site-header__link" href="/icanchange/">Formula</a>
-        <a class="site-header__link" href="/support/">FAQ</a>
+        <a class="site-header__link blur-trigger" href="/icanchange/">Formula</a>
+        <a class="site-header__link blur-trigger" href="/support/">FAQ</a>
       </nav>
       <div class="cta-proof site-header__action">
         <p class="social-proof cta-hover-proof" data-proof="click" data-page="request-prescription" data-record="false" data-total="true" data-label="people clicked recently" data-singular="person clicked recently" aria-live="polite">0 people clicked recently</p>
@@ -58,8 +77,8 @@
     footer.innerHTML = `
       <span class="site-footer__copy">@MACKLEY 2026</span>
       <nav class="site-footer__legal" aria-label="Legal">
-        <a class="site-footer__link" href="/legal/">Privacy</a>
-        <a class="site-footer__link" href="/terms/">Terms</a>
+        <a class="site-footer__link blur-trigger" href="/legal/">Privacy</a>
+        <a class="site-footer__link blur-trigger" href="/terms/">Terms</a>
       </nav>
     `;
   }
@@ -91,6 +110,7 @@
     });
 
     document.querySelectorAll(".ui-button").forEach(ensureButtonLabel);
+    decorateFocusTriggers();
   }
 
   function renderScrollGuide() {
