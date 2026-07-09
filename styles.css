@@ -7806,3 +7806,83 @@ body:has(.neti-lead__input:focus) :where(.neti-lead, .neti-lead__row, .neti-lead
   filter: none !important;
   opacity: 1 !important;
 }
+
+/* 2026-07-08 final homepage CTA polish. */
+html[data-landing-variant="b"] .home-product__statement p {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.06em !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+html[data-landing-variant="b"] .home-product__statement p span {
+  display: block !important;
+}
+
+html[data-landing-variant="b"] .home-product__statement strong {
+  font-weight: inherit !important;
+}
+
+.home-product__actions {
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+}
+
+.home-product__button {
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+  flex: 0 0 190px !important;
+}
+
+@media (min-width: 901px) {
+  .home-product:not(.home-neti) .home-product__actions .home-product__button {
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
+    flex: 0 0 190px !important;
+  }
+}
+
+body:has(.neti-lead__row:hover)::after,
+body:has(.neti-lead__row:focus-within)::after {
+  display: block !important;
+  z-index: 94 !important;
+  opacity: 0.065 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: var(--hover-blur-subtle) !important;
+  -webkit-backdrop-filter: var(--hover-blur-subtle) !important;
+}
+
+body:has(.neti-lead__row:hover) :where(#bg-layer, .swipe-hint, .site-header__brand-link, .site-header__link, .site-header__cta, .home-product__statement, .home-product__gallery, .home-product__title, .home-product__subtext, .home-product__button, .home-neti .neti-lead__title, .home-neti .neti-lead__fine, .home-neti .neti-lead__status, .page-gallery, .page-hero, .prose, .faq, .legal-document__header, .legal-document__section, .policy-grid, .note-panel, .site-footer__copy, .site-footer__link, .product-footer-cta),
+body:has(.neti-lead__row:focus-within) :where(#bg-layer, .swipe-hint, .site-header__brand-link, .site-header__link, .site-header__cta, .home-product__statement, .home-product__gallery, .home-product__title, .home-product__subtext, .home-product__button, .home-neti .neti-lead__title, .home-neti .neti-lead__fine, .home-neti .neti-lead__status, .page-gallery, .page-hero, .prose, .faq, .legal-document__header, .legal-document__section, .policy-grid, .note-panel, .site-footer__copy, .site-footer__link, .product-footer-cta) {
+  filter: var(--hover-blur-subtle) !important;
+  opacity: 0.86 !important;
+  transition: filter 150ms ease, opacity 150ms ease !important;
+}
+
+.neti-lead__row,
+.neti-lead__row *,
+body:has(.neti-lead__row:hover) :where(.neti-lead__row, .neti-lead__row *),
+body:has(.neti-lead__row:focus-within) :where(.neti-lead__row, .neti-lead__row *) {
+  position: relative;
+  z-index: 131;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 760px) {
+  .home-product__actions {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .home-product__button {
+    width: min(100%, 190px) !important;
+    min-width: min(100%, 190px) !important;
+    max-width: min(100%, 190px) !important;
+  }
+}
