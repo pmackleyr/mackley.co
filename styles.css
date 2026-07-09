@@ -7753,3 +7753,56 @@ body:has(.blur-trigger:focus-visible) :where(.blur-trigger:focus-visible, .blur-
   filter: none !important;
   opacity: 1 !important;
 }
+
+/* 2026-07-08 header/copy hotfix: final cascade layer. */
+.site-title::after,
+.site-header__brand-link::after {
+  display: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+  content: none !important;
+}
+
+.site-title:hover .site-logo,
+.site-title:focus-visible .site-logo,
+.site-header__brand-link:hover .site-logo,
+.site-header__brand-link:focus-visible .site-logo {
+  transform: translateZ(0) !important;
+}
+
+.site-header__link {
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  transform: translateY(4px) !important;
+}
+
+.site-header__link:hover,
+.site-header__link:focus-visible,
+.site-footer__link:hover,
+.site-footer__link:focus-visible {
+  color: var(--copper-core, #c96a35) !important;
+}
+
+.site-header__link:hover,
+.site-header__link:focus-visible {
+  transform: translateY(4px) !important;
+}
+
+.neti-lead__button,
+.neti-lead__button:hover,
+.neti-lead__button:focus-visible,
+.neti-lead .neti-lead__button:hover,
+.neti-lead .neti-lead__button:focus-visible,
+.neti-lead__row .neti-lead__button:hover,
+.neti-lead__row .neti-lead__button:focus-visible,
+.cta.neti-lead__button:hover,
+.cta.neti-lead__button:focus-visible,
+.neti-lead__button.ui-button:hover,
+.neti-lead__button.ui-button:focus-visible,
+body:has(.neti-lead__button:hover) :where(.neti-lead, .neti-lead__row, .neti-lead__input, .neti-lead__button),
+body:has(.neti-lead__button:focus-visible) :where(.neti-lead, .neti-lead__row, .neti-lead__input, .neti-lead__button),
+body:has(.neti-lead__input:focus) :where(.neti-lead, .neti-lead__row, .neti-lead__input, .neti-lead__button) {
+  filter: none !important;
+  opacity: 1 !important;
+}

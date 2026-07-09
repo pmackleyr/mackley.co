@@ -50,7 +50,7 @@
       element.classList.add("blur-trigger");
     });
 
-    document.querySelectorAll(".carousel-button").forEach((element) => {
+    document.querySelectorAll(".carousel-button, .neti-lead__button").forEach((element) => {
       element.classList.remove("blur-trigger");
     });
   }
@@ -62,7 +62,7 @@
     header.innerHTML = `
       <nav class="site-header__nav" aria-label="Primary">
         <a class="site-title site-header__brand-link blur-trigger" href="/" aria-label="MACKLEY home">
-          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-v-final" alt="MACKLEY" />
+          <img class="site-logo" src="/public/assets/full_logo.png?v=20260708-header-copy-v1" alt="MACKLEY" />
         </a>
         <a class="site-header__link blur-trigger" href="/icanchange/">Formula</a>
         <a class="site-header__link blur-trigger" href="/support/">FAQ</a>

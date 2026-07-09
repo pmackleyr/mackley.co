@@ -42,9 +42,9 @@
 
         <p><strong>INF&trade; Intranasal Neuropeptide Formula</strong> exists to increase your brain's neuroplasticity, filter signal from noise, and inspire connection so change accelerates from inside to out.<br />These select neuropeptides do NOT "create" new thoughts.<br />But they can shift you into new state where learning, clarity and confidence come more easily.<br />Everything begins with state:</p>
 
-        <p><strong>State &rarr; Thoughts &rarr; Actions &rarr; Change</strong></p>
+        <p><strong>Belief &rarr; State &rarr; Thoughts &rarr; Actions &rarr; Change</strong></p>
 
-        <p>Your <u>state</u> determines what you notice.<br />What you notice influences your <u>thoughts</u>.<br />What you repeatedly think drives your <u>actions</u>.<br />And it's what you repeatedly do that leads to <u>change</u>.</p>
+        <p>You know that your brain can change.<br />Your brain notices what it didn't before.<br />Now you're thinking new thoughts.<br />And eventually doing new actions.<br />Over time you are born again.</p>
 
         <p>Each ingredient supports a critical aspect of your learning and growth process.</p>
 
