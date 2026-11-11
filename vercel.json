@@ -12,27 +12,77 @@
     },
     {
       "source": "/deeper",
-      "destination": "/icanchange/",
+      "destination": "/breathedeeper/",
       "permanent": true
     },
     {
       "source": "/deeper/",
-      "destination": "/icanchange/",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/icanchange",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/icanchange/",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/product",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/product/",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/intake",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/intake/",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/spray-intake",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/spray-intake/",
+      "destination": "/breathedeeper/",
+      "permanent": true
+    },
+    {
+      "source": "/support",
+      "destination": "/breathedeeper/#faq",
+      "permanent": true
+    },
+    {
+      "source": "/support/",
+      "destination": "/breathedeeper/#faq",
       "permanent": true
     },
     {
       "source": "/checkout",
-      "destination": "/intake/?next=payment",
+      "destination": "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05",
       "permanent": false
     },
     {
       "source": "/checkout/",
-      "destination": "/intake/?next=payment",
+      "destination": "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05",
       "permanent": false
     },
     {
       "source": "/checkout.html",
-      "destination": "/intake/?next=payment",
+      "destination": "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05",
       "permanent": false
     }
   ],

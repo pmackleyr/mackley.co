@@ -689,6 +689,7 @@
 
     links.forEach((link) => {
       link.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         const href = link.getAttribute("href");
         if (!href || href.startsWith("#")) return;
 
@@ -711,7 +712,7 @@
         };
 
         recordSiteMetric("get-started");
-        recordProofClick("request-prescription");
+        recordProofClick(productConfig.commerceAction || "request-prescription");
         trackEvent("begin_checkout", payload, navigate);
         win.setTimeout(navigate, 180);
       });
