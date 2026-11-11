@@ -31,36 +31,24 @@ test("server code contains no fallback dashboard password", async () => {
   assert.match(worker, /authorizeOperator/);
 });
 
-test("public pages retain their primary product and intake contracts", async () => {
-  const [home, productRedirect, formula, netiPot, intake] = await Promise.all([
+test("storefront checkout is separate from the legacy prescription workflow", async () => {
+  const [home, netiPot, formula, intake, checkout, worker] = await Promise.all([
     read("index.html"),
-    read("product/index.html"),
-    read("icanchange/index.html"),
     read("breathedeeper/index.html"),
-    read("intake/index.html")
-  ]);
-  assert.match(home, /Intranasal Neuropeptide Formula/);
-  assert.match(home, /But first:/);
-  assert.match(productRedirect, /\/icanchange\//);
-  assert.match(formula, /product-render\.js/);
-  assert.match(netiPot, /Original Copper Neti Pot/);
-  assert.match(netiPot, /BREATHEDEEPER/);
-  assert.match(netiPot, /data-product-key="netiPot"/);
-  assert.match(intake, /spray-intake-form/);
-  assert.match(intake, /data-step="payment"/);
-  assert.match(intake, /BREATHEDEEPER/);
-  assert.match(intake, /shipping &amp; handling/);
-});
-
-test("the Neti Pot offer is code-gated and fails closed without a shipping rate", async () => {
-  const [intakeScript, worker] = await Promise.all([
-    read("spray-intake.js"),
+    read("icanchange/index.html"),
+    read("intake/index.html"),
+    read("checkout/index.html"),
     read("worker/src/index.js")
   ]);
-  assert.match(intakeScript, /const netiOfferCode = "BREATHEDEEPER"/);
-  assert.match(intakeScript, /offerType: "first_approved_shipment_neti_pot"/);
-  assert.match(worker, /const INCLUDED_NETI_OFFER_CODE = "BREATHEDEEPER"/);
-  assert.match(worker, /if \(!offerCode\) return false/);
-  assert.match(worker, /NETI_SHIPPING_RATE_ID/);
-  assert.match(worker, /shipping and handling is not configured/);
+
+  const retailPaymentLink = "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05";
+  for (const page of [home, netiPot, checkout]) {
+    assert.ok(page.includes(retailPaymentLink));
+    assert.doesNotMatch(page, /Get Prescription|data-neti-lead-form|next=payment/);
+  }
+  for (const page of [formula, intake]) {
+    assert.match(page, /http-equiv="refresh" content="0; url=\/breathedeeper\/"/);
+    assert.doesNotMatch(page, /spray-intake-form|stripe\.com/);
+  }
+  assert.ok(!worker.includes(retailPaymentLink));
 });
