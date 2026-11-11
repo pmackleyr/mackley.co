@@ -1,7 +1,7 @@
 (function (win) {
   const netiPot = {
     key: "netiPot",
-    slug: "breathedeeper",
+    slug: "neti",
     type: "retail",
     name: "Pure Copper Neti Pot",
     code: "Original",
@@ -18,8 +18,8 @@
     commerceAction: "neti-checkout",
     images: [
       {
-        src: "/public/product/neti-pot-01.png?v=20260702-neti-offer-v2",
-        alt: "Original Copper Neti Pot with MACKLEY wordmark"
+        src: "/public/product/neti-cutout.webp",
+        alt: "Pure copper MACKLEY neti pot with an angled spout"
       }
     ],
     story: [

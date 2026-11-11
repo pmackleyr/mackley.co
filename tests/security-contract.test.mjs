@@ -32,11 +32,12 @@ test("server code contains no fallback dashboard password", async () => {
 });
 
 test("storefront checkout is separate from the legacy prescription workflow", async () => {
-  const [home, netiPot, formula, intake, checkout, worker] = await Promise.all([
+  const [home, netiPot, formula, intake, oldProduct, checkout, worker] = await Promise.all([
     read("index.html"),
-    read("breathedeeper/index.html"),
+    read("neti/index.html"),
     read("icanchange/index.html"),
     read("intake/index.html"),
+    read("breathedeeper/index.html"),
     read("checkout/index.html"),
     read("worker/src/index.js")
   ]);
@@ -46,8 +47,8 @@ test("storefront checkout is separate from the legacy prescription workflow", as
     assert.ok(page.includes(retailPaymentLink));
     assert.doesNotMatch(page, /Get Prescription|data-neti-lead-form|next=payment/);
   }
-  for (const page of [formula, intake]) {
-    assert.match(page, /http-equiv="refresh" content="0; url=\/breathedeeper\/"/);
+  for (const page of [formula, intake, oldProduct]) {
+    assert.match(page, /http-equiv="refresh" content="0; url=\/neti"/);
     assert.doesNotMatch(page, /spray-intake-form|stripe\.com/);
   }
   assert.ok(!worker.includes(retailPaymentLink));
