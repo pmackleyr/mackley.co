@@ -1,159 +1,60 @@
 import { expect, test } from "@playwright/test";
 
-async function unlock(page) {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("mackley_access_lock_v1", "unlocked");
-  });
-}
+const retailCheckout = "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05";
 
-async function expectVisibleProductImages(page) {
-  const images = page.locator(".carousel-image");
-  await expect(images).toHaveCount(2);
-  const metrics = await images.evaluateAll((nodes) => nodes.map((image) => ({
-    naturalWidth: image.naturalWidth,
-    naturalHeight: image.naturalHeight,
-    width: image.getBoundingClientRect().width,
-    height: image.getBoundingClientRect().height,
-    visibility: getComputedStyle(image).visibility
-  })));
-  for (const image of metrics) {
-    expect(image.naturalWidth).toBeGreaterThan(1000);
-    expect(image.naturalHeight).toBeGreaterThan(1000);
-    expect(image.width).toBeGreaterThan(250);
-    expect(image.height).toBeGreaterThan(250);
-    expect(image.visibility).toBe("visible");
-  }
-}
-
-test("product images render at desktop and mobile sizes", async ({ browser }, testInfo) => {
-  for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
-    const page = await browser.newPage({ viewport });
-    await unlock(page);
-    await page.goto("/icanchange/", { waitUntil: "networkidle" });
-    await expectVisibleProductImages(page);
-    await testInfo.attach(`product-${viewport.width}.png`, {
-      body: await page.screenshot(),
-      contentType: "image/png"
-    });
-    await page.close();
-  }
-});
-
-test("Neti Pot page renders supplied product images", async ({ browser }, testInfo) => {
-  for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
-    const page = await browser.newPage({ viewport });
-    await unlock(page);
-    await page.goto("/breathedeeper/", { waitUntil: "networkidle" });
-    await expectVisibleProductImages(page);
-    await expect(page.getByRole("heading", { name: /Original Copper Neti Pot/i })).toBeVisible();
-    await expect(page.getByText(/BREATHEDEEPER/i).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Get it free with INF" })).toHaveAttribute("href", "/intake/?next=payment&offer=BREATHEDEEPER");
-    await testInfo.attach(`neti-pot-${viewport.width}.png`, {
-      body: await page.screenshot(),
-      contentType: "image/png"
-    });
-    await page.close();
-  }
-});
-
-test("BREATHEDEEPER pre-fills the code-gated Neti Pot offer", async ({ page }) => {
-  await unlock(page);
-  await page.goto("/intake/?next=payment&offer=BREATHEDEEPER", { waitUntil: "networkidle" });
-  await expect(page.locator("[data-referral-code-input]")).toHaveValue("BREATHEDEEPER");
-  await expect(page.locator("#referral-note")).toContainText("one free Neti Pot after approval");
-});
-
-test("home product image renders when the product section is active", async ({ page }, testInfo) => {
-  await unlock(page);
-  await page.goto("/", { waitUntil: "networkidle" });
-  const activeProduct = page.locator("#product-b");
-  await activeProduct.scrollIntoViewIfNeeded();
-  await expect(activeProduct.locator(".carousel-image").first()).toBeVisible();
-  const size = await activeProduct.locator(".carousel-image").first().evaluate((image) => ({
-    naturalWidth: image.naturalWidth,
-    width: image.getBoundingClientRect().width
-  }));
-  expect(size.naturalWidth).toBeGreaterThan(1000);
-  expect(size.width).toBeGreaterThan(250);
-  await testInfo.attach("home-product.png", {
-    body: await page.screenshot(),
-    contentType: "image/png"
-  });
-});
-
-test("home Neti Pot section is the final snap section", async ({ page }, testInfo) => {
-  await unlock(page);
-  await page.goto("/", { waitUntil: "networkidle" });
-  const activeNarrative = page.locator(".narrative:visible");
-  const netiSection = activeNarrative.locator(".home-neti");
-  await netiSection.evaluate((target) => {
-    const narrative = target.closest(".narrative");
-    narrative.scrollTop = target.offsetTop - ((narrative.clientHeight - target.clientHeight) / 2);
-    narrative.dispatchEvent(new Event("scroll"));
-  });
-  await expect(netiSection).toHaveClass(/active/);
-  await expect(netiSection.getByRole("heading", { name: /Original Copper Neti Pot/i })).toBeVisible();
-  await expect(netiSection.locator(".carousel-image").first()).toBeVisible();
-  await expect(netiSection.getByText(/BREATHEDEEPER/i)).toBeVisible();
-  await expect(page.locator(".scroll-guide__tick")).toHaveCount(4);
-  await testInfo.attach("home-neti-section.png", {
-    body: await page.screenshot(),
-    contentType: "image/png"
-  });
-});
-
-test("legacy product route redirects to icanchange", async ({ page }) => {
-  await unlock(page);
-  await page.goto("/product/?source=legacy");
-  await expect(page).toHaveURL(/\/icanchange\/\?source=legacy$/);
-});
-
-test("mobile pages expose one primary commerce CTA without scrolling", async ({ browser }, testInfo) => {
-  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
-    for (const route of ["/", "/icanchange/", "/breathedeeper/"]) {
-      const page = await browser.newPage({ viewport });
-      await unlock(page);
-      await page.goto(route, { waitUntil: "networkidle" });
-
-      const ctas = page.locator("a[data-product-buy]");
-      const visibleBounds = await ctas.evaluateAll((nodes) => nodes.map((node) => {
-        const rect = node.getBoundingClientRect();
-        return {
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          viewportWidth: window.innerWidth,
-          viewportHeight: window.innerHeight,
-          documentWidth: document.documentElement.scrollWidth
-        };
-      }).filter((rect) => (
-        rect.width > 0
-        && rect.height > 0
-        && rect.bottom > 0
-        && rect.top < rect.viewportHeight
-        && rect.right > 0
-        && rect.left < rect.viewportWidth
-      )));
-      expect(visibleBounds).toHaveLength(1);
-      const [bounds] = visibleBounds;
-
-      expect(bounds.top).toBeGreaterThanOrEqual(0);
-      expect(bounds.left).toBeGreaterThanOrEqual(0);
-      expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth);
-      expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportHeight);
-      expect(bounds.documentWidth).toBe(bounds.viewportWidth);
-
-      const routeName = route === "/" ? "home" : route.split("/").filter(Boolean)[0];
-      await testInfo.attach(`mobile-cta-${routeName}-${viewport.width}.png`, {
+test("the storefront fits phone and desktop viewports with JavaScript disabled", async ({ browser }, testInfo) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
+    const page = await browser.newPage({ viewport, javaScriptEnabled: false });
+    for (const route of ["/", "/breathedeeper/"]) {
+      await page.goto(route);
+      await expect(page.getByRole("heading", { name: "Pure Copper Neti Pot" })).toBeVisible();
+      const navigation = page.getByRole("navigation", { name: "Primary" });
+      await expect(navigation.getByRole("link", { name: "Learn more" })).toHaveAttribute("href", "/breathedeeper/");
+      const buy = navigation.getByRole("link", { name: "Buy now" });
+      await expect(buy).toHaveAttribute("href", retailCheckout);
+      await expect(buy).toBeInViewport();
+      const image = page.getByRole("img", { name: /Pure copper MACKLEY neti pot/i });
+      await expect(image).toBeVisible();
+      await expect.poll(() => image.evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
+      expect(await page.locator("html").evaluate((html) => html.scrollWidth)).toBe(viewport.width);
+      await testInfo.attach(`${route === "/" ? "home" : "product"}-${viewport.width}.png`, {
         body: await page.screenshot(),
         contentType: "image/png"
       });
-      await page.close();
     }
+    await page.close();
   }
+});
+
+test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText(/If you can change how you think/)).toBeVisible();
+  await expect(page.getByText("We believe you can.")).toBeVisible();
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" }).click();
+  await expect(page).toHaveURL(/\/breathedeeper\/$/);
+
+  const question = page.getByText("What water should I use?", { exact: true });
+  await question.focus();
+  await question.press("Enter");
+  await expect(page.getByText(/Use distilled or sterile water/)).toBeVisible();
+  await question.press("Space");
+  await expect(page.getByText(/Use distilled or sterile water/)).toBeHidden();
+
+  const checkoutRequest = page.waitForRequest(retailCheckout);
+  await page.route(retailCheckout, (route) => route.fulfill({ body: "Mock Stripe checkout" }));
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Buy now" }).click();
+  await checkoutRequest;
+  await expect(page).toHaveURL(retailCheckout);
+});
+
+test("legacy product routes reach the neti pot and support reaches the FAQ", async ({ page }) => {
+  for (const route of ["/product/", "/icanchange/", "/intake/", "/spray-intake/", "/deeper/"]) {
+    await page.goto(route);
+    await expect(page).toHaveURL(/\/breathedeeper\/$/);
+  }
+  await page.goto("/support/");
+  await expect(page).toHaveURL(/\/breathedeeper\/#faq$/);
+  await expect(page.getByRole("heading", { name: "Questions" })).toBeVisible();
 });
 
 test("dashboard exposes purchases, click conversion, and customer state", async ({ page }, testInfo) => {
