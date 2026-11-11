@@ -1035,6 +1035,12 @@ export default {
         : null;
 
     const url = new URL(request.url);
+    if (request.method === "POST" && ["/provider-requests", "/create-checkout-session", "/neti-pot/leads"].includes(url.pathname)) {
+      return jsonResponse(410, {
+        error: "This offer is no longer available.",
+        product_url: "https://mackley.co/breathedeeper/"
+      }, effectiveOrigin);
+    }
     if (url.pathname === "/stripe/webhook") {
       if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed." });
       const rawBody = await request.text();
@@ -1047,6 +1053,10 @@ export default {
 
       const event = JSON.parse(rawBody);
       if (event.type === "checkout.session.completed") {
+        // Retail orders are captured and confirmed by the hosted Stripe checkout.
+        if (["plink_1SmO1mH2VzsYlSl5M6JLGgeo", "plink_1UaTOnH2VzsYlSl5ySwWRGBS"].includes(event.data?.object?.payment_link)) {
+          return jsonResponse(200, { received: true });
+        }
         const sessionId = sanitizeTrackingValue(event.data?.object?.id || "");
         if (sessionId) {
           const session = await retrieveCheckoutSession(sessionId, env);
