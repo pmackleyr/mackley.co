@@ -36,7 +36,10 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 /* Identical markup and controls on both pages; swiping remains native. */
 .mk-gallery{min-width:0;width:100%}.mk-gallery__track{display:flex;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .mk-gallery__track::-webkit-scrollbar{display:none}.mk-gallery__track figure{flex:0 0 100%;min-width:0;scroll-snap-align:center;scroll-snap-stop:always;margin:0}
-.mk-gallery__track img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;background:#fff}
+.mk-gallery__track{aspect-ratio:4/3;align-items:stretch}
+.mk-gallery__track figure{display:flex;align-items:center;justify-content:center;height:100%;min-height:0}
+.mk-gallery__track picture{display:contents}
+.mk-gallery__track img{display:block;flex:none;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--mk-radius);background:#fff}
 .mk-gallery__controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px}
 .mk-gallery-arrow{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border:0;border-radius:50%;color:var(--mk-ink);background:#f5f5f7;font-size:20px;line-height:1}
 .mk-gallery-arrow:disabled{opacity:.25;cursor:default}.mk-gallery-arrow:not(:disabled):hover{background:#e8e8ed}
@@ -45,13 +48,10 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-gallery__count{min-width:36px;font-size:12px;color:var(--mk-muted);font-variant-numeric:tabular-nums;letter-spacing:0}
 /* Parker's essay rhythm: photographs first, one title, then uninterrupted prose. */
 .mk-editorial{max-width:1120px;margin:auto;padding:102px var(--mk-pad) 0}
-.mk-editorial>.mk-gallery{max-width:880px;margin:0 auto 54px}.mk-editorial-opening,.mk-essay-copy,.mk-editorial-purchase{max-width:680px;margin-inline:auto}
+.mk-editorial>.mk-gallery{max-width:880px;margin:0 auto 54px}.mk-editorial-opening,.mk-essay-copy{max-width:680px;margin-inline:auto}
 .mk-editorial-opening h1{margin-bottom:32px}
 .mk-essay-copy p{font-size:var(--mk-reading);line-height:1.72;letter-spacing:-.012em;margin-top:1.25em;text-wrap:pretty}
 .mk-essay-copy p:first-child{margin-top:0}.mk-essay-copy .mk-signature{font-size:15px;color:var(--mk-muted);margin-top:32px}
-.mk-editorial-purchase{margin-top:56px;padding:40px 0 48px;border-top:1px solid #e5e5e7}
-.mk-editorial-purchase h2{font-size:28px;font-weight:600;line-height:1.15;letter-spacing:-.025em}.mk-editorial-purchase p:not(.mk-price):not(.mk-small){font-size:17px;line-height:1.6;margin-top:18px}.mk-editorial-purchase .mk-price{margin-top:18px}
-.mk-editorial-purchase .mk-button{margin-top:26px}.mk-editorial-purchase .mk-small{margin-top:14px}.mk-editorial-purchase .mk-retail-note{font-size:14px!important;color:var(--mk-muted)}
 .mk-faq{max-width:824px;margin:40px auto 88px;padding:0 var(--mk-pad)}
 .mk-faq h2{font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.03em;margin-bottom:28px}
 .mk-faq details{border-top:1px solid #dedee2}.mk-faq details:last-child{border-bottom:1px solid #dedee2}
@@ -63,8 +63,8 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-policies{max-width:800px;padding:132px 28px 90px;margin:auto;color:#000}.mk-policy-intro{margin-bottom:56px}.mk-policy-intro h1{margin:14px 0 22px}.mk-policy-intro>p:not(.mk-small){font-size:18px}.mk-policy-intro nav{display:flex;gap:24px;margin-top:26px;font-size:14px}.mk-policies a{text-decoration:underline;text-underline-offset:4px}
 .mk-policies section+section{margin-top:72px;padding-top:48px;border-top:1px solid #ddd}.mk-policies h2{font-size:32px;font-weight:600;letter-spacing:-.03em;margin-bottom:24px}.mk-policies h3{font-size:18px;line-height:1.4;font-weight:600;margin:32px 0 10px}.mk-policies p{font-size:16px;line-height:1.75;margin:10px 0}.mk-policies .mk-small{font-size:12px}.mk-preferences{margin:24px 0 34px;padding:22px 0;border-block:1px solid #ddd}.mk-preferences label{display:flex;align-items:center;gap:12px;font-size:15px;min-height:44px;cursor:pointer}.mk-preferences input{width:20px;height:20px;accent-color:var(--mk-action);flex-shrink:0}.mk-preferences button{margin-top:12px}
 .mk-not-found{min-height:80svh;padding:160px var(--mk-pad) 80px}.mk-not-found .mk-button{margin-top:30px}
-@media(max-width:800px){.mk-reveal{grid-template-columns:1fr;max-width:720px;row-gap:38px}.mk-reveal .mk-gallery{grid-row:2}.mk-reveal__copy{max-width:none}.mk-reveal .mk-strike{max-width:none}.mk-reveal .mk-gallery__track img{max-height:60svh}.mk-belief{text-align:left}.mk-editorial{padding-top:96px}}
-@media(max-width:600px){:root{--mk-radius:24px;--mk-display:clamp(34px,8.5vw,52px);--mk-title:clamp(32px,8.5vw,44px);--mk-reading:18px}.mk-header{top:8px;width:calc(100% - 20px);height:54px;padding-left:14px;gap:6px}.mk-header .mk-logo{font-size:17px}.mk-header .mk-actions{gap:2px}.mk-header .mk-button{padding-inline:12px;font-size:13px}.mk-header .mk-button--secondary{padding-inline:7px}.mk-scene{padding-inline:24px}.mk-reveal{padding:100px 24px 54px}.mk-strike{margin-top:24px}.mk-price span{display:block;margin:4px 0 0}.mk-editorial{padding-inline:24px}.mk-editorial>.mk-gallery{margin-bottom:36px}.mk-editorial-opening h1{margin-bottom:28px}.mk-editorial-purchase{margin-top:40px;padding-bottom:36px}.mk-faq{margin:28px auto 60px;padding-inline:24px}.mk-gallery__controls{gap:10px;margin-top:10px}.mk-gallery-dot{width:30px}.mk-footer{padding:24px;gap:16px}.mk-footer .mk-actions{gap:22px}.mk-footer .mk-logo{display:inline-flex;align-items:center;min-height:44px}.mk-policies{padding:112px 24px 64px}}
+@media(max-width:800px){.mk-reveal{grid-template-columns:1fr;max-width:720px;row-gap:38px}.mk-reveal .mk-gallery{grid-row:2}.mk-reveal__copy{max-width:none}.mk-reveal .mk-strike{max-width:none}.mk-belief{text-align:left}.mk-editorial{padding-top:96px}}
+@media(max-width:600px){:root{--mk-radius:24px;--mk-display:clamp(34px,8.5vw,52px);--mk-title:clamp(32px,8.5vw,44px);--mk-reading:18px}.mk-header{top:8px;width:calc(100% - 20px);height:54px;padding-left:14px;gap:6px}.mk-header .mk-logo{font-size:17px}.mk-header .mk-actions{gap:2px}.mk-header .mk-button{padding-inline:12px;font-size:13px}.mk-header .mk-button--secondary{padding-inline:7px}.mk-scene{padding-inline:24px}.mk-reveal{padding:100px 24px 54px}.mk-strike{margin-top:24px}.mk-price span{display:block;margin:4px 0 0}.mk-editorial{padding-inline:24px}.mk-editorial>.mk-gallery{margin-bottom:36px}.mk-editorial-opening h1{margin-bottom:28px}.mk-faq{margin:28px auto 60px;padding-inline:24px}.mk-gallery__controls{gap:10px;margin-top:10px}.mk-gallery-dot{width:30px}.mk-footer{padding:24px;gap:16px}.mk-footer .mk-actions{gap:22px}.mk-footer .mk-logo{display:inline-flex;align-items:center;min-height:44px}.mk-policies{padding:112px 24px 64px}}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.mk-header{background:rgba(255,255,255,.97);border-color:#b6b6bc;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.mk-header{background:rgba(255,255,255,.96)}}
 @media(prefers-reduced-motion:reduce){.mk-root,.mk-gallery__track{scroll-behavior:auto}.mk *, .mk *::before,.mk *::after{transition:none!important;animation:none!important}.mk-scene__media video{display:none}.mk-root--home{scroll-snap-type:y proximity}}
@@ -75,15 +75,12 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-button{border-radius:var(--mk-radius)}
 .mk-gallery__track,.mk-gallery__track figure{border-radius:var(--mk-radius)}
 .mk-gallery__track figure{overflow:hidden}
-.mk-reveal__copy,.mk-editorial-opening,.mk-editorial-purchase{container-type:inline-size}
+.mk-reveal__copy,.mk-editorial-opening{container-type:inline-size}
 .mk-editorial-opening{max-width:880px}
 .mk .mk-product-title{font-size:clamp(26px,9.8cqi,56px);line-height:1.1;font-weight:600;letter-spacing:-.035em;white-space:nowrap;text-wrap:nowrap}
 .mk-editorial-opening h1{font-size:clamp(13px,5cqi,48px);line-height:1.2;letter-spacing:-.035em;white-space:nowrap;text-wrap:nowrap}
-.mk-editorial-purchase{border-top:0;padding-top:12px}
-.mk-editorial-purchase .mk-product-title{font-size:clamp(26px,9.8cqi,40px)}
-.mk-ritual-film{max-width:440px;margin:0 auto 40px;border-radius:var(--mk-radius);overflow:hidden;background:#080808}
+.mk-ritual-film{max-width:440px;margin:0 auto 24px;border-radius:var(--mk-radius);overflow:hidden;background:#080808}
 .mk-ritual-film video{display:block;width:100%;height:auto;border-radius:var(--mk-radius)}
-.mk-editorial-purchase .mk-offer-description{font-size:var(--mk-reading);line-height:1.5;margin-top:14px}
 @supports not (font-size:1cqi){.mk .mk-product-title{font-size:clamp(26px,3.2vw,48px)}.mk-editorial-opening h1{font-size:clamp(13px,3.55vw,36px)}}
 
 .mk-gallery__controls{gap:8px}
@@ -94,3 +91,7 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 /* Older iPhone Safari: preserve the measured type scale and immediate resize positioning. */
 .mk-root{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .mk-gallery__track{scroll-behavior:auto}
+
+/* The essay ends with one purchase action, then the demonstration. */
+.mk-essay-checkout{max-width:680px;margin:32px auto 40px}
+.mk-editorial>.mk-retail-note{max-width:680px;margin:0 auto 48px;font-size:14px;line-height:1.6;color:var(--mk-muted)}

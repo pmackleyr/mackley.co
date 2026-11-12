@@ -19,3 +19,6 @@
 - Visible MACKLEY mentions share Inter/red styling; metadata remains plain text.
 - Older Safari gets100vh fallback, text-size-adjust100%, and portable auto scrolling for resize/reduced-motion positioning. Pinch zoom is not disabled.
 - Static sizing, assets, IDs, captions, schema, branding and destinations validated. Actual Safari/device rendering and payment-email delivery remain unverified.
+
+
+2026-11-12 final checkout cleanup: replaced packaging illustration 2 with the owner's 2048 × 1555 updated original and a color-profile-preserving WebP derivative. Both galleries reference the versioned replacement. Removed the duplicate lower title, tagline, and price; moved the single essay checkout action directly after the narrative and before the demonstration. Kept the requested Natural Grocers inquiry below the film. Images now retain their intrinsic proportions inside a stable 4:3 track, with the shared 24px radius on each image itself. GitHub CLI authentication succeeded for pmackleyr; the local repository helper reuses the private workspace credential. GitHub Pages remains the production deployment path. Browser and physical-device validation remain unavailable.
