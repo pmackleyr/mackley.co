@@ -1,9 +1,9 @@
 @font-face{font-family:Inter;src:url('/public/fonts/InterVariable.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
-:root{--mk-red:#f70500;--mk-action:#d70500;--mk-ink:#1d1d1f;--mk-muted:#6e6e73;--mk-pad:clamp(24px,5vw,72px);--mk-display:clamp(36px,5.5vw,80px);--mk-title:clamp(32px,4.2vw,56px);--mk-reading:clamp(18px,1.5vw,21px)}
+:root{--mk-radius:24px;--mk-red:#f70500;--mk-action:#d70500;--mk-ink:#1d1d1f;--mk-muted:#6e6e73;--mk-pad:clamp(24px,5vw,72px);--mk-display:clamp(36px,5.5vw,80px);--mk-title:clamp(32px,4.2vw,56px);--mk-reading:clamp(18px,1.5vw,21px)}
 *{box-sizing:border-box;margin:0;padding:0}
 button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}img{max-width:100%;height:auto}button,input,summary,a{-webkit-tap-highlight-color:transparent}
 .mk-root{color-scheme:light;scroll-behavior:smooth;scroll-padding-top:96px;overflow-x:clip;background:#fff}
-body.mk{min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.5;letter-spacing:-.012em;-webkit-font-smoothing:antialiased}
+body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.5;letter-spacing:-.012em;-webkit-font-smoothing:antialiased}
 .mk a:focus-visible,.mk button:focus-visible,.mk summary:focus-visible,.mk input:focus-visible,.mk [tabindex]:focus-visible{outline:2px solid var(--mk-action);outline-offset:5px}
 .mk [id]{scroll-margin-top:96px}.mk-skip{position:fixed;top:-100px;left:20px;z-index:100;padding:12px 18px;background:white;color:black}.mk-skip:focus{top:12px}
 /* Clear glass belongs to the navigation layer; the content stays unadorned. */
@@ -15,7 +15,7 @@ body.mk{min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,
 .mk .mk-button--primary{background:var(--mk-action);color:white}.mk .mk-button--primary:hover{background:#ba0400}.mk .mk-button--primary:active{opacity:.8}
 .mk .mk-button--secondary{color:var(--mk-action);background:transparent;border-color:transparent;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:5px;transition:text-decoration-color .18s ease}.mk .mk-button--secondary:hover{ text-decoration-color:currentColor}
 .mk-header .mk-actions{flex-wrap:nowrap;gap:8px}.mk-header .mk-button{min-height:44px;padding:10px 18px;font-size:14px}.mk-header .mk-button--secondary{padding-inline:10px}
-.mk-scene{position:relative;isolation:isolate;min-height:100svh;display:grid;place-items:center;padding:110px var(--mk-pad);overflow:hidden;background:#080808;color:white}
+.mk-scene{position:relative;isolation:isolate;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:110px var(--mk-pad);overflow:hidden;background:#080808;color:white}
 .mk-scene__media,.mk-scene__shade{position:absolute;inset:0;z-index:-1}
 .mk-scene__media video,.mk-scene__media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease}
 .mk-scene__media .is-visible{opacity:1}
@@ -25,7 +25,7 @@ body.mk{min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,
 .mk-scroll{position:absolute;bottom:28px;left:calc(50% - 24px);display:grid;place-items:center;width:48px;height:48px;font-size:25px;opacity:.7}.mk-scroll:hover{opacity:1}
 .mk-root--home{scroll-snap-type:y mandatory;scroll-padding-top:0}
 .mk-home .mk-scene,.mk-home .mk-reveal,.mk-home .mk-footer{scroll-snap-align:start;scroll-snap-stop:always;scroll-margin:0}
-.mk-reveal{min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:center;gap:40px clamp(32px,6vw,88px);max-width:1440px;margin:auto;padding:110px var(--mk-pad) 72px}
+.mk-reveal{min-height:100vh;min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:center;gap:40px clamp(32px,6vw,88px);max-width:1440px;margin:auto;padding:110px var(--mk-pad) 72px}
 .mk-belief{grid-column:1/-1;color:var(--mk-red)}.mk-belief strong{font-weight:800;text-decoration:underline;text-decoration-thickness:.055em;text-underline-offset:.12em}
 .mk-reveal__copy{max-width:580px}.mk h1{font-size:var(--mk-title);font-weight:600;line-height:1.08;letter-spacing:-.035em;text-wrap:balance}
 .mk-strike{font-size:var(--mk-reading);font-weight:400;line-height:1.65;max-width:40ch;margin-top:28px;text-wrap:pretty}
@@ -64,8 +64,33 @@ body.mk{min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,
 .mk-policies section+section{margin-top:72px;padding-top:48px;border-top:1px solid #ddd}.mk-policies h2{font-size:32px;font-weight:600;letter-spacing:-.03em;margin-bottom:24px}.mk-policies h3{font-size:18px;line-height:1.4;font-weight:600;margin:32px 0 10px}.mk-policies p{font-size:16px;line-height:1.75;margin:10px 0}.mk-policies .mk-small{font-size:12px}.mk-preferences{margin:24px 0 34px;padding:22px 0;border-block:1px solid #ddd}.mk-preferences label{display:flex;align-items:center;gap:12px;font-size:15px;min-height:44px;cursor:pointer}.mk-preferences input{width:20px;height:20px;accent-color:var(--mk-action);flex-shrink:0}.mk-preferences button{margin-top:12px}
 .mk-not-found{min-height:80svh;padding:160px var(--mk-pad) 80px}.mk-not-found .mk-button{margin-top:30px}
 @media(max-width:800px){.mk-reveal{grid-template-columns:1fr;max-width:720px;row-gap:38px}.mk-reveal .mk-gallery{grid-row:2}.mk-reveal__copy{max-width:none}.mk-reveal .mk-strike{max-width:none}.mk-reveal .mk-gallery__track img{max-height:60svh}.mk-belief{text-align:left}.mk-editorial{padding-top:96px}}
-@media(max-width:600px){:root{--mk-display:clamp(34px,8.5vw,52px);--mk-title:clamp(32px,8.5vw,44px);--mk-reading:18px}.mk-header{top:8px;width:calc(100% - 20px);height:54px;padding-left:14px;gap:6px}.mk-header .mk-logo{font-size:17px}.mk-header .mk-actions{gap:2px}.mk-header .mk-button{padding-inline:12px;font-size:13px}.mk-header .mk-button--secondary{padding-inline:7px}.mk-scene{padding-inline:24px}.mk-reveal{padding:100px 24px 54px}.mk-strike{margin-top:24px}.mk-price span{display:block;margin:4px 0 0}.mk-editorial{padding-inline:24px}.mk-editorial>.mk-gallery{margin-bottom:36px}.mk-editorial-opening h1{margin-bottom:28px}.mk-editorial-purchase{margin-top:40px;padding-bottom:36px}.mk-faq{margin:28px auto 60px;padding-inline:24px}.mk-gallery__controls{gap:10px;margin-top:10px}.mk-gallery-dot{width:30px}.mk-footer{padding:24px;gap:16px}.mk-footer .mk-actions{gap:22px}.mk-footer .mk-logo{display:inline-flex;align-items:center;min-height:44px}.mk-policies{padding:112px 24px 64px}}
+@media(max-width:600px){:root{--mk-radius:24px;--mk-display:clamp(34px,8.5vw,52px);--mk-title:clamp(32px,8.5vw,44px);--mk-reading:18px}.mk-header{top:8px;width:calc(100% - 20px);height:54px;padding-left:14px;gap:6px}.mk-header .mk-logo{font-size:17px}.mk-header .mk-actions{gap:2px}.mk-header .mk-button{padding-inline:12px;font-size:13px}.mk-header .mk-button--secondary{padding-inline:7px}.mk-scene{padding-inline:24px}.mk-reveal{padding:100px 24px 54px}.mk-strike{margin-top:24px}.mk-price span{display:block;margin:4px 0 0}.mk-editorial{padding-inline:24px}.mk-editorial>.mk-gallery{margin-bottom:36px}.mk-editorial-opening h1{margin-bottom:28px}.mk-editorial-purchase{margin-top:40px;padding-bottom:36px}.mk-faq{margin:28px auto 60px;padding-inline:24px}.mk-gallery__controls{gap:10px;margin-top:10px}.mk-gallery-dot{width:30px}.mk-footer{padding:24px;gap:16px}.mk-footer .mk-actions{gap:22px}.mk-footer .mk-logo{display:inline-flex;align-items:center;min-height:44px}.mk-policies{padding:112px 24px 64px}}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.mk-header{background:rgba(255,255,255,.97);border-color:#b6b6bc;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.mk-header{background:rgba(255,255,255,.96)}}
 @media(prefers-reduced-motion:reduce){.mk-root,.mk-gallery__track{scroll-behavior:auto}.mk *, .mk *::before,.mk *::after{transition:none!important;animation:none!important}.mk-scene__media video{display:none}.mk-root--home{scroll-snap-type:y proximity}}
 @media print{.mk-header,.mk-footer,.mk-gallery__controls,.mk-scroll{display:none}.mk-root--home{scroll-snap-type:none}.mk-editorial{padding:0}.mk-scene{min-height:0;background:white;color:black}.mk-scene__media,.mk-scene__shade{display:none}}
+
+/* The box and the site share Inter, the red wordmark, and one corner radius. */
+.mk-brand{font-family:Inter,-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:var(--mk-red);font-style:normal;font-weight:700;letter-spacing:-.045em;white-space:nowrap}
+.mk-button{border-radius:var(--mk-radius)}
+.mk-gallery__track,.mk-gallery__track figure{border-radius:var(--mk-radius)}
+.mk-gallery__track figure{overflow:hidden}
+.mk-reveal__copy,.mk-editorial-opening,.mk-editorial-purchase{container-type:inline-size}
+.mk-editorial-opening{max-width:880px}
+.mk .mk-product-title{font-size:clamp(26px,9.8cqi,56px);line-height:1.1;font-weight:600;letter-spacing:-.035em;white-space:nowrap;text-wrap:nowrap}
+.mk-editorial-opening h1{font-size:clamp(13px,5cqi,48px);line-height:1.2;letter-spacing:-.035em;white-space:nowrap;text-wrap:nowrap}
+.mk-editorial-purchase{border-top:0;padding-top:12px}
+.mk-editorial-purchase .mk-product-title{font-size:clamp(26px,9.8cqi,40px)}
+.mk-ritual-film{max-width:440px;margin:0 auto 40px;border-radius:var(--mk-radius);overflow:hidden;background:#080808}
+.mk-ritual-film video{display:block;width:100%;height:auto;border-radius:var(--mk-radius)}
+.mk-editorial-purchase .mk-offer-description{font-size:var(--mk-reading);line-height:1.5;margin-top:14px}
+@supports not (font-size:1cqi){.mk .mk-product-title{font-size:clamp(26px,3.2vw,48px)}.mk-editorial-opening h1{font-size:clamp(13px,3.55vw,36px)}}
+
+.mk-gallery__controls{gap:8px}
+.mk-gallery-dot{width:28px}
+@media(max-width:600px){.mk-gallery-dot{width:24px}}
+@media(max-width:359px){.mk-gallery__count{position:absolute;width:1px;min-width:0;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
+
+/* Older iPhone Safari: preserve the measured type scale and immediate resize positioning. */
+.mk-root{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.mk-gallery__track{scroll-behavior:auto}

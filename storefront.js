@@ -95,7 +95,7 @@
     }
     function show(value, immediate = false) {
       index = clamp(value);
-      track.scrollTo({ left: track.clientWidth * index, behavior: immediate || reducedMotion.matches ? "instant" : "smooth" });
+      track.scrollTo({ left: track.clientWidth * index, behavior: immediate || reducedMotion.matches ? "auto" : "smooth" });
     }
     previous.addEventListener("click", () => show(index - 1));
     next.addEventListener("click", () => show(index + 1));

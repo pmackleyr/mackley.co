@@ -21,5 +21,5 @@ test('carousel supports keyboard Home/End and native swipe position updates',()=
  const f=fixture();const key=k=>f.track.keydown({key:k,preventDefault(){}});key('End');assert.equal(f.count.textContent,'3 / 3');key('Home');assert.equal(f.count.textContent,'1 / 3');key('ArrowRight');assert.equal(f.count.textContent,'2 / 3');f.track.scrollLeft=800;f.track.scroll();assert.equal(f.count.textContent,'3 / 3');
 });
 test('resizing retains the selected photograph rather than shifting between slides',()=>{
- const f=fixture();f.dots[2].click();f.track.clientWidth=275;f.resize();assert.equal(f.track.scrollLeft,550);assert.equal(f.track.behavior,'instant');assert.equal(f.count.textContent,'3 / 3');
+ const f=fixture();f.dots[2].click();f.track.clientWidth=275;f.resize();assert.equal(f.track.scrollLeft,550);assert.equal(f.track.behavior,'auto');assert.equal(f.count.textContent,'3 / 3');
 });

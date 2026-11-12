@@ -24,7 +24,7 @@
     ],
     story: [{ html: `<p>You enter this world on a breath. You leave when breathing stops. The shape of your life is determined by the shape of every breath you take in between.</p>
         <p>Breathing is the most important habit. But almost nobody, except for true yogis, takes radical care of their nasal passages.</p>
-        <p>The majority of us brush our teeth every morning, many filter the water we drink, but very few clean the passage that every breath travels through.</p>
+        <p>A kriya is a habit that changes you inside to out. Jala neti means rinsing your nose each day. Yogis practice jala neti every morning. Before anything else.</p>
         <p>Fill this pure copper neti pot each morning with distilled, sterile, or boiled-and-cooled water and a measured saline mix, then rinse each nostril.</p>
         <p>The salt is intended to match the salinity of your body’s fluids, making the rinse more comfortable. Follow the saline mix’s water measurements.</p>
         <p>You may feel your sinuses clear and your nasal passages open. Even if you don’t <em>think</em> you have junk up there, we all live in a polluted world. A saline rinse can help wash away dust, pollen, and mucus.</p>

@@ -9,3 +9,13 @@
 - Contents remain one 400mL copper pot and one microfiber towel. No scoop; salt is not included.
 - Checks: 12 playback lifecycle/media tests, 3 carousel tests, syntax, internal assets/links/IDs, metadata, copy and matching-component contracts. The six MP4s fully decode and have fast-start metadata.
 - Browser visual/device verification was unavailable in this session. Purchase-email delivery remains unverified. GitHub production publishing still requires valid repository write authentication.
+
+
+## iPhone SE and packaging finish
+
+- One-line container-relative headings verified against exact Inter600 glyph metrics at320px and375px. Product name9.4265em, long headline18.8549em at conservative optical-size14; widths at320px are251.3px and256.4px within272px. The long heading scales to13.6px to meet the owner's one-line requirement; reading copy remains18px.
+- Six-slide carousel includes exact supplied1/2/3 artwork and color-profile-preserving WebP versions. Both pages share markup, with a lower home-photo loading priority below the opening scenes. Shared24px corners for buttons, carousel and demonstration video.
+- The original720x1060,22.4-second demonstration now replaces the lower generic offer, followed by the requested title and short description. Stripe reassurance removed; local Natural Grocers inquiry retained.
+- Visible MACKLEY mentions share Inter/red styling; metadata remains plain text.
+- Older Safari gets100vh fallback, text-size-adjust100%, and portable auto scrolling for resize/reduced-motion positioning. Pinch zoom is not disabled.
+- Static sizing, assets, IDs, captions, schema, branding and destinations validated. Actual Safari/device rendering and payment-email delivery remain unverified.
