@@ -2,14 +2,6 @@
   "use strict";
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const header = document.querySelector(".mk-header");
-  const scenes = Array.from(document.querySelectorAll("[data-scene]"));
-  const sources = window.MACKLEY_SCENE_SOURCES || {};
-  const playlists = new WeakMap();
-  const ratios = new Map();
-  let activeScene = null;
-  let timer = null;
-  let generation = 0;
   let trackingLoaded = false;
   const preferenceKey = "mackley_optional_analytics";
 
@@ -80,125 +72,44 @@
   }
   enableTracking();
 
-  function stopTimer() {
-    window.clearTimeout(timer);
-    timer = null;
-    generation += 1;
-  }
-
-  // A shuffled bag plays every clip once before reshuffling, with no
-  // repeated clip at the bag boundary. GIF variants themselves do not loop.
-  function nextClip(scene) {
-    let state = playlists.get(scene);
-    if (!state) { state = { queue: [], last: null }; playlists.set(scene, state); }
-    if (!state.queue.length) {
-      state.queue = [...(sources[scene.dataset.scene] || [])];
-      for (let i = state.queue.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [state.queue[i], state.queue[j]] = [state.queue[j], state.queue[i]];
-      }
-      if (state.queue.length > 1 && state.queue[0].src === state.last) {
-        [state.queue[0], state.queue[1]] = [state.queue[1], state.queue[0]];
-      }
-    }
-    const clip = state.queue.shift();
-    if (clip) state.last = clip.src;
-    return clip;
-  }
-
-  function clearMedia() {
-    scenes.forEach((scene) => scene.querySelectorAll(".mk-scene__media img").forEach((img) => img.remove()));
-  }
-
-  function rotateScene(scene) {
-    if (!scene || reducedMotion.matches || document.hidden || scene !== activeScene) return;
-    const clip = nextClip(scene);
-    if (!clip) return;
-    const media = scene.querySelector(".mk-scene__media");
-    media.querySelectorAll("img:not(.is-visible)").forEach((img) => img.remove());
-    const previous = media.querySelector(".is-visible");
-    const next = document.createElement("img");
-    next.alt = "";
-    const token = generation;
-    // A fresh image element restarts a cached single-play GIF reliably.
-    next.addEventListener("load", () => {
-      if (token !== generation || reducedMotion.matches || document.hidden || scene !== activeScene) { next.remove(); return; }
-      window.clearTimeout(timer);
-      requestAnimationFrame(() => {
-        if (token !== generation) return;
-        next.classList.add("is-visible");
-        previous?.classList.remove("is-visible");
-      });
-      timer = window.setTimeout(() => rotateScene(scene), clip.durationMs);
-    }, { once: true });
-    next.addEventListener("error", () => {
-      if (token !== generation) return;
-      window.clearTimeout(timer);
-      next.remove();
-      timer = window.setTimeout(() => rotateScene(scene), 1000);
-    }, { once: true });
-    // Skip an unavailable image rather than leaving the rotation stuck.
-    timer = window.setTimeout(() => { next.remove(); rotateScene(scene); }, 12000);
-    media.append(next);
-    next.src = clip.src;
-  }
-
-  function activate(scene) {
-    if (scene === activeScene) return;
-    stopTimer();
-    clearMedia();
-    activeScene = scene;
-    rotateScene(scene);
-  }
-
-  if (scenes.length && "IntersectionObserver" in window) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => ratios.set(entry.target, entry.intersectionRatio));
-      const current = scenes.reduce((best, scene) => (ratios.get(scene) || 0) > (ratios.get(best) || 0) ? scene : best, null);
-      activate(current && (ratios.get(current) || 0) >= 0.5 ? current : null);
-    }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
-    scenes.forEach((scene) => observer.observe(scene));
-  } else if (scenes.length) {
-    activate(scenes[0]);
-  }
-  reducedMotion.addEventListener("change", () => {
-    stopTimer(); clearMedia();
-    if (!reducedMotion.matches) rotateScene(activeScene);
-  });
-  document.addEventListener("visibilitychange", () => {
-    stopTimer(); clearMedia();
-    if (!document.hidden) rotateScene(activeScene);
-  });
-
+  // Identical, native-swipe product carousel on home and product pages.
   document.querySelectorAll(".mk-gallery").forEach((gallery) => {
     const track = gallery.querySelector(".mk-gallery__track");
-    const prev = gallery.querySelector("[data-gallery-prev]");
+    const previous = gallery.querySelector("[data-gallery-prev]");
     const next = gallery.querySelector("[data-gallery-next]");
     const count = gallery.querySelector("[data-gallery-count]");
+    const dots = Array.from(gallery.querySelectorAll("[data-gallery-slide]"));
     const total = track.children.length;
-    let frame;
+    let index = 0, frame = 0;
+    const clamp = (value) => Math.max(0, Math.min(total - 1, value));
     function update() {
-      const index = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
-      prev.disabled = index === 0;
-      next.disabled = index >= total - 1;
-      count.textContent = `${index + 1} / ${total}`;
+      index = clamp(Math.round(track.scrollLeft / Math.max(1, track.clientWidth)));
+      previous.disabled = index === 0;
+      next.disabled = index === total - 1;
+      const label = `${index + 1} / ${total}`;
+      if (count.textContent !== label) count.textContent = label;
+      dots.forEach((dot, i) => {
+        if (i === index) dot.setAttribute("aria-current", "true");
+        else dot.removeAttribute("aria-current");
+      });
     }
-    function move(direction) {
-      track.scrollBy({ left: track.clientWidth * direction, behavior: reducedMotion.matches ? "instant" : "smooth" });
+    function show(value, immediate = false) {
+      index = clamp(value);
+      track.scrollTo({ left: track.clientWidth * index, behavior: immediate || reducedMotion.matches ? "instant" : "smooth" });
     }
-    prev.addEventListener("click", () => move(-1));
-    next.addEventListener("click", () => move(1));
+    previous.addEventListener("click", () => show(index - 1));
+    next.addEventListener("click", () => show(index + 1));
+    dots.forEach((dot, i) => dot.addEventListener("click", () => show(i)));
     track.addEventListener("keydown", (event) => {
-      if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
-        event.preventDefault();
-        move(event.key === "ArrowRight" ? 1 : -1);
-      }
+      const destinations = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: total - 1 };
+      if (event.key in destinations) { event.preventDefault(); show(destinations[event.key]); }
     });
     track.addEventListener("scroll", () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(update);
     }, { passive: true });
-    window.addEventListener("resize", update);
+    if ("ResizeObserver" in window) new ResizeObserver(() => show(index, true)).observe(track);
+    else window.addEventListener("resize", () => show(index, true));
     update();
   });
 
