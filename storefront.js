@@ -4,14 +4,10 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const header = document.querySelector(".mk-header");
   const scenes = Array.from(document.querySelectorAll("[data-scene]"));
-  const motionButton = document.querySelector(".mk-motion");
-  const sources = {
-    inside: ["/public/inside/brain.gif", "/public/inside/heart.gif", "/public/inside/chamber.gif"],
-    outside: ["/public/outside/surf.gif", "/public/outside/yogi.gif", "/public/outside/astronaut.gif"]
-  };
+  const sources = window.MACKLEY_SCENE_SOURCES || {};
+  const playlists = new WeakMap();
   const ratios = new Map();
   let activeScene = null;
-  let paused = reducedMotion.matches;
   let timer = null;
   let generation = 0;
   let trackingLoaded = false;
@@ -37,7 +33,7 @@
 
   async function enableTracking() {
     if (trackingLoaded || privacySignal() || !storedPreference()) return;
-    if (["localhost", "127.0.0.1"].includes(location.hostname)) return;
+    if (!["mackley.co", "www.mackley.co"].includes(location.hostname)) return;
     trackingLoaded = true;
     try {
       await loadScript("/google-tag.js");
@@ -90,42 +86,68 @@
     generation += 1;
   }
 
-  function setMotionLabel() {
-    if (!motionButton) return;
-    motionButton.textContent = paused ? "Play motion" : "Pause motion";
-    motionButton.setAttribute("aria-pressed", String(paused));
-    motionButton.hidden = !activeScene;
+  // A shuffled bag plays every clip once before reshuffling, with no
+  // repeated clip at the bag boundary. GIF variants themselves do not loop.
+  function nextClip(scene) {
+    let state = playlists.get(scene);
+    if (!state) { state = { queue: [], last: null }; playlists.set(scene, state); }
+    if (!state.queue.length) {
+      state.queue = [...(sources[scene.dataset.scene] || [])];
+      for (let i = state.queue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.queue[i], state.queue[j]] = [state.queue[j], state.queue[i]];
+      }
+      if (state.queue.length > 1 && state.queue[0].src === state.last) {
+        [state.queue[0], state.queue[1]] = [state.queue[1], state.queue[0]];
+      }
+    }
+    const clip = state.queue.shift();
+    if (clip) state.last = clip.src;
+    return clip;
+  }
+
+  function clearMedia() {
+    scenes.forEach((scene) => scene.querySelectorAll(".mk-scene__media img").forEach((img) => img.remove()));
   }
 
   function rotateScene(scene) {
-    if (!scene || paused || document.hidden || scene !== activeScene) return;
-    const images = Array.from(scene.querySelectorAll(".mk-scene__media img"));
-    const list = sources[scene.dataset.scene];
-    const index = Number(scene.dataset.frame || 0);
-    const next = images.find((img) => !img.classList.contains("is-visible")) || images[0];
+    if (!scene || reducedMotion.matches || document.hidden || scene !== activeScene) return;
+    const clip = nextClip(scene);
+    if (!clip) return;
+    const media = scene.querySelector(".mk-scene__media");
+    media.querySelectorAll("img:not(.is-visible)").forEach((img) => img.remove());
+    const previous = media.querySelector(".is-visible");
+    const next = document.createElement("img");
+    next.alt = "";
     const token = generation;
-    next.onload = () => {
-      if (token !== generation || paused || scene !== activeScene) return;
-      images.forEach((img) => img.classList.toggle("is-visible", img === next));
-      scene.dataset.frame = String((index + 1) % list.length);
-    };
-    next.src = list[index % list.length];
-    if (next.complete && next.naturalWidth) next.onload();
-    timer = window.setTimeout(() => rotateScene(scene), 8000);
+    // A fresh image element restarts a cached single-play GIF reliably.
+    next.addEventListener("load", () => {
+      if (token !== generation || reducedMotion.matches || document.hidden || scene !== activeScene) { next.remove(); return; }
+      window.clearTimeout(timer);
+      requestAnimationFrame(() => {
+        if (token !== generation) return;
+        next.classList.add("is-visible");
+        previous?.classList.remove("is-visible");
+      });
+      timer = window.setTimeout(() => rotateScene(scene), clip.durationMs);
+    }, { once: true });
+    next.addEventListener("error", () => {
+      if (token !== generation) return;
+      window.clearTimeout(timer);
+      next.remove();
+      timer = window.setTimeout(() => rotateScene(scene), 1000);
+    }, { once: true });
+    // Skip an unavailable image rather than leaving the rotation stuck.
+    timer = window.setTimeout(() => { next.remove(); rotateScene(scene); }, 12000);
+    media.append(next);
+    next.src = clip.src;
   }
 
   function activate(scene) {
     if (scene === activeScene) return;
     stopTimer();
+    clearMedia();
     activeScene = scene;
-    if (header) header.dataset.theme = scene ? "dark" : "light";
-    setMotionLabel();
-    scenes.filter((item) => item !== scene).forEach((item) => {
-      item.querySelectorAll("img").forEach((img) => {
-        img.classList.remove("is-visible");
-        img.removeAttribute("src");
-      });
-    });
     rotateScene(scene);
   }
 
@@ -133,32 +155,18 @@
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => ratios.set(entry.target, entry.intersectionRatio));
       const current = scenes.reduce((best, scene) => (ratios.get(scene) || 0) > (ratios.get(best) || 0) ? scene : best, null);
-      activate(current && (ratios.get(current) || 0) > 0.18 ? current : null);
-    }, { threshold: [0, 0.18, 0.3, 0.5, 0.7, 1] });
+      activate(current && (ratios.get(current) || 0) >= 0.5 ? current : null);
+    }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
     scenes.forEach((scene) => observer.observe(scene));
-    activate(scenes[0]);
   } else if (scenes.length) {
     activate(scenes[0]);
   }
-
-  motionButton?.addEventListener("click", () => {
-    paused = !paused;
-    stopTimer();
-    if (paused) {
-      scenes.forEach((scene) => scene.querySelectorAll("img").forEach((img) => {
-        img.classList.remove("is-visible");
-        img.removeAttribute("src");
-      }));
-    } else {
-      rotateScene(activeScene);
-    }
-    setMotionLabel();
-  });
-  reducedMotion.addEventListener("change", (event) => {
-    if (event.matches && !paused) motionButton?.click();
+  reducedMotion.addEventListener("change", () => {
+    stopTimer(); clearMedia();
+    if (!reducedMotion.matches) rotateScene(activeScene);
   });
   document.addEventListener("visibilitychange", () => {
-    stopTimer();
+    stopTimer(); clearMedia();
     if (!document.hidden) rotateScene(activeScene);
   });
 
