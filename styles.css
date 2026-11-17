@@ -28,6 +28,7 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-reveal{min-height:100vh;min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:center;gap:40px clamp(32px,6vw,88px);max-width:1440px;margin:auto;padding:110px var(--mk-pad) 72px}
 .mk-belief{grid-column:1/-1;color:var(--mk-red)}.mk-belief strong{font-weight:800;text-decoration:underline;text-decoration-thickness:.055em;text-underline-offset:.12em}
 .mk-reveal__copy{max-width:580px}.mk h1{font-size:var(--mk-title);font-weight:600;line-height:1.08;letter-spacing:-.035em;text-wrap:balance}
+.mk-product-intro{max-width:40ch;margin-bottom:20px;font-size:18px;font-weight:500;line-height:1.5;letter-spacing:0;text-wrap:pretty}
 .mk-strike{font-size:var(--mk-reading);font-weight:400;line-height:1.65;max-width:40ch;margin-top:28px;text-wrap:pretty}
 .mk-dropcap::first-letter{float:left;color:var(--mk-red);font-size:3.25em;line-height:.88;font-weight:650;margin:.045em .12em 0 0;letter-spacing:-.04em}
 .mk-dropcap::after{content:'';display:table;clear:both}
