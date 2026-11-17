@@ -1,8 +1,14 @@
-// The six original scene GIFs, encoded as finite H264 clips for native playback.
+// Scene GIFs encoded as finite H264 clips for native playback.
 export const SCENE_CLIPS = Object.freeze({
+  revolution: ["american", "march", "woodstock", "wall"].map(name => ({ src: `/public/motion/revolution/${name}.mp4`, poster: `/public/motion/revolution/${name}.jpg`, duration: 5 })),
   inside: ['brain', 'heart', 'chamber'].map(name => ({ src: `/public/motion/${name}.mp4`, poster: `/public/motion/${name}.jpg`, duration: 5 })),
   outside: ['surf', 'yogi', 'astronaut'].map(name => ({ src: `/public/motion/${name}.mp4`, poster: `/public/motion/${name}.jpg`, duration: name === 'surf' ? 5 : 5.1 }))
 });
+
+export function orderedPlaylist(items) {
+  let index = 0;
+  return () => items.length ? items[index++ % items.length] : undefined;
+}
 
 export function shuffledPlaylist(items, random = Math.random) {
   let queue = [], last;
@@ -25,7 +31,9 @@ export function createScenePlayer({ win = window, doc = document, clips = SCENE_
   const scenes = [...doc.querySelectorAll('[data-scene]')];
   if (!scenes.length) return { destroy() {} };
   const reduced = win.matchMedia('(prefers-reduced-motion: reduce)');
-  const playlists = new Map(scenes.map(scene => [scene, shuffledPlaylist(clips[scene.dataset.scene] || [], random)]));
+  const playlists = new Map(scenes.map(scene => [scene, scene.dataset.scene === "revolution"
+    ? orderedPlaylist(clips.revolution || [])
+    : shuffledPlaylist(clips[scene.dataset.scene] || [], random)]));
   const failed = new Set();
   const listeners = [];
   let active = null, current = null, pending = null, prepared = null, poster = null, retiring = [];

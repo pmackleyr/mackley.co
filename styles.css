@@ -6,10 +6,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit;
 body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.5;letter-spacing:-.012em;-webkit-font-smoothing:antialiased}
 .mk a:focus-visible,.mk button:focus-visible,.mk summary:focus-visible,.mk input:focus-visible,.mk [tabindex]:focus-visible{outline:2px solid var(--mk-action);outline-offset:5px}
 .mk [id]{scroll-margin-top:96px}.mk-skip{position:fixed;top:-100px;left:20px;z-index:100;padding:12px 18px;background:white;color:black}.mk-skip:focus{top:12px}
-/* Clear glass belongs to the navigation layer; the content stays unadorned. */
-.mk-header{position:fixed;z-index:50;inset:12px auto auto 50%;transform:translateX(-50%);width:min(calc(100% - 32px),1040px);height:56px;padding:5px 10px 5px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);border-radius:999px;box-shadow:inset 0 .5px 0 rgba(255,255,255,.75),0 2px 14px rgba(0,0,0,.045);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%)}
+/* Keep navigation legible over moving imagery without decorative glow. */
+.mk-header{position:fixed;z-index:50;inset:12px auto auto 50%;transform:translateX(-50%);width:min(calc(100% - 32px),1040px);height:56px;padding:5px 10px 5px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,255,255,.94);border:1px solid rgba(0,0,0,.1);border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .mk .mk-logo{color:var(--mk-red);font-size:19px;font-weight:700;line-height:1;letter-spacing:-.045em;white-space:nowrap}
-.mk-header .mk-logo,.mk-header .mk-button--secondary{text-shadow:0 0 10px rgba(255,255,255,.55)}
+.mk-header .mk-logo,.mk-header .mk-button--secondary{text-shadow:none;color:var(--mk-action);letter-spacing:0}
 .mk-actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
 .mk-button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 24px;border:1px solid transparent;border-radius:999px;font-size:16px;font-weight:600;line-height:1.2;letter-spacing:-.015em;text-decoration:none;transition:background-color .18s ease,opacity .18s ease}
 .mk .mk-button--primary{background:var(--mk-action);color:white}.mk .mk-button--primary:hover{background:#ba0400}.mk .mk-button--primary:active{opacity:.8}
@@ -17,7 +17,7 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-header .mk-actions{flex-wrap:nowrap;gap:8px}.mk-header .mk-button{min-height:44px;padding:10px 18px;font-size:14px}.mk-header .mk-button--secondary{padding-inline:10px}
 .mk-scene{position:relative;isolation:isolate;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:110px var(--mk-pad);overflow:hidden;background:#080808;color:white}
 .mk-scene__media,.mk-scene__shade{position:absolute;inset:0;z-index:-1}
-.mk-scene__media video,.mk-scene__media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease}
+.mk-scene__media video,.mk-scene__media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1);opacity:0;transition:opacity .5s ease}
 .mk-scene__media .is-visible{opacity:1}
 .mk-scene__shade{background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.42) 45%,rgba(0,0,0,.4))}
 .mk-scene h2,.mk-belief{font-size:var(--mk-display);font-weight:600;line-height:1.08;letter-spacing:-.045em;text-wrap:balance}
@@ -65,8 +65,8 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-not-found{min-height:80svh;padding:160px var(--mk-pad) 80px}.mk-not-found .mk-button{margin-top:30px}
 @media(max-width:800px){.mk-reveal{grid-template-columns:1fr;max-width:720px;row-gap:38px}.mk-reveal .mk-gallery{grid-row:2}.mk-reveal__copy{max-width:none}.mk-reveal .mk-strike{max-width:none}.mk-belief{text-align:left}.mk-editorial{padding-top:96px}}
 @media(max-width:600px){:root{--mk-radius:24px;--mk-display:clamp(34px,8.5vw,52px);--mk-title:clamp(32px,8.5vw,44px);--mk-reading:18px}.mk-header{top:8px;width:calc(100% - 20px);height:54px;padding-left:14px;gap:6px}.mk-header .mk-logo{font-size:17px}.mk-header .mk-actions{gap:2px}.mk-header .mk-button{padding-inline:12px;font-size:13px}.mk-header .mk-button--secondary{padding-inline:7px}.mk-scene{padding-inline:24px}.mk-reveal{padding:100px 24px 54px}.mk-strike{margin-top:24px}.mk-price span{display:block;margin:4px 0 0}.mk-editorial{padding-inline:24px}.mk-editorial>.mk-gallery{margin-bottom:36px}.mk-editorial-opening h1{margin-bottom:28px}.mk-faq{margin:28px auto 60px;padding-inline:24px}.mk-gallery__controls{gap:10px;margin-top:10px}.mk-gallery-dot{width:30px}.mk-footer{padding:24px;gap:16px}.mk-footer .mk-actions{gap:22px}.mk-footer .mk-logo{display:inline-flex;align-items:center;min-height:44px}.mk-policies{padding:112px 24px 64px}}
-@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.mk-header{background:rgba(255,255,255,.97);border-color:#b6b6bc;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.mk-header{background:rgba(255,255,255,.96)}}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.mk-header{background:#fff;border-color:#b6b6bc;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.mk-header{background:#fff}}
 @media(prefers-reduced-motion:reduce){.mk-root,.mk-gallery__track{scroll-behavior:auto}.mk *, .mk *::before,.mk *::after{transition:none!important;animation:none!important}.mk-scene__media video{display:none}.mk-root--home{scroll-snap-type:y proximity}}
 @media print{.mk-header,.mk-footer,.mk-gallery__controls,.mk-scroll{display:none}.mk-root--home{scroll-snap-type:none}.mk-editorial{padding:0}.mk-scene{min-height:0;background:white;color:black}.mk-scene__media,.mk-scene__shade{display:none}}
 
