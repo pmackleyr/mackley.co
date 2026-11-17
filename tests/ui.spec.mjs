@@ -5,11 +5,11 @@ const retailCheckout = "https://buy.stripe.com/7sY00j0Mx6EGdd256idwc05";
 test("the storefront fits phone and desktop viewports with JavaScript disabled", async ({ browser }, testInfo) => {
   for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
     const page = await browser.newPage({ viewport, javaScriptEnabled: false });
-    for (const route of ["/", "/breathedeeper/"]) {
+    for (const route of ["/", "/neti/"]) {
       await page.goto(route);
-      await expect(page.getByRole("heading", { name: "Pure Copper Neti Pot" })).toBeVisible();
+      await expect(page.locator("h1")).toBeVisible();
       const navigation = page.getByRole("navigation", { name: "Primary" });
-      await expect(navigation.getByRole("link", { name: "Learn more" })).toHaveAttribute("href", "/breathedeeper/");
+      await expect(navigation.getByRole("link", { name: "Learn more" })).toHaveAttribute("href", "/neti/");
       const buy = navigation.getByRole("link", { name: "Buy now" });
       await expect(buy).toHaveAttribute("href", retailCheckout);
       await expect(buy).toBeInViewport();
@@ -26,14 +26,46 @@ test("the storefront fits phone and desktop viewports with JavaScript disabled",
   }
 });
 
+test("the story headlines share one size and the product page shares one left edge", async ({ page }) => {
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    const headlines = await page.locator(".mk-scene h2, .mk-belief").evaluateAll((elements) => elements.map((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return { size: getComputedStyle(element).fontSize, textWidth: range.getBoundingClientRect().width, width: element.clientWidth, whiteSpace: getComputedStyle(element).whiteSpace };
+    }));
+    expect(headlines).toHaveLength(4);
+    expect(new Set(headlines.map(({ size }) => size)).size).toBe(1);
+    for (const headline of headlines) {
+      expect(headline.whiteSpace).toBe("nowrap");
+      expect(headline.textWidth).toBeLessThanOrEqual(headline.width + 1);
+    }
+    await expect(page.getByRole("link", { name: "Close the gap" })).toHaveAttribute("href", "/neti/");
+    const prose = await page.locator(".mk-product-intro, .mk-strike").evaluateAll((elements) => elements.map((element) => {
+      const style = getComputedStyle(element);
+      return [style.fontSize, style.fontWeight, style.lineHeight];
+    }));
+    expect(prose[0]).toEqual(prose[1]);
+    await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(152, 4, 0)");
+    await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" })).toHaveCSS("color", "rgb(152, 4, 0)");
+
+    await page.goto("/neti/");
+    const edges = await page.locator(".mk-editorial > .mk-gallery, .mk-editorial-opening, .mk-essay-copy, .mk-essay-checkout, .mk-ritual-film, .mk-retail-note, .mk-faq").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));
+    expect(edges).toHaveLength(7);
+    expect(new Set(edges).size).toBe(1);
+  }
+});
+
 test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText(/If you can change how you think/)).toBeVisible();
-  await expect(page.getByText("We believe you can.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "MACKLEY means REVOLUTION," })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Close the gap" })).toBeVisible();
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" }).click();
-  await expect(page).toHaveURL(/\/breathedeeper\/$/);
+  await expect(page).toHaveURL(/\/neti\/$/);
 
-  const question = page.getByText("What water should I use?", { exact: true });
+  const question = page.getByText("What water and salt should I use?", { exact: true });
   await question.focus();
   await question.press("Enter");
   await expect(page.getByText(/Use distilled or sterile water/)).toBeVisible();
@@ -50,10 +82,10 @@ test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) =
 test("legacy product routes reach the neti pot and support reaches the FAQ", async ({ page }) => {
   for (const route of ["/product/", "/icanchange/", "/intake/", "/spray-intake/", "/deeper/"]) {
     await page.goto(route);
-    await expect(page).toHaveURL(/\/breathedeeper\/$/);
+    await expect(page).toHaveURL(/\/neti\/$/);
   }
   await page.goto("/support/");
-  await expect(page).toHaveURL(/\/breathedeeper\/#faq$/);
+  await expect(page).toHaveURL(/\/neti\/#faq$/);
   await expect(page.getByRole("heading", { name: "Questions" })).toBeVisible();
 });
 
