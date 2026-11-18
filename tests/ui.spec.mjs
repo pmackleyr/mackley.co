@@ -48,8 +48,8 @@ test("the story headlines share one size and the product page shares one left ed
       return [style.fontSize, style.fontWeight, style.lineHeight];
     }));
     expect(prose[0]).toEqual(prose[1]);
-    await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(152, 4, 0)");
-    await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" })).toHaveCSS("color", "rgb(152, 4, 0)");
+    await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(29, 29, 31)");
+    await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" })).toHaveCSS("color", "rgb(29, 29, 31)");
 
     await page.goto("/neti/");
     const edges = await page.locator(".mk-editorial > .mk-gallery, .mk-editorial-opening, .mk-essay-copy, .mk-essay-checkout, .mk-ritual-film, .mk-retail-note, .mk-faq").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));

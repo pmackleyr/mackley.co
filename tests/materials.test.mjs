@@ -12,15 +12,15 @@ test("scene video and poster share grayscale without desaturating products", () 
 test("navigation removes glow and provides opaque accessibility fallbacks", () => {
   const header = css.match(/\.mk-header\{([^}]+)\}/)[1];
   assert.match(header, /background:#fff/);
-  assert.match(css, /\.mk-header\{background:rgba\(255,255,255,\.76\);[^}]*backdrop-filter:blur\(20px\)/);
+  assert.match(css, /\.mk-header\{background:rgba\(240,240,242,\.58\);[^}]*backdrop-filter:blur\(12px\)/);
   assert.doesNotMatch(header, /inset 0/);
-  assert.match(css, /\.mk-header :is\(\.mk-logo,\.mk-button--secondary\)\{text-shadow:none;color:#980400/);
+  assert.match(css, /\.mk-header :is\(\.mk-logo,\.mk-button--secondary\)\{text-shadow:none;color:var\(--mk-ink\)/);
   assert.match(css, /@media\(prefers-reduced-transparency:reduce\),\(prefers-contrast:more\)\{\.mk-header\{background:#fff;[^}]*backdrop-filter:none/);
 });
 
-test("red navigation text retains 4.5:1 contrast over the darkest possible header background", () => {
+test("navigation ink retains 4.5:1 contrast over the darkest possible header background", () => {
   const luminance = (rgb) => rgb.map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
-  const background = luminance([255 * 0.76, 255 * 0.76, 255 * 0.76]);
-  const text = luminance([152, 4, 0]);
+  const background = luminance([240, 240, 242].map(v => v * 0.58));
+  const text = luminance([29, 29, 31]);
   assert.ok((background + 0.05) / (text + 0.05) >= 4.5);
 });
