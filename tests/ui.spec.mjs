@@ -48,10 +48,21 @@ test("the story headlines share one size and the product page shares one left ed
       return [style.fontSize, style.fontWeight, style.lineHeight];
     }));
     expect(prose[0]).toEqual(prose[1]);
-    await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(29, 29, 31)");
+    await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(247, 5, 0)");
     await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" })).toHaveCSS("color", "rgb(29, 29, 31)");
+    const copy = await page.locator(".mk-reveal__copy").boundingBox();
+    const gallery = await page.locator(".mk-reveal .mk-gallery").boundingBox();
+    expect(copy.width).toBeCloseTo(gallery.width, 0);
+    if (width > 800) {
+      expect(copy.y + copy.height / 2).toBeCloseTo(gallery.y + gallery.height / 2, 0);
+    } else {
+      expect(gallery.y + gallery.height).toBeLessThan(copy.y);
+    }
 
     await page.goto("/neti/");
+    const essay = page.locator(".mk-essay-copy");
+    await expect(essay).toContainText("Never use water straight from the tap.");
+    await expect(essay).toContainText("Hari Om Tat Sat.");
     const edges = await page.locator(".mk-editorial > .mk-gallery, .mk-editorial-opening, .mk-essay-copy, .mk-essay-checkout, .mk-ritual-film, .mk-retail-note, .mk-faq").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));
     expect(edges).toHaveLength(7);
     expect(new Set(edges).size).toBe(1);
@@ -65,12 +76,14 @@ test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) =
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" }).click();
   await expect(page).toHaveURL(/\/neti\/$/);
 
-  const question = page.getByText("What water and salt should I use?", { exact: true });
+  const faq = page.locator("#faq");
+  const question = faq.getByText("What water and salt should I use?", { exact: true });
+  const answer = faq.getByText(/Use distilled or sterile water/);
   await question.focus();
   await question.press("Enter");
-  await expect(page.getByText(/Use distilled or sterile water/)).toBeVisible();
+  await expect(answer).toBeVisible();
   await question.press("Space");
-  await expect(page.getByText(/Use distilled or sterile water/)).toBeHidden();
+  await expect(answer).toBeHidden();
 
   const checkoutRequest = page.waitForRequest(retailCheckout);
   await page.route(retailCheckout, (route) => route.fulfill({ body: "Mock Stripe checkout" }));
