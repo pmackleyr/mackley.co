@@ -82,8 +82,12 @@ test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) =
   await question.focus();
   await question.press("Enter");
   await expect(answer).toBeVisible();
+  await expect(answer).toContainText("measured nasal saline mix");
   await question.press("Space");
   await expect(answer).toBeHidden();
+  await faq.getByText("How do I clean and dry it?", { exact: true }).click();
+  await expect(faq.getByText(/included microfiber towel/)).toBeVisible();
+  await expect(faq.getByText(/lemon juice can brighten the outside/)).toBeVisible();
 
   const checkoutRequest = page.waitForRequest(retailCheckout);
   await page.route(retailCheckout, (route) => route.fulfill({ body: "Mock Stripe checkout" }));
