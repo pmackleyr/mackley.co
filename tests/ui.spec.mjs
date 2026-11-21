@@ -49,6 +49,7 @@ test("the story headlines share one size and the product page shares one left ed
     }));
     expect(prose[0]).toEqual(prose[1]);
     await expect(page.locator(".mk-header .mk-brand")).toHaveCSS("color", "rgb(247, 5, 0)");
+    await expect(page.locator(".mk-header")).toHaveCSS("background-color", "rgba(255, 255, 255, 0.12)");
     await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Learn more" })).toHaveCSS("color", "rgb(29, 29, 31)");
     const copy = await page.locator(".mk-reveal__copy").boundingBox();
     const gallery = await page.locator(".mk-reveal .mk-gallery").boundingBox();
@@ -61,7 +62,9 @@ test("the story headlines share one size and the product page shares one left ed
 
     await page.goto("/neti/");
     const essay = page.locator(".mk-essay-copy");
-    await expect(essay).toContainText("Never use water straight from the tap.");
+    const steps = essay.getByRole("list");
+    await expect(steps.getByRole("listitem")).toHaveCount(4);
+    await expect(steps).toContainText("Never use water straight from the tap.");
     await expect(essay).toContainText("Hari Om Tat Sat.");
     const edges = await page.locator(".mk-editorial > .mk-gallery, .mk-editorial-opening, .mk-essay-copy, .mk-essay-checkout, .mk-ritual-film, .mk-retail-note, .mk-faq").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));
     expect(edges).toHaveLength(7);

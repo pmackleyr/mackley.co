@@ -8,7 +8,10 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk [id]{scroll-margin-top:96px}.mk-skip{position:fixed;top:-100px;left:20px;z-index:100;padding:12px 18px;background:white;color:black}.mk-skip:focus{top:12px}
 /* Glass is limited to the navigation layer; the opaque surface is the fallback. */
 .mk-header{position:fixed;z-index:50;inset:12px auto auto 50%;transform:translateX(-50%);width:min(calc(100% - 32px),1040px);height:56px;padding:5px 10px 5px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid rgba(29,29,31,.14);border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.mk-header{background:rgba(248,248,250,.34);border-top-color:rgba(255,255,255,.48);-webkit-backdrop-filter:blur(7px) saturate(125%) contrast(58%) brightness(145%);backdrop-filter:blur(7px) saturate(125%) contrast(58%) brightness(145%)}}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .mk-header{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .mk .mk-header .mk-button--secondary{background:rgba(255,255,255,.64)}
+}
 .mk .mk-logo{color:var(--mk-red);font-size:19px;font-weight:700;line-height:1;letter-spacing:-.045em;white-space:nowrap}
 .mk .mk-header :is(.mk-logo,.mk-button--secondary){text-shadow:none;color:var(--mk-ink);letter-spacing:0}
 .mk-header .mk-logo{display:inline-flex;align-items:center;min-height:44px}
@@ -66,6 +69,9 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-editorial-opening h1{margin-bottom:32px}
 .mk-essay-copy p{font-size:var(--mk-reading);line-height:1.72;letter-spacing:-.012em;margin-top:1.25em;text-wrap:pretty}
 .mk-essay-copy p:first-child{margin-top:0}.mk-essay-copy .mk-signature{font-size:15px;color:var(--mk-muted);margin-top:32px}
+.mk-essay-copy h2{margin:1.5em 0 .4em;font-size:var(--mk-reading);font-weight:700}
+.mk-essay-copy ol{padding-inline-start:1.5em;font-size:var(--mk-reading);line-height:1.72;text-wrap:pretty}
+.mk-essay-copy li+li{margin-top:.35em}
 .mk-faq{max-width:680px;margin:40px 0 88px}
 .mk-faq h2{font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.03em;margin-bottom:28px}
 .mk-faq details{border-top:1px solid #dedee2}.mk-faq details:last-child{border-bottom:1px solid #dedee2}
