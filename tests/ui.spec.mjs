@@ -70,6 +70,7 @@ test("the story headlines share one size and the product page shares one left ed
       "Dry the outside, the inside, then leave upside down to dry completely."
     ]);
     await expect(essay.getByRole("link", { name: "Salt is not included" })).toHaveAttribute("href", "#neti-salt-note");
+    await expect(essay.locator("sup").getByRole("link", { name: "Salt is not included" })).toHaveCSS("text-decoration-line", "none");
     await expect(essay.locator("#neti-salt-note")).toHaveText("*not included.");
     await expect(essay).toContainText("Never use water straight from the tap.");
     await expect(essay).toContainText("Hari Om Tat Sat.");
@@ -79,7 +80,7 @@ test("the story headlines share one size and the product page shares one left ed
   }
 });
 
-test("both purchase areas show the same price, contents, and linked return terms", async ({ page }) => {
+test("both purchase areas show the same price, contents, and return disclosure", async ({ page }) => {
   await page.goto("/");
   const opening = await page.locator(".mk-strike").innerText();
   for (const [route, selector] of [["/", ".mk-reveal__copy"], ["/neti/", ".mk-essay-checkout"]]) {
@@ -88,12 +89,15 @@ test("both purchase areas show the same price, contents, and linked return terms
     await expect(offer.locator(".mk-price")).toHaveText(/\$42\s+U\.S\. delivery included/);
     await expect(offer.locator(".mk-purchase-includes")).toHaveText("400 mL pure copper neti pot and microfiber towel.");
     await expect(offer.getByRole("link", { name: "Buy now" })).toHaveAttribute("href", retailCheckout);
-    await expect(offer.getByRole("link", { name: "30-day return policy for unused pots" })).toHaveAttribute("href", "/policies/#returns");
+    await expect(offer.locator(".mk-purchase-policy")).toHaveText("No change-of-mind returns.");
   }
   expect(opening.startsWith(await page.locator(".mk-essay-copy .mk-dropcap").innerText())).toBe(true);
-  await page.locator(".mk-essay-checkout").getByRole("link", { name: "30-day return policy for unused pots" }).click();
+  await page.getByText("Where do you ship, and can I return it?", { exact: true }).click();
+  await page.getByRole("link", { name: "Read delivery and return details" }).click();
   await expect(page).toHaveURL(/\/policies\/#returns$/);
   await expect(page.locator("#returns")).toBeVisible();
+  await expect(page.getByText(/Orders placed before this update/)).toBeVisible();
+  await expect(page.getByText(/We will arrange a replacement or refund/)).toBeVisible();
 });
 
 test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) => {
