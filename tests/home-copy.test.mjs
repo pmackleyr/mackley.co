@@ -10,7 +10,7 @@ test("homepage keeps the approved narrative and product introduction in order", 
     'from who you are inside,',
     'to what you do outside.',
     '<h2 class="mk-belief"><a href="/neti/">Close the gap <span aria-hidden="true">&rarr;</span></a></h2>',
-    '<p class="mk-product-intro">Start each day like a true yogi. Introducing--the best tool for the most important habit. <em>Jala neti</em> is the very first kriya for perfect reason.</p>',
+    '<p class="mk-product-intro">Start each day like a true yogi. <em>Jala neti</em>, &ldquo;clear breath,&rdquo; is the very first <em>kriya</em>, "habit," of yoga.</p>',
     '<h1 id="product-name" class="mk-product-title">Pure Copper Neti Pot</h1>'
   ];
   let previous = -1;
@@ -20,5 +20,5 @@ test("homepage keeps the approved narrative and product introduction in order", 
     previous = position;
   }
   assert.equal((home.match(/class="mk-scene"/g) || []).length, 3);
-  assert.match(home, /<p class="mk-price">\$42<\/p>/);
+  assert.match(home, /<p class="mk-price">\$42 <span>U\.S\. delivery included<\/span><\/p>/);
 });

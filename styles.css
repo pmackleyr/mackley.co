@@ -46,7 +46,10 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-strike{margin-top:28px}
 .mk-dropcap::first-letter{float:left;color:var(--mk-red);font-size:3.25em;line-height:.88;font-weight:650;margin:.045em .12em 0 0;letter-spacing:-.04em}
 .mk-dropcap::after{content:'';display:table;clear:both}
-.mk-price{font-size:24px;font-weight:600;line-height:1.35;letter-spacing:-.025em;margin:28px 0 20px}.mk-price span{font-size:13px;font-weight:400;color:var(--mk-muted);letter-spacing:0;margin-left:8px}
+.mk-price{font-size:24px;font-weight:600;line-height:1.35;letter-spacing:-.025em;margin:28px 0 8px}.mk-price span{font-size:13px;font-weight:400;color:var(--mk-muted);letter-spacing:0;margin-left:8px}
+.mk-purchase-includes,.mk-purchase-returns{font-size:14px;line-height:1.5;color:var(--mk-muted);letter-spacing:0}
+.mk-purchase-includes{margin-bottom:18px}
+.mk-purchase-returns a{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:3px}
 .mk-small{font-size:13px;line-height:1.6;color:var(--mk-muted);letter-spacing:0}
 /* Identical markup and controls on both pages; swiping remains native. */
 .mk-gallery{min-width:0;width:100%}.mk-gallery__track{display:flex;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
@@ -72,6 +75,9 @@ body.mk{min-height:100vh;min-height:100svh;background:#fff;color:var(--mk-ink);f
 .mk-essay-copy h2{margin:1.5em 0 .4em;font-size:var(--mk-reading);font-weight:700}
 .mk-essay-copy ol{padding-inline-start:1.5em;font-size:var(--mk-reading);line-height:1.72;text-wrap:pretty}
 .mk-essay-copy li+li{margin-top:.35em}
+.mk-essay-copy ol a{text-decoration:underline;text-underline-offset:3px}
+.mk-essay-copy .mk-essay-rule{width:2em;margin-top:1.25em;border:0;border-top:1px solid #dedee2}
+.mk-essay-copy .mk-essay-rule+p{margin-top:.5em}
 .mk-faq{max-width:680px;margin:40px 0 88px}
 .mk-faq h2{font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.03em;margin-bottom:28px}
 .mk-faq details{border-top:1px solid #dedee2}.mk-faq details:last-child{border-bottom:1px solid #dedee2}

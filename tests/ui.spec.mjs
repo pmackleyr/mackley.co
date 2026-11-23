@@ -63,13 +63,37 @@ test("the story headlines share one size and the product page shares one left ed
     await page.goto("/neti/");
     const essay = page.locator(".mk-essay-copy");
     const steps = essay.getByRole("list");
-    await expect(steps.getByRole("listitem")).toHaveCount(4);
-    await expect(steps).toContainText("Never use water straight from the tap.");
+    await expect(steps.getByRole("listitem")).toHaveText([
+      "Add salt,*",
+      "Fill with clean water,",
+      "Rinse each nostril (one potful is enough for both),",
+      "Dry the outside, the inside, then leave upside down to dry completely."
+    ]);
+    await expect(essay.getByRole("link", { name: "Salt is not included" })).toHaveAttribute("href", "#neti-salt-note");
+    await expect(essay.locator("#neti-salt-note")).toHaveText("*not included.");
+    await expect(essay).toContainText("Never use water straight from the tap.");
     await expect(essay).toContainText("Hari Om Tat Sat.");
     const edges = await page.locator(".mk-editorial > .mk-gallery, .mk-editorial-opening, .mk-essay-copy, .mk-essay-checkout, .mk-ritual-film, .mk-retail-note, .mk-faq").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));
     expect(edges).toHaveLength(7);
     expect(new Set(edges).size).toBe(1);
   }
+});
+
+test("both purchase areas show the same price, contents, and linked return terms", async ({ page }) => {
+  await page.goto("/");
+  const opening = await page.locator(".mk-strike").innerText();
+  for (const [route, selector] of [["/", ".mk-reveal__copy"], ["/neti/", ".mk-essay-checkout"]]) {
+    await page.goto(route);
+    const offer = page.locator(selector);
+    await expect(offer.locator(".mk-price")).toHaveText(/\$42\s+U\.S\. delivery included/);
+    await expect(offer.locator(".mk-purchase-includes")).toHaveText("400 mL pure copper neti pot and microfiber towel.");
+    await expect(offer.getByRole("link", { name: "Buy now" })).toHaveAttribute("href", retailCheckout);
+    await expect(offer.getByRole("link", { name: "30-day return policy for unused pots" })).toHaveAttribute("href", "/policies/#returns");
+  }
+  expect(opening.startsWith(await page.locator(".mk-essay-copy .mk-dropcap").innerText())).toBe(true);
+  await page.locator(".mk-essay-checkout").getByRole("link", { name: "30-day return policy for unused pots" }).click();
+  await expect(page).toHaveURL(/\/policies\/#returns$/);
+  await expect(page.locator("#returns")).toBeVisible();
 });
 
 test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) => {
@@ -94,7 +118,7 @@ test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) =
 
   const checkoutRequest = page.waitForRequest(retailCheckout);
   await page.route(retailCheckout, (route) => route.fulfill({ body: "Mock Stripe checkout" }));
-  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Buy now" }).click();
+  await page.locator(".mk-essay-checkout").getByRole("link", { name: "Buy now" }).click();
   await checkoutRequest;
   await expect(page).toHaveURL(retailCheckout);
 });
