@@ -80,24 +80,25 @@ test("the story headlines share one size and the product page shares one left ed
   }
 });
 
-test("both purchase areas show the same price, contents, and return disclosure", async ({ page }) => {
+test("both purchase areas show the same price and contents without extra offer copy", async ({ page }) => {
   await page.goto("/");
   const opening = await page.locator(".mk-strike").innerText();
   for (const [route, selector] of [["/", ".mk-reveal__copy"], ["/neti/", ".mk-essay-checkout"]]) {
     await page.goto(route);
     const offer = page.locator(selector);
-    await expect(offer.locator(".mk-price")).toHaveText(/\$42\s+U\.S\. delivery included/);
+    await expect(offer.locator(".mk-price")).toHaveText("$42");
     await expect(offer.locator(".mk-purchase-includes")).toHaveText("400 mL pure copper neti pot and microfiber towel.");
     await expect(offer.getByRole("link", { name: "Buy now" })).toHaveAttribute("href", retailCheckout);
-    await expect(offer.locator(".mk-purchase-policy")).toHaveText("No change-of-mind returns.");
+    expect(await page.content()).not.toMatch(/delivery (?:is )?included|change-of-mind returns/i);
   }
   expect(opening.startsWith(await page.locator(".mk-essay-copy .mk-dropcap").innerText())).toBe(true);
   await page.getByText("Where do you ship, and can I return it?", { exact: true }).click();
   await page.getByRole("link", { name: "Read delivery and return details" }).click();
   await expect(page).toHaveURL(/\/policies\/#returns$/);
   await expect(page.locator("#returns")).toBeVisible();
-  await expect(page.getByText(/Orders placed before this update/)).toBeVisible();
+  await expect(page.getByText(/Earlier orders remain covered/)).toBeVisible();
   await expect(page.getByText(/We will arrange a replacement or refund/)).toBeVisible();
+  expect(await page.content()).not.toMatch(/delivery (?:is )?included|change-of-mind returns/i);
 });
 
 test("learn more, keyboard FAQ, and the Stripe handoff work", async ({ page }) => {

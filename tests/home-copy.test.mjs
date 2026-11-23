@@ -20,5 +20,5 @@ test("homepage keeps the approved narrative and product introduction in order", 
     previous = position;
   }
   assert.equal((home.match(/class="mk-scene"/g) || []).length, 3);
-  assert.match(home, /<p class="mk-price">\$42 <span>U\.S\. delivery included<\/span><\/p>/);
+  assert.match(home, /<p class="mk-price">\$42<\/p>/);
 });
